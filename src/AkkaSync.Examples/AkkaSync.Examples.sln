@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkkaSync.Examples", "AkkaSync.Examples.csproj", "{06987A36-1834-B223-D5B7-07C47E08F9E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06987A36-1834-B223-D5B7-07C47E08F9E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06987A36-1834-B223-D5B7-07C47E08F9E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06987A36-1834-B223-D5B7-07C47E08F9E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06987A36-1834-B223-D5B7-07C47E08F9E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B4845FA-6F31-4526-B813-1F476E076481}
+	EndGlobalSection
+EndGlobal

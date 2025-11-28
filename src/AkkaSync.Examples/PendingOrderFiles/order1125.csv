@@ -1,0 +1,11 @@
+Id,CustomerId,OrderDate,TotalAmount,Status,ShippingAddress,Country,IsPriority
+1001,1,2024-07-01,129.99,Paid,12 Queen Street,Auckland,true
+1002,2,2024-07-02,89.50,Pending,45 King Road,Christchurch,false
+1003,1,2024-07-02,240.00,Shipped,12 Queen Street,Auckland,false
+1004,3,2024-07-03,15.90,Cancelled,8 River Ave,Wellington,false
+1005,4,2024-07-05,320.89,Paid,78 Ocean Drive,Tauranga,true
+1006,2,2024-07-06,55.00,Pending,45 King Road,Christchurch,false
+1007,5,2024-07-07,780.45,Paid,90 Hill Road,Hamilton,true
+1008,6,2024-07-07,45.99,Shipped,122 Lake View,Dunedin,false
+1009,3,2024-07-08,350.00,Paid,8 River Ave,Wellington,true
+1010,4,2024-07-09,18.75,Pending,78 Ocean Drive,Tauranga,false

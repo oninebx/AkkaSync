@@ -1,0 +1,43 @@
+# Build results
+bin/
+obj/
+out/
+
+# Visual Studio
+.vscode
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider IDE
+.idea/
+
+# NuGet packages
+*.nupkg
+packages/
+.nuget/
+
+# Logs
+*.log
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# ASP.NET
+wwwroot/lib/
+
+# Entity Framework
+*.dbmdl
+*.dbproj.schemaview
+
+# Others
+*.cache
+*.pdb
+*.dll
+*.exe
+*.mdb
+*.ilk
+*.log
