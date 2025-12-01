@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
+using Akka.Event;
 using AkkaSync.Core.Pipeline;
+using Microsoft.Extensions.Logging;
 
 namespace AkkaSync.Plugins.Sources;
 
@@ -9,10 +11,12 @@ public class CsvSource : ISyncSource
 
   private readonly string _filePath;
   private readonly char _delimiter;
-  public CsvSource(string filePath, char delimiter = ',')
+  private readonly ILogger<CsvSource> _logger;
+  public CsvSource(string filePath, ILogger<CsvSource> logger, char delimiter = ',')
   {
     _filePath = filePath;
     _delimiter = delimiter;
+    _logger = logger;
   }
 
   public string Key => $"_csv_{_filePath.GetHashCode()}";
@@ -29,13 +33,26 @@ public class CsvSource : ISyncSource
     int lineNumber = 1;
     while (!reader.EndOfStream)
     {
-      var line = await reader.ReadLineAsync();
-      if (line == null)
+      var line = await reader.ReadLineAsync(cancellationToken);
+      if (string.IsNullOrWhiteSpace(line))
       {
         continue;
       }
       lineNumber++;
-      var values = line.Split(_delimiter);
+      string[] values;
+      try
+      {
+        values = line.Split(_delimiter);
+        if(values.Length != headers.Length)
+        {
+          throw new FormatException("Column count does not match header");
+        }
+      }
+      catch (FormatException ex)
+      {
+        _logger.LogWarning(ex, "CSV format error at line {Line} in file {File}", lineNumber, _filePath);
+        continue;
+      }
       var record = new Dictionary<string, object>();
       for (int i = 0; i < headers.Length && i < values.Length; i++)
       {

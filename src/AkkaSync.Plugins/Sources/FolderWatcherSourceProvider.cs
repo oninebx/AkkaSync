@@ -4,12 +4,19 @@ using AkkaSync.Core.Common;
 using AkkaSync.Core.Configuration;
 using AkkaSync.Core.Pipeline;
 using AkkaSync.Core.PluginProviders;
+using Microsoft.Extensions.Logging;
 
 namespace AkkaSync.Plugins.Sources;
 
 public class FolderWatcherSourceProvider : IPluginProvider<ISyncSource>
 {
   public string Key => nameof(FolderWatcherSourceProvider);
+  private readonly ILoggerFactory _factory;
+
+  public FolderWatcherSourceProvider(ILoggerFactory loggerFactory)
+  {
+    _factory = loggerFactory;
+  }
 
   IEnumerable<ISyncSource> IPluginProvider<ISyncSource>.Create(PipelineContext context, CancellationToken cancellationToken)
   {
@@ -23,7 +30,8 @@ public class FolderWatcherSourceProvider : IPluginProvider<ISyncSource>
       switch(context.SourceProvider.Parameters["source"])
       {
         case "csv":
-          yield return new CsvSource(file);
+          var csvlogger = _factory.CreateLogger<CsvSource>();
+          yield return new CsvSource(file, csvlogger);
           break;
         default:
           throw new NotSupportedException($"Source type {context.SourceProvider.Parameters["source"]} is not supported.");

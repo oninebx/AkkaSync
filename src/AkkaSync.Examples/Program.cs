@@ -11,6 +11,7 @@ using AkkaSync.Plugins.Sources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -18,6 +19,12 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnC
 var config = builder.Configuration.GetSection("AkkaSync").Get<PipelineConfig>()!;
 
 var services = new ServiceCollection();
+services.AddLogging(config =>
+{
+  config.AddConsole();
+  config.SetMinimumLevel(LogLevel.Debug);
+});
+
 services.AddSingleton<IPluginProvider<ISyncSource>, FolderWatcherSourceProvider>();
 services.AddSingleton<IPluginProviderRegistry<ISyncSource>, PluginProviderRegistry<ISyncSource>>();
 

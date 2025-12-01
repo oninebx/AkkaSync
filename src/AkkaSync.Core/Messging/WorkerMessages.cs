@@ -4,3 +4,4 @@ namespace AkkaSync.Core.Messging;
 
 public record StartProcessing();
 public record ProcessingCompleted(string Name);
+public record ProcessingFailed(string Name);
