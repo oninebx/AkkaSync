@@ -1,10 +1,10 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
+using AkkaSync.Core.Abstractions;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.Configuration;
 using AkkaSync.Core.Messging;
-using AkkaSync.Core.Pipeline;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Messages;
 
@@ -15,17 +15,24 @@ public class PipelineManagerActor : ReceiveActor
   private readonly IPluginProviderRegistry<ISyncSource> _sourceRegistry;
   private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
+  private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
   private readonly PipelineConfig _config;
   private readonly Dictionary<string, IActorRef> _pipelines = [];
   private readonly HashSet<string> _completedPipelines = [];
   private IReadOnlyList<IReadOnlySet<string>> _layers;
   private int _currentLayerIndex = 0;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  public PipelineManagerActor(IPluginProviderRegistry<ISyncSource> sourceRegistry, IPluginProviderRegistry<ISyncTransformer> transformerRegistry, IPluginProviderRegistry<ISyncSink> sinkRegistry,  PipelineConfig config)
+  public PipelineManagerActor(
+    IPluginProviderRegistry<ISyncSource> sourceRegistry, 
+    IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
+    IPluginProviderRegistry<ISyncSink> sinkRegistry,
+    IPluginProviderRegistry<IHistoryStore> storeRegistry,
+    PipelineConfig config)
   {
     _sourceRegistry = sourceRegistry;
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
+    _storeRegistry = storeRegistry;
     _config = config;
     _layers = _config.BuildLayers();
     Receive<StartPipeline>(msg => HandleStartPipeline(msg));
@@ -69,10 +76,13 @@ public class PipelineManagerActor : ReceiveActor
 
       var sink = context.SinkProvider;
       var sinkProvider = _sinkRegistry.GetProvider(sink.Type);
+
+      var store = context.HistoryStoreProvider;
+      var storeProvider = _storeRegistry.GetProvider(store?.Type ?? string.Empty);
       
       if(sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
       {
-         var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, context)), context.Name);
+         var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, context)), context.Name);
         _pipelines[context.Name] = pipelineActor;
         _logger.Info($"Started pipeline with ID {context.Name}.");
       }

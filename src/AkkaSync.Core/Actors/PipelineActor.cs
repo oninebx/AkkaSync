@@ -6,11 +6,13 @@ using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using AkkaSync.Core.Abstractions;
 using AkkaSync.Core.Configuration;
 using AkkaSync.Core.Messging;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Models;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Messages;
+using Microsoft.VisualBasic;
 
 namespace AkkaSync.Core.Actors
 {
@@ -19,23 +21,32 @@ namespace AkkaSync.Core.Actors
       private readonly IPluginProvider<ISyncSource> _sourceProvider;
       private readonly IPluginProvider<ISyncTransformer> _transformerProvider;
       private readonly IPluginProvider<ISyncSink> _sinkProvider;
+      private readonly IHistoryStore? _historyStore;
       private CancellationTokenSource? _cancellationTokenSource;
       private readonly PipelineContext _context;
       private readonly IDictionary<string, IActorRef> _workers = new Dictionary<string, IActorRef>();
       private readonly ILoggingAdapter _logger = Context.GetLogger();
-      public PipelineActor(IPluginProvider<ISyncSource> sourceProvider, IPluginProvider<ISyncTransformer> transformerProvider, IPluginProvider<ISyncSink> sinkProvider, PipelineContext context)
+      public PipelineActor(
+        IPluginProvider<ISyncSource> sourceProvider, 
+        IPluginProvider<ISyncTransformer> transformerProvider, 
+        IPluginProvider<ISyncSink> sinkProvider,
+        IPluginProvider<IHistoryStore>? historyProvider,
+        PipelineContext context)
       {
           _sourceProvider = sourceProvider;
           _transformerProvider = transformerProvider;
           _sinkProvider = sinkProvider;
+          _historyStore = historyProvider?.Create(context).FirstOrDefault();
           _context = context;
-          Receive<StartSync>(_ => HandleStart());
+          ReceiveAsync<StartSync>(_ => HandleStart());
           Receive<StopSync>(_ => HandleStop());
-          Receive<ProcessingCompleted>(msg => HandleProcessingCompleted(msg));
-          
+          ReceiveAsync<ProcessingCompleted>(msg => HandleProcessingCompleted(msg));
+          ReceiveAsync<ProcessingProgress>(msg => HandleProcessingProgress(msg));
+          ReceiveAsync<ProcessingFailed>(msg => HandleProcessingFailed(msg));
+          Receive<Terminated>(msg => HandleTerminated(msg));
       }
 
-      private void HandleStart()
+      private async Task HandleStart()
       {
         _cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = _cancellationTokenSource.Token;
@@ -46,12 +57,25 @@ namespace AkkaSync.Core.Actors
         var sources = _sourceProvider.Create(_context, CancellationToken.None);
         foreach(var source in sources)
         {
-          var workerName = $"Worker-{source.Key}";
+          string? cursor = default!;
+          if(_historyStore is IHistoryStore store)
+          {
+            var record = await store.GetAsync(source.Id, cancellationToken);
+            if(record is SyncHistoryRecord syncRecord && record.ETag == source.ETag && record.Status == "Completed")
+            {
+              continue; 
+            }
+            cursor = record?.Cursor;
+            await _historyStore.MarkRunningAsync(source.Id);
+          }
+          
+          var workerName = $"Worker-{source.Id}";
           if(_workers.ContainsKey(workerName))
           {
               continue;
           }
-          var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(source, transformerChain, sink, batchSize, cancellationToken)), workerName);
+          
+          var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(source, transformerChain, sink, batchSize, cursor, cancellationToken)), workerName);
           _workers[workerName] = worker;
           Context.Watch(worker);
         }
@@ -63,14 +87,44 @@ namespace AkkaSync.Core.Actors
           // Add your stop logic here
       }
 
-      private void HandleProcessingCompleted(ProcessingCompleted msg)
+      private async Task HandleProcessingCompleted(ProcessingCompleted msg)
       {
           _logger.Info($"Pipeline Pipeline-{_context.Name} completed processing.");
-          _workers.Remove(msg.Name);
+          if(_historyStore != null)
+          {
+            await _historyStore.MarkCompletedAsync(msg.SourceId, msg.ETag);
+          }
+          
+      }
+
+      private async Task HandleProcessingProgress(ProcessingProgress msg)
+      {
+        _logger.Info($"[Sync Progress] SourceId={msg.SourceId}, Cursor={msg.Cursor}");
+        if(_historyStore != null)
+        {
+          await _historyStore.UpdateCursorAsync(msg.SourceId, msg.Cursor, _cancellationTokenSource?.Token ?? CancellationToken.None);
+        }
+      }
+
+      private async Task HandleProcessingFailed(ProcessingFailed msg)
+      {
+        _logger?.Error($"Processing failed for SourceId={msg.SourceId}");
+
+        if (_historyStore != null)
+        {
+            await _historyStore.MarkFailedAsync(msg.SourceId, msg.Reason, _cancellationTokenSource?.Token ?? CancellationToken.None);
+        }
+      }
+
+      private void HandleTerminated(Terminated msg)
+      {
+        var actorName = msg.ActorRef.Path.Name;
+          _workers.Remove(actorName);
           if(_workers.Count == 0)
           {
               Context.Parent.Tell(new PipelineCompleted(Self.Path.Name));
           }
+          _logger.Info($"Worker terminated. Name={actorName}, Path={msg.ActorRef.Path}");
       }
 
       private void PrintTablesData(TransformContext context)

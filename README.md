@@ -1,105 +1,108 @@
 # AkkaSync
 
-**AkkaSync** is a lightweight and extensible **data synchronization and migration framework** built on top of the **Akka.NET Actor Model**.  
-It is designed for enterprise data integration scenarios such as system-to-system synchronization, ETL workflows, and structured/unstructured data migration.
+**AkkaSync** is a lightweight, extensible data-synchronization framework built on the **Akka.NET actor model**.  
+It provides a configuration-driven **Extract → Transform → Load (ETL)** pipeline with **high concurrency**, **failure isolation**, and **resumable execution** via **cursor/ETag checkpointing**.
 
-AkkaSync simplifies the traditional ETL complexity in .NET and provides:
+## Core Design Goals
 
-- Actor-based asynchronous data pipelines  
-- Extract → Transform → Load workflow  
-- Checkpointing, resume, and offset tracking  
-- Idempotent writes & deduplication  
-- Automatic retries and supervision  
-- Multi-pipeline parallelism and tenant isolation  
-- Plugin-driven connectors for multiple source & target systems  
+- **Actor-based pipeline orchestration**  
+- **Isolated, fault-tolerant worker execution**  
+- **Plugin-driven Sources / Transformers / Sinks**  
+- **Resume & retry with persistent HistoryStore**  
+- **Simple to configure, easy to extend**  
+
+
+## 🧩 Architecture Overview
+
+```mermaid
+flowchart TD
+
+    %% ----- Actor System -----
+    subgraph ACTORS[Akka Actor System]
+        direction TB
+
+        PMA[<b>PipelineManagerActor</b><br/>• Loads pipeline config<br/>• Builds DAG<br/>• Starts pipelines]
+
+        PA[<b>PipelineActor</b><br/>• Manages one pipeline<br/>• Supervises workers<br/>• Handles retries]
+
+        WA[<b>SyncWorkerActor</b><br/>• Executes sync steps<br/>• Invokes plugins]
+    end
+
+    %% ----- Plugin System -----
+    subgraph PLUGINS[Plugin System]
+        direction TB
+
+        PL[<b>SyncPlugin</b><br/>• Sources: File, DB, API...<br/>• Sinks: DB, API, Stream...<br/>• Transformers]
+    end
+
+    %% ----- History Store (external persistence) -----
+    HS[(HistoryStore<br/>Cursor / ETag<br/>Persistence)]
+
+    %% ----- Configuration -----
+    CFG[(appsettings.json)]
+
+    %% ----- Connections -----
+    CFG --> PMA
+    HS <--> PA
+    PMA --> PA --> WA --> PL
+
+
+```
+
+
+## 📘 Architecture Components
+
+### **1. PipelineManagerActor**
+Manages global orchestration:
+
+- Loads pipeline definitions from configuration  
+- Builds and validates dependency DAG  
+- Starts pipeline execution  
+- Supervises PipelineActor lifecycle  
+
+➡️ *See: [PipelineManagerActor](./docs/pipeline-manager.md)*
+
+### **2. PipelineActor**
+Owns execution of a single pipeline:
+
+- Starts sync steps in correct order  
+- Spawns and supervises SyncWorkerActor  
+- Handles backoff, retries, and failures  
+- Reports progress to the manager  
+
+➡️ *See: [PipelineActor](./docs/pipeline.md)*
+
+### **3. SyncWorkerActor**
+Handles actual business execution:
+
+- Invokes data source and sink plugins  
+- Performs sync logic  
+- Reports cursor & progress  
+- Isolated, restartable, testable  
+
+➡️ *See: [SyncWorkerActor](./docs/worker.md)*
 
 ---
 
-## 🚀 Getting Started
+### **4. Plugins (IPlugin)**
+Plugins enable extensibility:
 
-### 1. Configure a Pipeline
+- **Source plugins**: CSV, SQL, API...  
+- **Sink plugins**: Sqlite, In-Memory, Custom  
+- **Transform plugins**: Clean, map, enrich  
 
-Example pipeline configuration (`samples/pipeline.yaml`):
+Each plugin runs inside a worker, making the system highly modular.
 
-```yaml
-pipelines:
-  - name: CustomerSync
-    source:
-      type: SQL
-      connection: "Server=.;Database=Demo;User Id=sa;Password=yourpassword;"
-      query: "SELECT * FROM Customer WHERE UpdatedAt > @LastSync"
-    transform:
-      - type: MapFields
-        mappings:
-          CustomerID: ID
-          Name: FullName
-      - type: Filter
-        condition: "Status = 'Active'"
-    sink:
-      type: REST
-      endpoint: "https://api.demo.com/customers"
-      method: POST
-    schedule:
-      interval: 30s
-```
+➡️ *See: [Plugins](./docs/plugins.md)*
 
-### 2. Run the Example
+---
 
-```bash
-dotnet run --project src/AkkaSync.Examples/DemoPipeline.cs
-```
+## 🚀 Key Features
 
-AkkaSync will:
-
-* Initialize an Extract → Transform → Load actor pipeline
-
-* Pull data from SQL
-
-* Apply mapping and filtering transforms
-
-* POST the transformed records to a REST API
-
-* Record offsets to support checkpointing and resume
-
-* Automatically retry failed operations
-
-## 🔧 Architecture Overview
-
-Core Modules
-
-* AkkaSync.Core – Core actor framework
-
-* AkkaSync.Connectors – Pluggable Source/Sink connectors
-
-* AkkaSync.Transforms – Transformation rules (MapFields, Filter, Custom Functions)
-
-* Persistence – Offset tracking, pipeline state storage
-
-* Examples – Runnable examples demonstrating YAML-based pipeline configuration
-
-## 🏗️ Development Guide
-Extend the Framework
-
-* Add a new Source or Sink connector by implementing the ISourceConnector or ISinkConnector interfaces
-
-* Add custom transformations by inheriting from BaseTransform
-
-* Create new pipelines by providing YAML configuration—no need to write orchestration code
-
-## 🔭 Roadmap
-
-Planned features for future releases:
-
-* Additional source/sink connectors (CSV, Kafka, EventHub, Azure Table, etc.)
-
-* Akka.Cluster distributed execution
-
-* Web-based dashboard for pipeline monitoring
-
-* Rich transformation DSL
-
-* CLI tools for managing pipelines and inspecting offsets
-
-## 📝 License
-
-MIT
+- **Actor-based concurrency** using Akka.NET  
+- **Plugin-driven extensibility**  
+- **Dependency-aware pipeline execution with DAG**  
+- **Lightweight, test-friendly design**  
+- **Supports multiple data sources and sinks**  
+- **Structured logging & observability**  
+- **Easy to embed into any .NET application**

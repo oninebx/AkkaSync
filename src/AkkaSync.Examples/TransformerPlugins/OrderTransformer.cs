@@ -1,5 +1,6 @@
 using System;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Abstractions;
+using AkkaSync.Core.Models;
 
 namespace AkkaSync.Examples.TransformerPlugins;
 

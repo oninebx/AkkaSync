@@ -1,6 +1,6 @@
 using System;
 using AkkaSync.Core.Configuration;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Abstractions;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Plugins.Sinks.Factories;
 

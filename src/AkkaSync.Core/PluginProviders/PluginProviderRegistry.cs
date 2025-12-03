@@ -1,11 +1,11 @@
 using System;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Abstractions;
 
 namespace AkkaSync.Core.PluginProviders;
 
 public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : class
 {
-    private readonly Dictionary<string, IPluginProvider<T>> _providers;
+  private readonly Dictionary<string, IPluginProvider<T>> _providers;
 
   public PluginProviderRegistry(IEnumerable<IPluginProvider<T>> providers)
   {
@@ -14,10 +14,7 @@ public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : cl
 
   public IPluginProvider<T>? GetProvider(string key)
   {
-    if (_providers.TryGetValue(key, out var provider))
-    {
-      return provider;
-    }
-    throw new KeyNotFoundException($"Source provider '{key}' not found.");
+    _ = _providers.TryGetValue(key, out var provider);
+    return provider;
   }
 }

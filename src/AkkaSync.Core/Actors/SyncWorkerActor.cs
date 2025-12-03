@@ -1,8 +1,9 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
+using AkkaSync.Core.Abstractions;
 using AkkaSync.Core.Messging;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Models;
 
 namespace AkkaSync.Core.Actors;
 
@@ -14,13 +15,21 @@ public class SyncWorkerActor : ReceiveActor
   private readonly CancellationToken _cancellationToken;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private readonly int _batchSize;
-  public SyncWorkerActor(ISyncSource source, ISyncTransformer transformer, ISyncSink sink, int batchSize, CancellationToken cancellationToken)
+  private readonly string? _cursor;
+  public SyncWorkerActor(
+    ISyncSource source, 
+    ISyncTransformer transformer, 
+    ISyncSink sink, 
+    int batchSize,
+    string? cursor,
+    CancellationToken cancellationToken)
   {
     _source = source;
     _transformer = transformer;
     _sink = sink;
     _cancellationToken = cancellationToken;
     _batchSize = batchSize;
+    _cursor = cursor;
     ReceiveAsync<StartProcessing>(async _ => await RunPipeline());
   }
 
@@ -30,33 +39,41 @@ public class SyncWorkerActor : ReceiveActor
   {
     _cancellationToken.ThrowIfCancellationRequested();
     _logger.Info($"Worker {Self.Path.Name} started processing.");
+
+    async Task FlushAsync(List<TransformContext> batch, int size)
+    {
+      if(batch.Count >= size)
+      {
+        await _sink.WriteAsync(batch, _cancellationToken);
+        Context.Parent.Tell(new ProcessingProgress(_source.Id, batch.Last().Cursor));
+        batch.Clear();
+      }
+    }
+
     var batch = new List<TransformContext>();
     try
     {
-      await foreach (var context in _source.ReadAsync(_cancellationToken))
+      await foreach (var context in _source.ReadAsync(_cursor, _cancellationToken))
       {
         _transformer.Transform(context);
         batch.Add(context);
-        if (batch.Count >= _batchSize)
-        {
-            await _sink.WriteAsync(batch, _cancellationToken);
-            batch.Clear();
-        }
+        await FlushAsync(batch, _batchSize);
       }
-      if (batch.Count > 0)
-      {
-          await _sink.WriteAsync(batch, _cancellationToken);
-          batch.Clear();
-      }
-      Context.Parent.Tell(new ProcessingCompleted(Self.Path.Name));
+
+      await FlushAsync(batch, 1);
+      
+      Context.Parent.Tell(new ProcessingCompleted(Self.Path.Name, _source.Id, _source.ETag));
     }
     catch (Exception ex)
     {
+      Context.Parent.Tell(new ProcessingFailed(Self.Path.Name, _source.Id, ex.Message));
       _logger.Error(ex, $"Worker {Self.Path.Name} encountered an error: {ex.Message}");
     }
     finally
     {
       _logger.Info($"Worker {Self.Path.Name} finished processing.");
+      Context.Stop(Self);
     }
   }
+
 }

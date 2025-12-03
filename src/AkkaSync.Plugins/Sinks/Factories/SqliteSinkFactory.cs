@@ -1,5 +1,5 @@
 using System;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace AkkaSync.Plugins.Sinks.Factories;

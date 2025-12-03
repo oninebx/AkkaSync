@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
     <ProjectReference Include="../AkkaSync.Plugins/AkkaSync.Plugins.csproj" />
-    <ProjectReference Include="..\AkkaSync.Core\AkkaSync.Core.csproj" />
+    <ProjectReference Include="../Infrastructure/AkkaSync.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

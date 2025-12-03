@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AkkaSync.Core.Models;
 
-namespace AkkaSync.Core.Pipeline
+namespace AkkaSync.Core.Abstractions
 {
     public interface ISyncTransformer
     {
