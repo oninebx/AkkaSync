@@ -1,7 +1,6 @@
 using System;
-using AkkaSync.Core.Pipeline;
 
-namespace AkkaSync.Plugins.Sinks.Factories;
+namespace AkkaSync.Core.Abstractions;
 
 public interface IDatabaseSinkFactory
 {

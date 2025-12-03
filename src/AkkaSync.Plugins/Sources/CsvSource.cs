@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
 using Akka.Event;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Common;
+using AkkaSync.Core.Abstractions;
+using AkkaSync.Core.Models;
 using Microsoft.Extensions.Logging;
 
 namespace AkkaSync.Plugins.Sources;
@@ -12,17 +14,42 @@ public class CsvSource : ISyncSource
   private readonly string _filePath;
   private readonly char _delimiter;
   private readonly ILogger<CsvSource> _logger;
-  public CsvSource(string filePath, ILogger<CsvSource> logger, char delimiter = ',')
+  private readonly ISyncGenerator _generator;
+  private readonly Lazy<string> _id;
+  private readonly Lazy<string> _etag;
+
+  public CsvSource(string filePath, ISyncGenerator generator, ILogger<CsvSource> logger, char delimiter = ',')
   {
     _filePath = filePath;
     _delimiter = delimiter;
+    _generator = generator;
     _logger = logger;
+
+    _id = new Lazy<string>(() =>
+    {
+      return generator.ComputeSha256(Type, Key);
+    }, LazyThreadSafetyMode.ExecutionAndPublication);
+
+    _etag = new Lazy<string>(() =>
+    {
+      var info = new FileInfo(_filePath);
+      var input = $"{info.Length}:{info.LastWriteTimeUtc.Ticks}";
+      
+      return generator.ComputeSha256(info.Length.ToString(), info.LastWriteTimeUtc.Ticks.ToString());
+    });
   }
 
-  public string Key => $"_csv_{_filePath.GetHashCode()}";
+  public string Key => Path.GetFullPath(_filePath).Replace('\\', '/').ToLowerInvariant();
 
-  public async IAsyncEnumerable<TransformContext> ReadAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+  public string Type => "CSV";
+
+  public string Id => _id.Value;
+
+  public string ETag => _etag.Value;
+
+  public async IAsyncEnumerable<TransformContext> ReadAsync(string? cursor, [EnumeratorCancellation] CancellationToken cancellationToken)
   {
+    _ = int.TryParse(cursor, out int startRow);
     using var reader = new StreamReader(_filePath);
     string? headerLine = await reader.ReadLineAsync();
     if (headerLine == null)
@@ -31,7 +58,13 @@ public class CsvSource : ISyncSource
     }
     var headers = headerLine.Split(_delimiter);
     int lineNumber = 1;
-    while (!reader.EndOfStream)
+    int index = 0;
+    while(index < startRow && !reader.EndOfStream)
+    {
+      await reader.ReadLineAsync();
+      index++;
+    }
+    while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
     {
       var line = await reader.ReadLineAsync(cancellationToken);
       if (string.IsNullOrWhiteSpace(line))
@@ -70,10 +103,12 @@ public class CsvSource : ISyncSource
                 ["SourceType"] = "CSV",
                 ["FilePath"] = _filePath,
                 ["LineNumber"] = lineNumber,
-            }
+            },
+            Cursor = index.ToString()
         };
 
         yield return ctx;
+        index++;
     } 
   }
 }

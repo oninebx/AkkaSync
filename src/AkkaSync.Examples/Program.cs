@@ -1,10 +1,11 @@
 ﻿using Akka.Actor;
 using Akka.DependencyInjection;
 using AkkaSync.Core.Configuration;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Abstractions;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Examples;
 using AkkaSync.Examples.TransformerPlugins;
+using AkkaSync.Infrastructure;
 using AkkaSync.Plugins.Sinks;
 using AkkaSync.Plugins.Sinks.Factories;
 using AkkaSync.Plugins.Sources;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using AkkaSync.Plugins.HistoryStores;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -34,6 +36,11 @@ services.AddSingleton<IPluginProviderRegistry<ISyncTransformer>, PluginProviderR
 services.AddSingleton<IDatabaseSinkFactory, SqliteSinkFactory>();
 services.AddSingleton<IPluginProvider<ISyncSink>, DatabaseSinkProvider>();
 services.AddSingleton<IPluginProviderRegistry<ISyncSink>, PluginProviderRegistry<ISyncSink>>();
+
+services.AddSingleton<IPluginProvider<IHistoryStore>, InMemoryHistoryStoreProvider>();
+services.AddSingleton<IPluginProviderRegistry<IHistoryStore>, PluginProviderRegistry<IHistoryStore>>();
+
+services.AddAkkaSync();
 
 services.AddSingleton<PipelineConfig>(config);
 var serviceProvider = services.BuildServiceProvider();

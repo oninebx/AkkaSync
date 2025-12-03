@@ -1,6 +1,7 @@
 using System;
+using AkkaSync.Core.Models;
 
-namespace AkkaSync.Core.Pipeline;
+namespace AkkaSync.Core.Abstractions;
 
 public abstract class TransformerBase : ISyncTransformer
 {

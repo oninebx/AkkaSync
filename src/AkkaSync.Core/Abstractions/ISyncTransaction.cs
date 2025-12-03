@@ -1,6 +1,6 @@
 using System;
 
-namespace AkkaSync.Core.Pipeline;
+namespace AkkaSync.Core.Abstractions;
 
 public interface ISyncTransaction : IAsyncDisposable
 {

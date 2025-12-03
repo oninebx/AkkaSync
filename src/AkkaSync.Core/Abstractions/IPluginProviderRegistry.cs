@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks.Dataflow;
-using AkkaSync.Core.Pipeline;
+using AkkaSync.Core.Abstractions;
 
-namespace AkkaSync.Core.PluginProviders;
+namespace AkkaSync.Core.Abstractions;
 
 public interface IPluginProviderRegistry<T> where T : class
 {
