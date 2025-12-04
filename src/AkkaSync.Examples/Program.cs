@@ -1,19 +1,20 @@
 ﻿using Akka.Actor;
 using Akka.DependencyInjection;
-using AkkaSync.Core.Configuration;
-using AkkaSync.Core.Abstractions;
+using AkkaSync.Abstractions;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Examples;
 using AkkaSync.Examples.TransformerPlugins;
 using AkkaSync.Infrastructure;
-using AkkaSync.Plugins.Sinks;
-using AkkaSync.Plugins.Sinks.Factories;
 using AkkaSync.Plugins.Sources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using AkkaSync.Plugins.HistoryStores;
+using AkkaSync.Abstractions.Models;
+using AkkaSync.Plugins.HistoryStore.InMemory;
+using AkkaSync.Plugins.Sink.Sqlite;
+using AkkaSync.Infrastructure.DependencyInjection;
+using AkkaSync.Plugins.Source.File;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -27,30 +28,19 @@ services.AddLogging(config =>
   config.SetMinimumLevel(LogLevel.Debug);
 });
 
-services.AddSingleton<IPluginProvider<ISyncSource>, FolderWatcherSourceProvider>();
-services.AddSingleton<IPluginProviderRegistry<ISyncSource>, PluginProviderRegistry<ISyncSource>>();
-
 services.AddSingleton<IPluginProvider<ISyncTransformer>, CsvTransformerProvider>();
-services.AddSingleton<IPluginProviderRegistry<ISyncTransformer>, PluginProviderRegistry<ISyncTransformer>>();
-
-services.AddSingleton<IDatabaseSinkFactory, SqliteSinkFactory>();
-services.AddSingleton<IPluginProvider<ISyncSink>, DatabaseSinkProvider>();
-services.AddSingleton<IPluginProviderRegistry<ISyncSink>, PluginProviderRegistry<ISyncSink>>();
-
-services.AddSingleton<IPluginProvider<IHistoryStore>, InMemoryHistoryStoreProvider>();
-services.AddSingleton<IPluginProviderRegistry<IHistoryStore>, PluginProviderRegistry<IHistoryStore>>();
-
-services.AddAkkaSync();
+services.AddAkkaSync()
+        .AddSqliteSink()
+        .AddFileSource()
+        .AddInMemoryHistoryStore();
 
 services.AddSingleton<PipelineConfig>(config);
 var serviceProvider = services.BuildServiceProvider();
 
-var boot = BootstrapSetup.Create();
-var setup = DependencyResolverSetup.Create(serviceProvider);
-var actorSystem = ActorSystem.Create("AkkaSyncSystem", boot.And(setup));
-var resolver = DependencyResolver.For(actorSystem);
-
-
+var actorSystem = serviceProvider.RunAkkaSync();
 
 Console.WriteLine("Starting AkkaSync Demo Pipeline...");
-await DemoPipeline.Run(actorSystem, resolver);
+await Task.Delay(10000);
+
+await actorSystem.Terminate();
+Console.WriteLine("AkkaSync Demo Ends");

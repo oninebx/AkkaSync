@@ -10,4 +10,8 @@
     <PackageReference Include="Akka" Version="1.5.55" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
+  </ItemGroup>
+
 </Project>

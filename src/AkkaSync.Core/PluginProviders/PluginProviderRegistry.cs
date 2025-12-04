@@ -1,5 +1,5 @@
 using System;
-using AkkaSync.Core.Abstractions;
+using AkkaSync.Abstractions;
 
 namespace AkkaSync.Core.PluginProviders;
 

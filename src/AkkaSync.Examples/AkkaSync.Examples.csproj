@@ -2,12 +2,13 @@
 
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
-    <ProjectReference Include="../AkkaSync.Plugins/AkkaSync.Plugins.csproj" />
+    <ProjectReference Include="../AkkaSync.Plugins.HistoryStore.InMemory/AkkaSync.Plugins.HistoryStore.InMemory.csproj" />
+    <ProjectReference Include="../AkkaSync.Plugins.Sink.Sqlite/AkkaSync.Plugins.Sink.Sqlite.csproj" />
+    <ProjectReference Include="../AkkaSync.Plugins.Source.File/AkkaSync.Plugins.Source.File.csproj" />
     <ProjectReference Include="../Infrastructure/AkkaSync.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.DependencyInjection" Version="1.5.55" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
   </ItemGroup>

@@ -6,10 +6,9 @@ using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
-using AkkaSync.Core.Abstractions;
-using AkkaSync.Core.Configuration;
 using AkkaSync.Core.Messging;
-using AkkaSync.Core.Models;
+using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Messages;
 using Microsoft.VisualBasic;
@@ -36,7 +35,7 @@ namespace AkkaSync.Core.Actors
           _sourceProvider = sourceProvider;
           _transformerProvider = transformerProvider;
           _sinkProvider = sinkProvider;
-          _historyStore = historyProvider?.Create(context).FirstOrDefault();
+          _historyStore = historyProvider?.Create(context.HistoryStoreProvider).FirstOrDefault();
           _context = context;
           ReceiveAsync<StartSync>(_ => HandleStart());
           Receive<StopSync>(_ => HandleStop());
@@ -50,11 +49,11 @@ namespace AkkaSync.Core.Actors
       {
         _cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = _cancellationTokenSource.Token;
-        var transformerChain = _transformerProvider.Create(_context, cancellationToken).First();
-        var sink = _sinkProvider.Create(_context, cancellationToken).First();
+        var transformerChain = _transformerProvider.Create(_context.TransformerProvider, cancellationToken).First();
+        var sink = _sinkProvider.Create(_context.SinkProvider, cancellationToken).First();
         var batchSize = _context.SinkProvider.Parameters.TryGetValue("batchSize", out var s) && int.TryParse(s, out var size) ? size : 1;
 
-        var sources = _sourceProvider.Create(_context, CancellationToken.None);
+        var sources = _sourceProvider.Create(_context.SourceProvider, CancellationToken.None);
         foreach(var source in sources)
         {
           string? cursor = default!;

@@ -1,9 +1,9 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
-using AkkaSync.Core.Abstractions;
+using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
-using AkkaSync.Core.Configuration;
 using AkkaSync.Core.Messging;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Messages;
@@ -88,7 +88,7 @@ public class PipelineManagerActor : ReceiveActor
       }
       else
       {
-        _logger.Warning($"Failed to create pipeline {context.Name}. Source or Transformer provider not found.");
+        _logger.Warning($"Failed to create pipeline {context.Name}. Source, Transformer or Sink provider not found.");
         return;
       }
     }

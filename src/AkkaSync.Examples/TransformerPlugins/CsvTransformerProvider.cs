@@ -1,8 +1,7 @@
 using System;
 using AkkaSync.Core.Common;
-using AkkaSync.Core.Configuration;
-using AkkaSync.Core.Abstractions;
-using AkkaSync.Core.Models;
+using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.PluginProviders;
 
 namespace AkkaSync.Examples.TransformerPlugins;
@@ -11,9 +10,9 @@ public class CsvTransformerProvider : IPluginProvider<ISyncTransformer>
 {
   public string Key => nameof(CsvTransformerProvider);
 
-  public IEnumerable<ISyncTransformer> Create(PipelineContext context,CancellationToken cancellationToken)
+  public IEnumerable<ISyncTransformer> Create(PluginContext context,CancellationToken cancellationToken)
   {
-    switch (context.TransformerProvider.Parameters["transform"])
+    switch (context.Parameters["transform"])
     {
       case "customer":
         yield return new CustomerTransformer();
@@ -31,7 +30,7 @@ public class CsvTransformerProvider : IPluginProvider<ISyncTransformer>
         yield return new AuditTransformer();
         yield break;
       default:
-        throw new NotSupportedException($"Transform type '{context.TransformerProvider.Parameters["transform"]}' is not supported.");
+        throw new NotSupportedException($"Transform type '{context.Parameters["transform"]}' is not supported.");
     }
   }
 }
