@@ -1,9 +1,9 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
-using AkkaSync.Core.Abstractions;
+using AkkaSync.Abstractions;
 using AkkaSync.Core.Messging;
-using AkkaSync.Core.Models;
+using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Core.Actors;
 

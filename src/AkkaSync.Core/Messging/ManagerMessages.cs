@@ -1,5 +1,5 @@
 using System;
-using AkkaSync.Core.Configuration;
+using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Core.Messging;
 

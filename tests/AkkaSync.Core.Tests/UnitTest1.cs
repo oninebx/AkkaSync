@@ -1,10 +1,13 @@
 namespace AkkaSync.Core.Tests;
 
-public class UnitTest1
+/// <summary>
+/// Smoke test to verify test project is configured correctly
+/// </summary>
+public class SmokeTests
 {
     [Fact]
-    public void Test1()
+    public void TestProjectLoads()
     {
-
+        Assert.True(true);
     }
 }

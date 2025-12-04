@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 using System.Text;
-using AkkaSync.Core.Abstractions;
+using AkkaSync.Abstractions;
 
 namespace AkkaSync.Core.Common;
 
