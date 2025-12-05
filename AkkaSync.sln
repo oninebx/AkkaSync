@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkkaSync.Plugins.HistorySto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkkaSync.Abstractions.Tests", "tests\AkkaSync.Abstractions.Tests\AkkaSync.Abstractions.Tests.csproj", "{9E10825B-55EE-4442-9738-016E5320A34A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AkkaSync.Host", "src\AkkaSync.Host\AkkaSync.Host.csproj", "{326013B4-C52B-4D91-A684-5C78F94495A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{9E10825B-55EE-4442-9738-016E5320A34A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E10825B-55EE-4442-9738-016E5320A34A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E10825B-55EE-4442-9738-016E5320A34A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{326013B4-C52B-4D91-A684-5C78F94495A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{326013B4-C52B-4D91-A684-5C78F94495A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{326013B4-C52B-4D91-A684-5C78F94495A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{326013B4-C52B-4D91-A684-5C78F94495A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -81,5 +87,6 @@ Global
 		{E7B9B8D7-46DA-4A96-B0BB-27330F5DFBC0} = {46E9693C-107A-41CB-B06D-D91C25978EF9}
 		{65212AF9-009D-4A39-BB75-6685207C3823} = {46E9693C-107A-41CB-B06D-D91C25978EF9}
 		{9E10825B-55EE-4442-9738-016E5320A34A} = {953FDA21-0E2E-4210-87AE-322E68DB527D}
+		{326013B4-C52B-4D91-A684-5C78F94495A4} = {46E9693C-107A-41CB-B06D-D91C25978EF9}
 	EndGlobalSection
 EndGlobal
