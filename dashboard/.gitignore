@@ -1,0 +1,51 @@
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Output directories ---
+.next/
+out/
+dist/
+build/
+.coverage/
+
+# --- Environment variables ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# --- OS / Editor Files ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+logs
+*.log
+*.log.*
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# --- TypeScript ---
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Optional: Turbo / Cache ---
+.turbo/
+.turbopack/
+
+# --- Optional: Next.js Cache (should not commit) ---
+.next/cache/
+
+# --- Optional: Test coverage ---
+coverage/
+
+# --- Optional: Local serverless build ---
+.serverless/
