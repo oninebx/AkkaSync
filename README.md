@@ -14,41 +14,11 @@ It provides a configuration-driven **Extract → Transform → Load (ETL)** pipe
 
 ## 🧩 Architecture Overview
 
-```mermaid
-flowchart TD
+### concurrent and parallel Pipelines in AkkaSync
+![AkkaSync Diagram](./assets/akkasync-outside.png)
 
-    %% ----- Actor System -----
-    subgraph ACTORS[Akka Actor System]
-        direction TB
-
-        PMA[<b>PipelineManagerActor</b><br/>• Loads pipeline config<br/>• Builds DAG<br/>• Starts pipelines]
-
-        PA[<b>PipelineActor</b><br/>• Manages one pipeline<br/>• Supervises workers<br/>• Handles retries]
-
-        WA[<b>SyncWorkerActor</b><br/>• Executes sync steps<br/>• Invokes plugins]
-    end
-
-    %% ----- Plugin System -----
-    subgraph PLUGINS[Plugin System]
-        direction TB
-
-        PL[<b>SyncPlugin</b><br/>• Sources: File, DB, API...<br/>• Sinks: DB, API, Stream...<br/>• Transformers]
-    end
-
-    %% ----- History Store (external persistence) -----
-    HS[(HistoryStore<br/>Cursor / ETag<br/>Persistence)]
-
-    %% ----- Configuration -----
-    CFG[(appsettings.json)]
-
-    %% ----- Connections -----
-    CFG --> PMA
-    HS <--> PA
-    PMA --> PA --> WA --> PL
-
-
-```
-
+### Actors & Plugins in AkkaSync
+![AkkaSync Actor & Plugin](./assets/akkasync-actor-plugin.png)
 
 ## 📘 Architecture Components
 
@@ -88,7 +58,7 @@ Handles actual business execution:
 Plugins enable extensibility:
 
 - **Source plugins**: CSV, SQL, API...  
-- **Sink plugins**: Sqlite, In-Memory, Custom  
+- **Sink plugins**: Sqlite, SqlServer, ElasticSearch  
 - **Transform plugins**: Clean, map, enrich  
 
 Each plugin runs inside a worker, making the system highly modular.

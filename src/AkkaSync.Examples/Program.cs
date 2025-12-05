@@ -40,7 +40,9 @@ var serviceProvider = services.BuildServiceProvider();
 var actorSystem = serviceProvider.RunAkkaSync();
 
 Console.WriteLine("Starting AkkaSync Demo Pipeline...");
-await Task.Delay(10000);
+
+Console.WriteLine("Press Enter to exit...");
+Console.ReadLine();
 
 await actorSystem.Terminate();
 Console.WriteLine("AkkaSync Demo Ends");
