@@ -1,20 +1,24 @@
 # AkkaSync
 
-**AkkaSync** is a lightweight, extensible data-synchronization framework built on the **Akka.NET actor model**.  
-It provides a configuration-driven **Extract → Transform → Load (ETL)** pipeline with **high concurrency**, **failure isolation**, and **resumable execution** via **cursor/ETag checkpointing**.
+**AkkaSync** is a lightweight, extensible data-synchronization framework built on the **Akka.NET actor model**.
+It offers a configuration-driven **Extract → Transform → Load (ETL)**  pipeline featuring **high concurrency**, **failure isolation**, and **scalable parallel processing**.
 
-## Core Design Goals
+AkkaSync was initially designed to support **reliable**, **concurrent**, and **parallel** data transformation and synchronization across heterogeneous storage mediums—such as files, databases, and message queues—commonly found in distributed application environments.
 
-- **Actor-based pipeline orchestration**  
-- **Isolated, fault-tolerant worker execution**  
-- **Plugin-driven Sources / Transformers / Sinks**  
-- **Resume & retry with persistent HistoryStore**  
-- **Simple to configure, easy to extend**  
+The framework adopts a **plugin-oriented architecture**, defining four extensible module types:
+
+- **Source**  – Responsible for extracting data from external systems or storage mediums.
+- **Transformer**  – Applies business logic to convert, filter, or reshape the extracted data.
+- **Sink**  – Persists the processed data into the target system or storage layer.
+- **HistoryStore** – Maintains synchronization metadata to support incremental and reliable processing.
+
+This modular design allows the system to evolve organically, making it easier to introduce new capabilities and adapt to broader integration scenarios over time.
+The project structure is intentionally kept flexible: the core runtime and plugin modules are isolated from each other, and each plugin can be developed, versioned, and published independently. This allows users to depend only on the components they need while keeping integrations clean and maintainable.
 
 
 ## 🧩 Architecture Overview
 
-### concurrent and parallel Pipelines in AkkaSync
+### Concurrent and Parallel Pipelines in AkkaSync
 ![AkkaSync Diagram](./assets/akkasync-outside.png)
 
 ### Actors & Plugins in AkkaSync
@@ -54,7 +58,7 @@ Handles actual business execution:
 
 ---
 
-### **4. Plugins (IPlugin)**
+### **4. Plugins**
 Plugins enable extensibility:
 
 - **Source plugins**: CSV, SQL, API...  
@@ -64,15 +68,3 @@ Plugins enable extensibility:
 Each plugin runs inside a worker, making the system highly modular.
 
 ➡️ *See: [Plugins](./docs/plugins.md)*
-
----
-
-## 🚀 Key Features
-
-- **Actor-based concurrency** using Akka.NET  
-- **Plugin-driven extensibility**  
-- **Dependency-aware pipeline execution with DAG**  
-- **Lightweight, test-friendly design**  
-- **Supports multiple data sources and sinks**  
-- **Structured logging & observability**  
-- **Easy to embed into any .NET application**
