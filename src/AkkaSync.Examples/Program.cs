@@ -1,11 +1,6 @@
 ﻿using Akka.Actor;
 using Akka.DependencyInjection;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.PluginProviders;
-using AkkaSync.Examples;
-using AkkaSync.Examples.TransformerPlugins;
-using AkkaSync.Infrastructure;
-using AkkaSync.Plugins.Sources;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +10,7 @@ using AkkaSync.Plugins.HistoryStore.InMemory;
 using AkkaSync.Plugins.Sink.Sqlite;
 using AkkaSync.Infrastructure.DependencyInjection;
 using AkkaSync.Plugins.Source.File;
+using AkkaSync.Plugins.Transformer.examples;
 
 var builder = Host.CreateApplicationBuilder(args);
 

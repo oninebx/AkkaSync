@@ -14,4 +14,18 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <PluginOutputDir>../AkkaSync.Host/plugins</PluginOutputDir>
+  </PropertyGroup>
+
+  <Target Name="CopyPluginToHost" AfterTargets="Build">
+    <Message Text="Copying plugin to Host plugins folder..." Importance="high" />
+    <MakeDir Directories="$(PluginOutputDir)" Condition="!Exists('$(PluginOutputDir)')" />
+    <Copy
+      SourceFiles="$(OutputPath)\$(AssemblyName).dll"
+      DestinationFolder="$(PluginOutputDir)"
+      SkipUnchangedFiles="true" />
+
+  </Target>
+
 </Project>

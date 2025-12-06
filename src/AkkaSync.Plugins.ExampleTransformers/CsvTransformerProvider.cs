@@ -1,10 +1,8 @@
 using System;
-using AkkaSync.Core.Common;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
-using AkkaSync.Core.PluginProviders;
 
-namespace AkkaSync.Examples.TransformerPlugins;
+namespace AkkaSync.Plugins.Transformer.examples;
 
 public class CsvTransformerProvider : IPluginProvider<ISyncTransformer>
 {

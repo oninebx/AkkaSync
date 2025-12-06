@@ -44,6 +44,7 @@ namespace AkkaSync.Plugins.Sink.Sqlite
       try
       {
         using var connection = new SqliteConnection(_connectionString);
+        
         await connection.OpenAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 

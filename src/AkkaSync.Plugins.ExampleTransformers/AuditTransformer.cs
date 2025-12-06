@@ -2,7 +2,7 @@ using System;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
 
-namespace AkkaSync.Examples.TransformerPlugins;
+namespace AkkaSync.Plugins.Transformer.examples;
 
 public class AuditTransformer : TransformerBase
 {

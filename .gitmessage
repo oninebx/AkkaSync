@@ -1,0 +1,32 @@
+# ------------------------------
+# AkkaSync Commit Message Template
+# ------------------------------
+# Please follow Conventional Commits:
+# type(scope): subject
+#
+# Types:
+#   feat     - A new feature
+#   fix      - A bug fix
+#   chore    - Maintenance, tooling, non-functional changes
+#   docs     - Documentation changes
+#   style    - Formatting, whitespace, code style, no functional changes
+#   refactor - Code refactoring, no features or bug fixes
+#   perf     - Performance improvements
+#   test     - Add or modify tests
+#   build    - Build system or dependency changes
+#   ci       - CI/CD configuration changes
+#   revert   - Revert a previous commit
+#
+# Suggested Scopes:
+#   dashboard, host, core, plugins, sync
+#
+# Example:
+#   feat(dashboard): add pipeline status page
+#
+# Subject (summary) should be concise, <= 72 characters
+#
+# Body (optional):
+#   Use the body to explain what and why vs. how.
+#
+# Footer (optional):
+#   Reference issues, breaking changes, etc.

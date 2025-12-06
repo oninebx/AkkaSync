@@ -10,11 +10,6 @@
     <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.22" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
-  </ItemGroup>
-
   <PropertyGroup>
     <PluginOutputDir>../AkkaSync.Host/plugins</PluginOutputDir>
   </PropertyGroup>
