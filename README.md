@@ -68,3 +68,7 @@ Plugins enable extensibility:
 Each plugin runs inside a worker, making the system highly modular.
 
 ➡️ *See: [Plugins](./docs/plugins.md)*
+
+## Development Log
+
+Curious about what’s been built, what’s in progress, or what’s coming next? Check out our [Development Log](./docs/DEVELOPMENT_LOG.md) to see the current roadmap, planned features, and ongoing work. This helps contributors and users stay up-to-date with AkkaSync’s progress.

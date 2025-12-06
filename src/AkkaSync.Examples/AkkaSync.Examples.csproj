@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
+    <ProjectReference Include="../AkkaSync.Plugins.ExampleTransformers/AkkaSync.Plugins.ExampleTransformers.csproj" />
     <ProjectReference Include="../AkkaSync.Plugins.HistoryStore.InMemory/AkkaSync.Plugins.HistoryStore.InMemory.csproj" />
     <ProjectReference Include="../AkkaSync.Plugins.Sink.Sqlite/AkkaSync.Plugins.Sink.Sqlite.csproj" />
     <ProjectReference Include="../AkkaSync.Plugins.Source.File/AkkaSync.Plugins.Source.File.csproj" />

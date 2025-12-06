@@ -9,5 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.22" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

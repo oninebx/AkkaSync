@@ -8,7 +8,6 @@ public static class SqliteSinkModule
 {
   public static IServiceCollection AddSqliteSink(this IServiceCollection services)
   {
-    services.AddSingleton<ISyncSink, SqliteSink>();
     services.AddSingleton<IPluginProvider<ISyncSink>, SqliteSinkProvider>();
     return services;
   }
