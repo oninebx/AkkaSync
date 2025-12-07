@@ -12,24 +12,27 @@ namespace AkkaSync.Infrastructure.DependencyInjection;
 
 public static class AkkaSyncExtension
 {
-  public static IServiceCollection AddAkkaSync(this IServiceCollection services)
+  public static IServiceCollection AddAkkaSync(this IServiceCollection services, Action<ActorSystem, DependencyResolver>? config = null)
   {
     services.AddSingleton<ISyncGenerator, SyncGenerator>();
     services.AddSingleton<IPluginProviderRegistry<ISyncSource>, PluginProviderRegistry<ISyncSource>>();
     services.AddSingleton<IPluginProviderRegistry<ISyncTransformer>, PluginProviderRegistry<ISyncTransformer>>();
     services.AddSingleton<IPluginProviderRegistry<ISyncSink>, PluginProviderRegistry<ISyncSink>>();
     services.AddSingleton<IPluginProviderRegistry<IHistoryStore>, PluginProviderRegistry<IHistoryStore>>();
-    return services;
-  }
 
-  public static ActorSystem RunAkkaSync(this IServiceProvider provider)
-  {
-    var boot = BootstrapSetup.Create();
-    var setup = DependencyResolverSetup.Create(provider);
-    var actorSystem = ActorSystem.Create("AkkaSyncSystem", boot.And(setup));
-    var resolver = DependencyResolver.For(actorSystem);
-    actorSystem.ActorOf(resolver.Props<PipelineManagerActor>(), "PipelineManager");
-    return actorSystem;
+    services.AddSingleton(provider =>
+    {
+      var bootstrap = BootstrapSetup.Create();
+      var di = DependencyResolverSetup.Create(provider);
+      var system = ActorSystem.Create("AkkaSyncSystem", bootstrap.And(di));
+      var resolver = DependencyResolver.For(system);
+      system.ActorOf(resolver.Props<PipelineManagerActor>(), "pipeline-manager");
+      config?.Invoke(system, resolver);
+      return system;
+    });
+
+    
+    return services;
   }
 
   public static IServiceCollection AddAkkaSyncPlugins(this IServiceCollection services, string pluginFolder)
@@ -44,10 +47,10 @@ public static class AkkaSyncExtension
         {
           var assembly = Assembly.LoadFrom(file);
           var pluginTypes = assembly.GetTypes()
-                                    .Where(t => !t.IsAbstract && !t.IsInterface &&
-                                      (typeof(IPluginProvider<ISyncSource>).IsAssignableFrom(t)
-                                      || typeof(IPluginProvider<ISyncTransformer>).IsAssignableFrom(t)
-                                      || typeof(IPluginProvider<ISyncSink>).IsAssignableFrom(t)));
+              .Where(t => !t.IsAbstract && !t.IsInterface &&
+                (typeof(IPluginProvider<ISyncSource>).IsAssignableFrom(t)
+                || typeof(IPluginProvider<ISyncTransformer>).IsAssignableFrom(t)
+                || typeof(IPluginProvider<ISyncSink>).IsAssignableFrom(t)));
             
           foreach(var type in pluginTypes)
           {

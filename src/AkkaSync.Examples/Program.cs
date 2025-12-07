@@ -33,12 +33,12 @@ services.AddAkkaSync()
 services.AddSingleton<PipelineConfig>(config);
 var serviceProvider = services.BuildServiceProvider();
 
-var actorSystem = serviceProvider.RunAkkaSync();
+// var actorSystem = serviceProvider.RunAkkaSync();
 
 Console.WriteLine("Starting AkkaSync Demo Pipeline...");
 
 Console.WriteLine("Press Enter to exit...");
 Console.ReadLine();
 
-await actorSystem.Terminate();
+// await actorSystem.Terminate();
 Console.WriteLine("AkkaSync Demo Ends");
