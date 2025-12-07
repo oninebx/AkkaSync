@@ -1,4 +1,5 @@
 using Akka.Actor;
+using AkkaSync.Core.Messging;
 using AkkaSync.Infrastructure.DependencyInjection;
 
 namespace AkkaSync.Host;
@@ -6,27 +7,27 @@ namespace AkkaSync.Host;
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-    private readonly IServiceProvider _provider;
-    private ActorSystem? _actorSystem;
+    private ActorSystem _actorSystem;
 
-    public Worker(IServiceProvider provider, ILogger<Worker> logger)
+    public Worker(ActorSystem actorSystem, ILogger<Worker> logger)
     {
-        _logger = logger;
-        _provider = provider;
+      _actorSystem = actorSystem;
+      _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // while (!stoppingToken.IsCancellationRequested)
-        // {
-        //     if (_logger.IsEnabled(LogLevel.Information))
-        //     {
-        //         _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-        //     }
-        //     await Task.Delay(1000, stoppingToken);
-        // }
-      _actorSystem = _provider.RunAkkaSync();
-      _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+        _logger.LogInformation("AkkaSync Host Worker started...");
+        var dashboard = _actorSystem.ActorSelection("/user/dashboard-proxy");
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+            }
+            dashboard.Tell(new DashboardEvent("heartbeat", DateTime.Now));
+            await Task.Delay(1000, stoppingToken);
+        }
     }
 
   public override async Task StopAsync(CancellationToken cancellationToken)
