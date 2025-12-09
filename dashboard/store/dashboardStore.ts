@@ -6,11 +6,13 @@ export type DashboardEvent = {
 }
 
 type DashboardState = {
+  hosts: { id: string; name: string; status: 'online' | 'offline' | 'syncing' }[];
   events: DashboardEvent[];
   addEvent: (e: DashboardEvent) => void;
 }
 
 export const useDashboardStore = create<DashboardState>( set => ({
+  hosts: [],
   events: [],
   addEvent: e => set(state => ({events: [...state.events, e]}))
 }));
