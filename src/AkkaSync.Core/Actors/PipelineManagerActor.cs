@@ -55,11 +55,13 @@ public class PipelineManagerActor : ReceiveActor
       return;
     }
     var layer = _layers[_currentLayerIndex];
-    var contexts = _config.Pipelines.ToDictionary(p => p.Name, p => p);
+    var contexts = _config.Pipelines.Where(p => p.AutoStart).ToDictionary(p => p.Name, p => p);
     foreach(var name in layer)
     {
-      var context = contexts[name];
-      Self.Tell(new StartPipeline(context));
+      if(contexts.TryGetValue(name, out var context))
+      {
+        Self.Tell(new StartPipeline(context));
+      }
     }
   }
 

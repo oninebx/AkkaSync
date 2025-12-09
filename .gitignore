@@ -41,3 +41,6 @@ wwwroot/lib/
 *.mdb
 *.ilk
 *.log
+
+# AkkaSync Plugins Dlls
+plugins
