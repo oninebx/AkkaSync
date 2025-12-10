@@ -1,4 +1,4 @@
-import { HostStatus } from '@/providers/SignalRProvider';
+import { HostStatus } from '@/providers/SignalRProvider/SignalRProvider';
 import React from 'react';
 
 type Props = {

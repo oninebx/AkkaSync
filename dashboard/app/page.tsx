@@ -1,6 +1,6 @@
 'use client';
 import HostCard from "@/components/HostCard";
-import { useHostStatus } from "@/providers/SignalRProvider";
+import { useHostStatus } from "@/providers/SignalRProvider/SignalRProvider";
 
 export default function HomePage() {
   
