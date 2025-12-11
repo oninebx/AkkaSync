@@ -1,4 +1,5 @@
-import { HostStatus } from "@/providers/SignalRProvider/SignalRProvider";
+import { HostStatus } from "@/providers/SignalRProvider";
+
 
 interface Host {
   id: string;

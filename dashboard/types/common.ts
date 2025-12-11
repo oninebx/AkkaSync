@@ -1,0 +1,1 @@
+export type HandlerFunction = (...args: unknown[]) => void;
