@@ -2,6 +2,7 @@ import { render, act, screen, renderHook } from "@testing-library/react";
 import { SignalRContext, SignalRProvider } from "../SignalRProvider";
 import { useContext } from "react";
 import { createConnection } from "../createConnection";
+import { HandlerFunction } from "@/types/common";
 
 jest.mock('../createConnection');
 
@@ -22,17 +23,22 @@ beforeEach(() => {
   });
 });
 
-const TestConsumer = () => {
+type TestConsumerProps = {
+  on?: HandlerFunction;
+  off?: HandlerFunction;
+};
+const TestConsumer = ({on = () => {}, off = () => {}}: TestConsumerProps) => {
   const context = useContext(SignalRContext);
+  
   return (
     <div>
       <span data-testid="status">{context?.status}</span>
       <button
-        onClick={() => context?.on("hostOnline", () => {})}
+        onClick={() => context?.on("hostOnline", on)}
         data-testid="btn-on"
       />
       <button
-        onClick={() => context?.off("hostOnline")}
+        onClick={() => context?.off("hostOnline", off)}
         data-testid="btn-off"
       />
       <button
@@ -42,6 +48,9 @@ const TestConsumer = () => {
     </div>
   );
 }
+
+const Wrapper = ({ children }: { children: React.ReactNode }) => 
+  <SignalRProvider url="/test">{children}</SignalRProvider>;
 
 describe('SignalRProvider', () => {
   it('should create and start the connection on mount', async () => {
@@ -112,22 +121,23 @@ describe('SignalRProvider', () => {
         screen.getByTestId("btn-on").click();
       });
 
-      expect(onMock).toHaveBeenCalled();
-      expect(onMock.mock.calls[0][0]).toBe("hostOnline");
+      expect(onMock).toHaveBeenCalledWith("hostOnline", expect.any(Function));
   });
 
   it("should call connection.off() when context.off() is invoked", async () => {
+    const handler = jest.fn();
     render(
         <SignalRProvider url="/url">
-          <TestConsumer />
+          <TestConsumer on={ handler } off={ handler }/>
         </SignalRProvider>
       );
 
       await act(async () => {
+        screen.getByTestId("btn-on").click();
         screen.getByTestId("btn-off").click();
       });
 
-      expect(offMock).toHaveBeenCalledWith("hostOnline", undefined);
+      expect(offMock).toHaveBeenCalledWith("hostOnline", handler);
   });
 
   it("should call connection.invoke() when context.invoke() is invoked", async () => {
@@ -164,6 +174,70 @@ describe('SignalRProvider', () => {
     expect(onMock).toHaveBeenCalledTimes(2);
     expect(onMock).toHaveBeenNthCalledWith(1, "event1", expect.any(Function));
     expect(onMock).toHaveBeenNthCalledWith(2, "event1", expect.any(Function));
+  });
+
+  it("should only register the same handler once even if on is called multiple times", () => {
+    const handler = jest.fn();
+
+    const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
+
+    act(() => {
+      result.current?.on("event1", handler);
+      result.current?.on("event1", handler);
+    });
+
+    expect(onMock).toHaveBeenCalledTimes(1);
+    expect(onMock).toHaveBeenCalledWith("event1", handler);
+  });
+
+  it("should only remove the exact handler", () => {
+    const handlerA = jest.fn();
+    const handlerB = jest.fn();
+
+    const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
+
+    act(() => {
+      result.current?.on("event1", handlerA);
+      result.current?.on("event1", handlerB);
+      result.current?.off("event1", handlerA);
+    });
+
+    expect(offMock).toHaveBeenCalledTimes(1);
+    expect(offMock).toHaveBeenCalledWith("event1", handlerA);
+  });
+
+  it("should register multiple different handlers without conflict", () => {
+    const handlerA = jest.fn();
+    const handlerB = jest.fn();
+
+    const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
+
+    act(() => {
+      result.current?.on("event1", handlerA);
+      result.current?.on("event1", handlerB);
+    });
+
+    expect(onMock).toHaveBeenCalledTimes(2);
+    expect(onMock).toHaveBeenCalledWith("event1", handlerA);
+    expect(onMock).toHaveBeenCalledWith("event1", handlerB);
+  });
+
+  it("warns when off is called with a callback that was never registered", () => {
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    const handler = jest.fn();
+
+    const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
+
+    act(() => {
+      result.current?.off("HostOnline", handler);
+    });
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("callback not found")
+    );
+
+    warnSpy.mockRestore();
   });
 
 });
