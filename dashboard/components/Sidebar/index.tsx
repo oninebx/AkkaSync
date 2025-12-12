@@ -1,33 +1,58 @@
-import Link from 'next/link';
-import Image from 'next/image';
+// components/layout/Sidebar.tsx
+"use client";
 
-interface SidebarItem {
-  name: string;
-  href: string;
-}
+import Image from "next/image";
+import { useState } from "react";
+import { SidebarItem } from "./SidebarItem";
+import {
+  Gauge,
+  Server,
+  Workflow,
+  Settings,
+  Menu,
+  ChevronLeft,
+} from "lucide-react";
 
-const sidebarItems: SidebarItem[] = [
-  { name: "Overview", href: "/overview" },
-  { name: "Host", href: "/host-monitor" },
-  { name: "Pipelines", href: "/pipelines" },
-  { name: "Settings", href: "/settings" },
+const items = [
+  { name: "Overview", href: "/overview", icon: <Gauge /> },
+  { name: "Host", href: "/host-monitor", icon: <Server /> },
+  { name: "Pipelines", href: "/pipelines", icon: <Workflow /> },
+  { name: "Settings", href: "/settings", icon: <Settings /> },
 ];
 
-const Sidebar = () => (
-  <div className="min-w-72 bg-surface-muted flex flex-col items-center py-6 text-gray-700">
-    <Image
-      src="/akkasync-logo.png"
-      alt="AkkaSync Logo"
-      width={256}
-      height={256}
-      className="mb-10"
-    />
-    {sidebarItems.map((item) => (
-      <Link key={item.name} href={item.href} className="mb-6 text-sm hover:text-primary">
-        {item.name}
-      </Link>
-    ))}
-  </div>
-);
+const Sidebar = () => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside
+      className={`bg-surface-muted text-gray-700 border-r border-gray-200 transition-all
+        ${collapsed ? "w-20" : "w-64"}`}
+    >
+      <div className="flex items-center justify-between px-4 py-4">
+        {!collapsed && (
+          <Image
+            src="/akkasync-logo.png"
+            alt="AkkaSync Logo"
+            width={140}
+            height={140}
+          />
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-1 rounded hover:bg-gray-200"
+        >
+          {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+        </button>
+      </div>
+
+      {/* Nav menu */}
+      <nav className="mt-6 flex flex-col gap-1 px-3">
+        {items.map((item) => (
+          <SidebarItem key={item.name} {...item} collapsed={collapsed} />
+        ))}
+      </nav>
+    </aside>
+  );
+};
 
 export default Sidebar;
