@@ -16,7 +16,7 @@ interface RecentEventsCardProps {
 export default function RecentEventsCard({ events }: RecentEventsCardProps) {
   return (
     <Card className="h-56 flex flex-col">
-      <p className="text-gray-700 font-semibold mb-2">Recent Events</p>
+      <p className="text-gray-900 font-semibold text-base mb-2">Recent Events</p>
       <ul className="text-sm space-y-1 overflow-y-auto">
         {events.map((e, idx) => (
           <li key={idx} className={getLevelClass(e.level)}>
@@ -28,7 +28,6 @@ export default function RecentEventsCard({ events }: RecentEventsCardProps) {
   );
 }
 
-// 根据日志等级动态返回颜色
 function getLevelClass(level: string) {
   switch (level) {
     case "INFO":

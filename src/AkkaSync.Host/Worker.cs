@@ -1,7 +1,5 @@
 using Akka.Actor;
 using AkkaSync.Core.Messging;
-using AkkaSync.Host.Messaging;
-using AkkaSync.Infrastructure.DependencyInjection;
 
 namespace AkkaSync.Host;
 
@@ -35,7 +33,6 @@ public class Worker : BackgroundService
   {
     if (_actorSystem != null)
       {
-          _actorSystem.EventStream.Publish(new HostOffline(DateTime.UtcNow, "Graceful shutdown"));
           _logger.LogInformation("Stopping AkkaSync ActorSystem...");
           await _actorSystem.Terminate();
           _logger.LogInformation("AkkaSync ActorSystem terminated.");

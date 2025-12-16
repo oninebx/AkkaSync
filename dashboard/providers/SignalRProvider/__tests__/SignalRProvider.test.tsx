@@ -1,5 +1,5 @@
 import { render, act, screen, renderHook } from "@testing-library/react";
-import { SignalRContext, SignalRProvider } from "../SignalRProvider";
+import { SignalRContext, SignalRProvider } from "../HostSignalRProvider";
 import { useContext } from "react";
 import { createConnection } from "../createConnection";
 import { HandlerFunction } from "@/types/common";
@@ -11,6 +11,7 @@ const stopMock = jest.fn().mockResolvedValue(undefined);
 const onMock = jest.fn();
 const offMock = jest.fn();
 const invokeMock = jest.fn();
+const stateMock = 'Connected';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -20,6 +21,7 @@ beforeEach(() => {
     on: onMock,
     off: offMock,
     invoke: invokeMock,
+    state: stateMock
   });
 });
 
@@ -34,11 +36,11 @@ const TestConsumer = ({on = () => {}, off = () => {}}: TestConsumerProps) => {
     <div>
       <span data-testid="status">{context?.status}</span>
       <button
-        onClick={() => context?.on("hostOnline", on)}
+        onClick={() => context?.on("HostOnline", on)}
         data-testid="btn-on"
       />
       <button
-        onClick={() => context?.off("hostOnline", off)}
+        onClick={() => context?.off("HostOnline", off)}
         data-testid="btn-off"
       />
       <button
@@ -84,7 +86,7 @@ describe('SignalRProvider', () => {
     expect(stopMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should set status to online after start succeeds', async () => {
+  it('should set status to connected after start succeeds', async () => {
     await act(async () => {
       render(
         <SignalRProvider url="/x">
@@ -93,10 +95,10 @@ describe('SignalRProvider', () => {
       );
     });
 
-    expect(screen.getByTestId("status").textContent).toBe("online");
+    expect(screen.getByTestId("status").textContent).toBe("connected");
   });
 
-  it("should set status to offline if start fails", async () => {
+  it("should set status to available if start fails", async () => {
     startMock.mockRejectedValueOnce(new Error("fail"));
 
     await act(async () => {
@@ -107,13 +109,16 @@ describe('SignalRProvider', () => {
       );
     });
 
-    expect(screen.getByTestId("status").textContent).toBe("offline");
+    expect(screen.getByTestId("status").textContent).toBe("unavailable");
   });
 
   it("should call connection.on() when context.on() is invoked", async () => {
+
+    const handler = jest.fn();
+
     render(
         <SignalRProvider url="/url">
-          <TestConsumer />
+          <TestConsumer on={handler}/>
         </SignalRProvider>
       );
 
@@ -121,7 +126,7 @@ describe('SignalRProvider', () => {
         screen.getByTestId("btn-on").click();
       });
 
-      expect(onMock).toHaveBeenCalledWith("hostOnline", expect.any(Function));
+      expect(onMock).toHaveBeenCalledWith("HostOnline", handler);
   });
 
   it("should call connection.off() when context.off() is invoked", async () => {
@@ -137,7 +142,7 @@ describe('SignalRProvider', () => {
         screen.getByTestId("btn-off").click();
       });
 
-      expect(offMock).toHaveBeenCalledWith("hostOnline", handler);
+      expect(offMock).toHaveBeenCalledWith("HostOnline", handler);
   });
 
   it("should call connection.invoke() when context.invoke() is invoked", async () => {
@@ -167,13 +172,13 @@ describe('SignalRProvider', () => {
     const { result: resultB } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
 
     act(() => {
-      resultA.current?.on("event1", jest.fn());
-      resultB.current?.on("event1", jest.fn());
+      resultA.current?.on("HostOnline", jest.fn());
+      resultB.current?.on("HostOnline", jest.fn());
     });
 
     expect(onMock).toHaveBeenCalledTimes(2);
-    expect(onMock).toHaveBeenNthCalledWith(1, "event1", expect.any(Function));
-    expect(onMock).toHaveBeenNthCalledWith(2, "event1", expect.any(Function));
+    expect(onMock).toHaveBeenNthCalledWith(1, "HostOnline", expect.any(Function));
+    expect(onMock).toHaveBeenNthCalledWith(2, "HostOnline", expect.any(Function));
   });
 
   it("should only register the same handler once even if on is called multiple times", () => {
@@ -182,12 +187,12 @@ describe('SignalRProvider', () => {
     const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
 
     act(() => {
-      result.current?.on("event1", handler);
-      result.current?.on("event1", handler);
+      result.current?.on("HostOnline", handler);
+      result.current?.on("HostOnline", handler);
     });
 
     expect(onMock).toHaveBeenCalledTimes(1);
-    expect(onMock).toHaveBeenCalledWith("event1", handler);
+    expect(onMock).toHaveBeenCalledWith("HostOnline", handler);
   });
 
   it("should only remove the exact handler", () => {
@@ -197,13 +202,13 @@ describe('SignalRProvider', () => {
     const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
 
     act(() => {
-      result.current?.on("event1", handlerA);
-      result.current?.on("event1", handlerB);
-      result.current?.off("event1", handlerA);
+      result.current?.on("HostOnline", handlerA);
+      result.current?.on("HostOnline", handlerB);
+      result.current?.off("HostOnline", handlerA);
     });
 
     expect(offMock).toHaveBeenCalledTimes(1);
-    expect(offMock).toHaveBeenCalledWith("event1", handlerA);
+    expect(offMock).toHaveBeenCalledWith("HostOnline", handlerA);
   });
 
   it("should register multiple different handlers without conflict", () => {
@@ -213,13 +218,13 @@ describe('SignalRProvider', () => {
     const { result } = renderHook(() => useContext(SignalRContext), { wrapper: Wrapper });
 
     act(() => {
-      result.current?.on("event1", handlerA);
-      result.current?.on("event1", handlerB);
+      result.current?.on("HostOnline", handlerA);
+      result.current?.on("HostOnline", handlerB);
     });
 
     expect(onMock).toHaveBeenCalledTimes(2);
-    expect(onMock).toHaveBeenCalledWith("event1", handlerA);
-    expect(onMock).toHaveBeenCalledWith("event1", handlerB);
+    expect(onMock).toHaveBeenCalledWith("HostOnline", handlerA);
+    expect(onMock).toHaveBeenCalledWith("HostOnline", handlerB);
   });
 
   it("warns when off is called with a callback that was never registered", () => {
