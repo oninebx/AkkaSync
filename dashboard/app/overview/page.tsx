@@ -2,10 +2,11 @@
 
 import Card from "@/components/Card";
 import KpiCard from "./components/KpiCard";
-import HostCard from "./components/HostCard";
+import HostCard from "./components/HostCard/HostCard";
 import RecentEventsCard, { EventItem } from "./components/RecentEventsCard";
 import DisplayTable, { Column } from "@/components/DisplayTable";
 import { cn } from "@/lib/utils";
+import { useHostSnapshot } from "./hooks/useSnapshot";
 
 const kpis = [
   { title: "Running Pipelines", value: "2", color: "#1F2937" },
@@ -80,8 +81,6 @@ const columns: Column<Pipeline>[] = [
 
 export default function HomePage() {
 
-  // const status = useHostStatus();
-  const status = 'online';
   return (
     <>
       <div className="min-h-screen px-4 py-6">
@@ -92,10 +91,7 @@ export default function HomePage() {
             }
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <HostCard 
-              name="AkkaSync-Primary"
-              status="online"
-              lastHeartbeat="2025-12-10 14:03:22" />
+            <HostCard name="AkkaSync-Primary" />
             <RecentEventsCard events={events}/>
           </div>
           <Card>

@@ -1,3 +1,3 @@
-export { SignalRProvider } from './SignalRProvider';
-export { useHostStatus } from './hooks';
-export type { HostStatus, SignalREventMap, SignalRMethodMap, SignalRContextValue } from './types';
+export { SignalRProvider } from './HostSignalRProvider';
+export { useHostSignalR } from './useHostSignalR';
+export type { SignalRConnectionStatus, HostSignalRContextValue } from './types';

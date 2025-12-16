@@ -21,4 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Infrastructure/StateStore/" />
+  </ItemGroup>
 </Project>

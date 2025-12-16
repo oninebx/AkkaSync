@@ -1,18 +1,19 @@
-import { HandlerFunction } from "@/types/common";
+import { HostSnapshot } from "@/types/host";
 
-export type HostStatus = 'online' | 'offline' | 'syncing' | 'connecting';
-
-export interface SignalREventMap {
-  [eventName: string]: HandlerFunction;
+export interface HostSignalREventMap {
+  HostSnapshot: (payload: HostSnapshot) => void;
 }
 
-export interface SignalRMethodMap {
-  [methodName: string]: (...args: unknown[]) => Promise<unknown>;
+export type SignalRConnectionStatus = 'connecting' | 'connected' | 'unavailable';
+
+export interface HostSignalRMethodMap {
+  // [methodName: string]: (...args: unknown[]) => Promise<unknown>;
+  GetHostSnapshot: () => Promise<HostSnapshot>;
 }
 
-export interface SignalRContextValue<TEvents extends SignalREventMap, TMethods extends SignalRMethodMap> {
-  status: HostStatus;
-  on: <K extends keyof TEvents>(eventName: K, callback: TEvents[K]) => void;
-  off: <K extends keyof TEvents>(eventName: K, callback: TEvents[K]) => void;
-  invoke: <K extends keyof TMethods>(methodName: K, ...args: Parameters<TMethods[K]>) => Promise<Awaited<ReturnType<TMethods[K]>>>;
+export interface HostSignalRContextValue {
+  status: SignalRConnectionStatus;
+  on: <K extends keyof HostSignalREventMap>(eventName: K, callback: HostSignalREventMap[K]) => void;
+  off: <K extends keyof HostSignalREventMap>(eventName: K, callback: HostSignalREventMap[K]) => void;
+  invoke: <K extends keyof HostSignalRMethodMap>(methodName: K, ...args: Parameters<HostSignalRMethodMap[K]>) => Promise<Awaited<ReturnType<HostSignalRMethodMap[K]>>>;
 }

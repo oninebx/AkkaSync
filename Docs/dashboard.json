@@ -1,0 +1,152 @@
+{
+  "meta": {
+    "name": "AkkaSync High-Fidelity Dashboard Full",
+    "version": "1.0",
+    "createdBy": "ChatGPT",
+    "notes": "This JSON file contains all six pages (Login, Overview, Host Monitor, Pipelines List, Pipeline Detail, Settings) for the AkkaSync Dashboard MVP, compatible with Json2Figma plugin. High-fidelity design using the custom brand colors provided by the user."
+  },
+  "pages": [
+    {
+      "id": "page-login",
+      "name": "Login",
+      "frames": [
+        {
+          "id": "login-frame",
+          "name": "Login",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 900,
+          "background": "#F9FAFB",
+          "children": [
+            { "type": "rectangle", "id": "card", "x": 520, "y": 220, "width": 400, "height": 420, "radius": 12, "fill": "#FFFFFF" },
+            { "type": "text", "id": "title", "x": 640, "y": 260, "text": "AkkaSync Dashboard", "fontSize": 28, "color": "#1F2937" },
+            { "type": "input", "id": "email", "x": 560, "y": 340, "width": 320, "height": 44, "placeholder": "Email" },
+            { "type": "input", "id": "password", "x": 560, "y": 400, "width": 320, "height": 44, "placeholder": "Password" },
+            { "type": "button", "id": "login-btn", "x": 560, "y": 470, "width": 320, "height": 48, "text": "Login", "fill": "#6366F1", "textColor": "#FFFFFF" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-overview",
+      "name": "Overview",
+      "frames": [
+        {
+          "id": "overview-frame",
+          "name": "Overview",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1024,
+          "background": "#F9FAFB",
+          "children": [
+            { "type": "sidebar", "id": "left-nav", "x": 0, "y": 0, "width": 72, "height": 1024, "fill": "#111827", "items": ["Overview","Pipelines","Host","Logs","Settings"], "itemColor": "#FFFFFF" },
+            { "type": "topbar", "id": "topbar", "x": 72, "y": 0, "width": 1368, "height": 72, "fill": "#FFFFFF", "children": [ { "type": "search", "id": "search" }, { "type": "avatar", "id": "avatar" } ] },
+            { "type": "kpi_row", "id": "kpis", "x": 92, "y": 96, "width": 1280, "height": 120, "cards": [
+              { "title": "Running Pipelines", "value": "2", "bgColor": "#FFFFFF", "textColor": "#1F2937" },
+              { "title": "Failed (24h)", "value": "0", "bgColor": "#FFFFFF", "textColor": "#EF4444" },
+              { "title": "Total Pipelines", "value": "8", "bgColor": "#FFFFFF", "textColor": "#1F2937" },
+              { "title": "Queued Jobs", "value": "1", "bgColor": "#FFFFFF", "textColor": "#FBBF24" }
+            ] },
+            { "type": "host_status", "id": "host-status", "x": 92, "y": 236, "width": 600, "height": 220, "children": [ { "type": "text", "text": "Host: AkkaSync-Primary", "color": "#1F2937" }, { "type": "status_dot", "status": "online", "color": "#10B981" }, { "type": "text", "text": "Last Heartbeat: 2025-12-10 14:03:22", "color": "#6B7280" } ] },
+            { "type": "recent_events", "id": "events", "x": 708, "y": 236, "width": 664, "height": 420, "items": [
+              { "text": "[14:02:01] INFO Pipeline UserSync started", "color": "#3B82F6" },
+              { "text": "[14:02:02] DEBUG Task FetchUsers completed (32ms)", "color": "#6B7280" },
+              { "text": "[14:02:03] INFO Task SyncUsers completed (153ms)", "color": "#3B82F6" }
+            ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-host-monitor",
+      "name": "Host Monitor",
+      "frames": [
+        {
+          "id": "host-frame",
+          "name": "Host Monitor",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1024,
+          "background": "#F9FAFB",
+          "children": [
+            { "type": "card", "id": "host-summary", "x": 92, "y": 96, "width": 1200, "height": 140, "title": "AkkaSync-Primary", "fields": [ { "label": "Status", "value": "Online", "color": "#10B981" }, { "label": "Queue Length", "value": "0", "color": "#1F2937" } ] },
+            { "type": "chart", "id": "cpu-chart", "x": 92, "y": 260, "width": 560, "height": 300, "title": "CPU Usage" },
+            { "type": "chart", "id": "queue-chart", "x": 732, "y": 260, "width": 560, "height": 300, "title": "Queue Length" },
+            { "type": "timeline", "id": "heartbeat-timeline", "x": 92, "y": 580, "width": 1200, "height": 220, "title": "Heartbeats" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-pipelines",
+      "name": "Pipelines",
+      "frames": [
+        {
+          "id": "pipelines-frame",
+          "name": "Pipelines List",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1024,
+          "background": "#F9FAFB",
+          "children": [
+            { "type": "table", "id": "pipeline-table", "x": 92, "y": 96, "width": 1200, "height": 700, "columns": ["Pipeline","Status","Last Run","Duration","Next Run"], "rows": [
+              ["UserSync","Running","2025-12-10 13:59","2m 3s","-"],
+              ["OrderSync","Idle","2025-12-09 22:01","1m 12s","-"]
+            ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-pipeline-detail",
+      "name": "Pipeline Detail",
+      "frames": [
+        {
+          "id": "detail-frame",
+          "name": "Pipeline Detail",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1024,
+          "background": "#F9FAFB",
+          "children": [
+            { "type": "header", "id": "pipeline-header", "x": 92, "y": 96, "width": 1200, "height": 64, "title": "UserSync", "status": "Running", "statusColor": "#10B981" },
+            { "type": "stats", "id": "run-stats", "x": 92, "y": 176, "width": 1200, "height": 80, "fields": [ { "label": "Last Run", "value": "2025-12-10 13:59", "color": "#1F2937" }, { "label": "Avg Duration", "value": "1m 45s", "color": "#1F2937" } ] },
+            { "type": "timeline", "id": "task-timeline", "x": 92, "y": 276, "width": 760, "height": 540, "items": [
+              { "name": "FetchUsers", "durationMs": 120, "status": "success", "color": "#10B981" },
+              { "name": "TransformUsers", "durationMs": 50, "status": "success", "color": "#10B981" },
+              { "name": "PushToCRM", "durationMs": 200, "status": "running", "color": "#6366F1" }
+            ] },
+            { "type": "logs", "id": "live-logs", "x": 872, "y": 276, "width": 420, "height": 540, "items": [
+              { "text": "[13:59:01] INFO FetchUsers started", "color": "#3B82F6" },
+              { "text": "[13:59:02] INFO FetchUsers completed (120ms)", "color": "#3B82F6" }
+            ] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page-settings",
+      "name": "Settings",
+      "frames": [
+        {
+          "id": "settings-frame",
+          "name": "Settings",
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 1024,
+          "background": "#F9FAFB",
+          "children": [
+            { "type": "section", "id": "connections", "x": 92, "y": 96, "width": 1200, "height": 200, "title": "Connections" },
+            { "type": "section", "id": "theme", "x": 92, "y": 312, "width": 1200, "height": 200, "title": "Theme" }
+          ]
+        }
+      ]
+    }
+  ]
+}
