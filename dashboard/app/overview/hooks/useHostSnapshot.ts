@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 
 export const useHostSnapshot = () => {
   const {status, on, off, invoke} = useHostSignalR();
-  const [snapshot, setSnapshot] = useState<HostSnapshot>({ status: HostStatus.Offline, timestamp: new Date().toUTCString()});
-  const handleSnapshot = (payload : HostSnapshot) => { setSnapshot(payload); console.log(payload)};
+  const [snapshot, setSnapshot] = useState<HostSnapshot>({ status: HostStatus.Stopped, startAt: new Date().toUTCString()});
+  const handleSnapshot = (payload : HostSnapshot) => { setSnapshot(payload); console.log(snapshot)};
   
   useEffect(() => {
     on('HostSnapshot', handleSnapshot);
@@ -24,6 +24,7 @@ export const useHostSnapshot = () => {
     const initHost = async () => {
       try{
         const payload = await invoke('GetHostSnapshot');
+        console.log(payload.pipelines);
         if(!cancelled) {
           setSnapshot(payload);
         }

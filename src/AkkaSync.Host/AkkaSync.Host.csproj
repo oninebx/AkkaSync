@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Domain/States/" />
     <Folder Include="Infrastructure/StateStore/" />
   </ItemGroup>
 </Project>

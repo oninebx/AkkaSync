@@ -2,13 +2,16 @@ import Card from "@/components/Card";
 import { StatusRow } from "@/components/StatusRow";
 import { cn } from "@/lib/utils";
 import { SignalRConnectionStatus } from "@/providers/SignalRProvider";
-import { useHostSnapshot } from "@/app/overview/hooks/useSnapshot";
+import { useHostSnapshot } from "@/app/overview/hooks/useHostSnapshot";
 import { HostStatus, StatusType } from "@/types/host";
 
 
 
 interface HostCardProps {
   name: string;
+  connectionStatus: SignalRConnectionStatus;
+  status: HostStatus;
+  startTime: string;
   className?: string;
 }
 
@@ -18,10 +21,9 @@ const STATUS_COLORS: Record<SignalRConnectionStatus, string> = {
   unavailable: 'bg-error'
 }
 
-export default function HostCard({ name, className }: HostCardProps) {
-  const { connectionStatus, status, timestamp } = useHostSnapshot();
+export default function HostCard({ name, connectionStatus, status, startTime, className }: HostCardProps) {
   const color = STATUS_COLORS[connectionStatus];
-  const hostStatus = HostStatus[status].toLowerCase() as StatusType;
+  const hostState = HostStatus[status].toLowerCase() as StatusType;
   return (
     <Card height="h-56" className={cn("flex flex-col justify-between relative overflow-hidden", className)}>
       <div
@@ -29,12 +31,11 @@ export default function HostCard({ name, className }: HostCardProps) {
         title={`SignalR: ${connectionStatus}`} />
       <div>
         <p className="text-gray-900 font-semibold text-base mb-2">Host: {name}</p>
-        <StatusRow label="Host" status={ hostStatus } labelWidth="w-15" />
-        {/* <StatusRow label="Engine" status={engineStatus} labelWidth="w-15" /> */}
+        <StatusRow label="State" status={hostState} labelWidth="w-15" />
       </div>
-      {timestamp && (
+      {startTime && (
         <p className="text-gray-500 mt-2 text-xs">
-          Last Heartbeat: {timestamp}
+          Last Heartbeat: {startTime}
         </p>
       )}
     </Card>

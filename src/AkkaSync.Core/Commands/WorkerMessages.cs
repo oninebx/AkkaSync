@@ -1,6 +1,6 @@
 using System;
 
-namespace AkkaSync.Core.Messging;
+namespace AkkaSync.Core.Messages;
 
 public record StartProcessing();
 public record ProcessingCompleted(string Name, string SourceId, string ETag);

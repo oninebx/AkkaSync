@@ -1,5 +1,5 @@
 using Akka.Actor;
-using AkkaSync.Core.Messging;
+using AkkaSync.Core.Messages;
 
 namespace AkkaSync.Host;
 
@@ -17,16 +17,16 @@ public class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("AkkaSync Host Worker started...");
-        var dashboard = _actorSystem.ActorSelection("/user/dashboard-proxy");
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            }
-            dashboard.Tell(new DashboardEvent("heartbeat", DateTime.Now));
-            await Task.Delay(1000, stoppingToken);
-        }
+        // var dashboard = _actorSystem.ActorSelection("/user/dashboard-proxy");
+        // while (!stoppingToken.IsCancellationRequested)
+        // {
+        //     if (_logger.IsEnabled(LogLevel.Information))
+        //     {
+        //         _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+        //     }
+        //     dashboard.Tell(new DashboardEvent("heartbeat", DateTime.Now));
+        //     await Task.Delay(1000, stoppingToken);
+        // }
     }
 
   public override async Task StopAsync(CancellationToken cancellationToken)

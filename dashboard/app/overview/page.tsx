@@ -1,19 +1,13 @@
 'use client';
 
 import Card from "@/components/Card";
-import KpiCard from "./components/KpiCard";
 import HostCard from "./components/HostCard/HostCard";
 import RecentEventsCard, { EventItem } from "./components/RecentEventsCard";
 import DisplayTable, { Column } from "@/components/DisplayTable";
 import { cn } from "@/lib/utils";
-import { useHostSnapshot } from "./hooks/useSnapshot";
-
-const kpis = [
-  { title: "Running Pipelines", value: "2", color: "#1F2937" },
-  { title: "Failed (24h)", value: "0", color: "#EF4444" },
-  { title: "Total Pipelines", value: "8", color: "#1F2937" },
-  { title: "Queued Jobs", value: "1", color: "#FBBF24" },
-];
+import { useHostSnapshot } from "./hooks/useHostSnapshot";
+import { KpiBanner } from "./components/KpiBanner";
+import useKpis from "./components/KpiBanner/useKpis";
 
 const events: EventItem[] = [
   { time: "14:02:01", level: "INFO", message: "Pipeline UserSync started" },
@@ -21,7 +15,7 @@ const events: EventItem[] = [
   { time: "14:02:03", level: "INFO", message: "Task SyncUsers completed (153ms)" },
 ];
 
-const pipelines: Pipeline[] = [
+const pipelinesData: Pipeline[] = [
   { name: "UserSync", status: "running", progress: 60, start: "14:00", duration: "2m" },
   { name: "OrderSync", status: "success", progress: 100, start: "13:50", duration: "5m" },
   { name: "PaymentSync", status: "error", progress: 45, start: "13:55", duration: "3m" },
@@ -80,23 +74,25 @@ const columns: Column<Pipeline>[] = [
 ];
 
 export default function HomePage() {
-
+  const snapshot = useHostSnapshot();
+  const KpiData = useKpis(snapshot);
+  const { connectionStatus, status, startAt } = snapshot;
   return (
     <>
       <div className="min-h-screen px-4 py-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            { kpis.map((kpi) => 
-                <KpiCard key={kpi.title} title={kpi.title} value={kpi.value} color={kpi.color} />)
-            }
-          </div>
+          <KpiBanner data={KpiData} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <HostCard name="AkkaSync-Primary" />
+            <HostCard 
+              name="AkkaSync-Primary"
+              connectionStatus={connectionStatus}
+              status={status}
+              startTime={startAt} />
             <RecentEventsCard events={events}/>
           </div>
           <Card>
               <h2 className="text-lg font-semibold text-gray-700 mb-4">Pipelines Status</h2>
-              <DisplayTable columns={columns} data={pipelines} />
+              <DisplayTable columns={columns} data={pipelinesData} />
           </Card>
         </div>
       </div>

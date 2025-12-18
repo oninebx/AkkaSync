@@ -7,12 +7,13 @@ using Akka.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using AkkaSync.Core.Actors;
 using System.Reflection;
+using AkkaSync.Core.Commands.PipelineManager;
 
 namespace AkkaSync.Infrastructure.DependencyInjection;
 
 public static class AkkaSyncExtension
 {
-  public static IServiceCollection AddAkkaSync(this IServiceCollection services, Action<ActorSystem, DependencyResolver>? config = null)
+  public static IServiceCollection AddAkkaSync(this IServiceCollection services, Action<DependencyResolver, List<ActorHook>>? config = null)
   {
     services.AddSingleton<ISyncGenerator, SyncGenerator>();
     services.AddSingleton<IPluginProviderRegistry<ISyncSource>, PluginProviderRegistry<ISyncSource>>();
@@ -26,8 +27,14 @@ public static class AkkaSyncExtension
       var di = DependencyResolverSetup.Create(provider);
       var system = ActorSystem.Create("AkkaSyncSystem", bootstrap.And(di));
       var resolver = DependencyResolver.For(system);
-      system.ActorOf(resolver.Props<PipelineManagerActor>(), "pipeline-manager");
-      config?.Invoke(system, resolver);
+
+      var actorHooks = new List<ActorHook>
+      {
+        new(resolver.Props<PipelineManagerActor>(), "pipeline-manager")
+      };
+      config?.Invoke(resolver, actorHooks);
+      system.ActorOf(resolver.Props<SyncRuntimeActor>(actorHooks), "sync-runtime");
+      
       return system;
     });
 
