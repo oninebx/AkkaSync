@@ -1,12 +1,17 @@
 export enum HostStatus {
-  Online,
-  Offline
+  Syncing,
+  Idle,
+  Degraded,
+  Stopped
 }
+export type StatusType = Lowercase<keyof typeof HostStatus>;
 
-export type EngineStatus = 'starting' | 'syncing' | 'idle' | 'paused' | 'stopped' | 'failed';
-export type StatusType = Lowercase<keyof typeof HostStatus> | EngineStatus;
-
+export interface PipelineSnapshot {
+  id: string,
+  startAt: string
+}
 export interface HostSnapshot {
   status: HostStatus;
-  timestamp: string;
+  startAt: string;
+  pipelines?: Record<string, PipelineSnapshot>;
 }

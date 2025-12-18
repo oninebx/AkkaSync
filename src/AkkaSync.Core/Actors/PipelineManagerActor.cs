@@ -3,10 +3,11 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Commands.PipelineManager;
 using AkkaSync.Core.Common;
-using AkkaSync.Core.Messging;
+using AkkaSync.Core.Events;
+using AkkaSync.Core.Messages;
 using AkkaSync.Core.PluginProviders;
-using AkkaSync.Messages;
 
 namespace AkkaSync.Core.Actors;
 
@@ -35,17 +36,18 @@ public class PipelineManagerActor : ReceiveActor
     _storeRegistry = storeRegistry;
     _config = config;
     _layers = _config.BuildLayers();
+
+    Receive<StartPipelineManager>(_ =>
+    {
+      _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
+      Context.System.EventStream.Publish(new PipelineManagerStarted());
+      StartNextLayer();
+    });
+
     Receive<StartPipeline>(msg => HandleStartPipeline(msg));
     Receive<PipelineCompleted>(msg => HandlePipelineCompleted(msg));
     Receive<StopPipeline>(msg => HandleStopPipeline(msg));
   }
-
-  protected override void PreStart()
-  {
-    StartNextLayer();
-  }
-
-
 
   private void StartNextLayer()
   {
@@ -87,6 +89,7 @@ public class PipelineManagerActor : ReceiveActor
          var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, context)), context.Name);
         _pipelines[context.Name] = pipelineActor;
         _logger.Info($"Started pipeline with ID {context.Name}.");
+        Context.System.EventStream.Publish(new PipelineStarted(context.Name));
       }
       else
       {

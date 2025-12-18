@@ -1,4 +1,4 @@
-namespace AkkaSync.Messages
+namespace AkkaSync.Core.Messages
 {
     public record StartSync();
     public record StopSync();

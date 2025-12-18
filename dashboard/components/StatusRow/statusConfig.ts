@@ -1,7 +1,14 @@
 import { StatusType } from "@/types/host";
 
 export const STATUS_CONFIG: Record<StatusType, { color: string; text: string }> = {
-  online: { color: 'bg-success', text: 'Online' },
+  syncing: { color: 'bg-info', text: 'Syncing' },
+  idle: { color: 'bg-gray-200', text: 'Idle' },
+  degraded: { color: 'bg-warning', text: 'Degraded'},
+  stopped: {color: 'bg-gray-500', text: 'Stopped'},
+};
+
+/**
+ * online: { color: 'bg-success', text: 'Online' },
   offline: { color: 'bg-error', text: 'Offline' },
   paused: { color: 'bg-warning', text: 'Paused' },
   syncing: { color: 'bg-info', text: 'Syncing' },
@@ -9,4 +16,4 @@ export const STATUS_CONFIG: Record<StatusType, { color: string; text: string }> 
   stopped: { color: 'bg-gray-500', text: 'Stopped' },
   idle: { color: 'bg-gray-200', text: 'Idle' },
   starting: { color: 'bg-warning', text: 'Starting' },
-};
+ */

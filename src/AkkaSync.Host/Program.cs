@@ -1,10 +1,11 @@
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Host;
-using AkkaSync.Host.Actors;
 using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Host.Infrastructure.Actors;
 using AkkaSync.Host.Infrastructure.SignalR;
 using AkkaSync.Host.Infrastructure.StateStore;
 using AkkaSync.Host.Web;
+using AkkaSync.Infrastructure;
 using AkkaSync.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,9 +25,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddSignalR();
 
 var config = builder.Configuration.GetSection("AkkaSync").Get<PipelineConfig>()!;
-builder.Services.AddAkkaSync((system, resolver) =>
+builder.Services.AddAkkaSync((resolver, actorHooks) =>
 {
-  system.ActorOf(resolver.Props<DashboardProxyActor>(), "dashboard-proxy");
+  actorHooks.Add(new ActorHook(resolver.Props<DashboardProxyActor>(), "dashboard-proxy"));
 }).AddAkkaSyncPlugins("plugins")
 .AddSingleton(config);
 builder.Services.AddSingleton<IHostSnapshotPublisher, SignalRHostSnapshotPublisher>();

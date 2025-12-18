@@ -1,6 +1,6 @@
 using System;
 
-namespace AkkaSync.Core.Messging;
+namespace AkkaSync.Core.Messages;
 
 public record DashboardEvent(string Type, object Data);
 public record DashboardCommand(string Command, object Payload, string ConnectionId);

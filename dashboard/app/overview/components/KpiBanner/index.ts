@@ -1,0 +1,1 @@
+export { default as KpiBanner } from './KpiBanner';
