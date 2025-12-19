@@ -11,10 +11,9 @@ const KPI_TEMPLATES = [
 
 const useKpis = (snapshot: HostSnapshot): Kpi[] => {
   return useMemo(() => {
-    const pipelines = snapshot?.pipelines ?? {};
-    const pipelineList = Object.values(pipelines);
-    const total = pipelineList.length;
-    const running = 0;
+    const pipelines = snapshot?.pipelines ?? [];
+    const total = snapshot.pipelinesTotal;
+    const running = pipelines.length;
     const failed = 0;
     const queued = 0;
 

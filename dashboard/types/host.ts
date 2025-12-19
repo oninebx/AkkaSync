@@ -12,6 +12,7 @@ export interface PipelineSnapshot {
 }
 export interface HostSnapshot {
   status: HostStatus;
+  pipelinesTotal: number;
   startAt: string;
-  pipelines?: Record<string, PipelineSnapshot>;
+  pipelines?: PipelineSnapshot[];
 }

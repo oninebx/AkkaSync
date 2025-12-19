@@ -9,7 +9,7 @@ export default function DashboardPage() {
   // const [connectionState, setConnectionState] = useState('Disconnected');
   // useEffect(() => {
   //   const conn = getDashboardHub();
-  //   conn.on("receiveEvent", (event) => {
+  //   conn.on("HostSnapshot", (event) => {
   //     console.log("Event received:", event);
   //     addEvent(event);
   //   });

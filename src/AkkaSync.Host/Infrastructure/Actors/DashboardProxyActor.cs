@@ -5,6 +5,8 @@ using AkkaSync.Abstractions;
 using AkkaSync.Core.Events;
 using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Domain.States;
+using AkkaSync.Host.Web;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AkkaSync.Host.Infrastructure.Actors;
 
@@ -17,7 +19,7 @@ public class DashboardProxyActor : ReceiveActor
     _store = store;
     Receive<ISyncEvent>(evt =>
     {
-      var current = _store.GetSnapshot();
+      var current = _store.Snapshot;
       var next = HostStateReducer.Reduce(current, evt);
       if(!ReferenceEquals(current, next))
       {

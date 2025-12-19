@@ -40,12 +40,20 @@ public class PipelineManagerActor : ReceiveActor
     Receive<StartPipelineManager>(_ =>
     {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      Context.System.EventStream.Publish(new PipelineManagerStarted());
+      Context.System.EventStream.Publish(new PipelineManagerStarted(_config.Pipelines.Count));
       StartNextLayer();
     });
 
+    Receive<Terminated>(msg =>
+    {
+      var actorName = msg.ActorRef.Path.Name;
+      _pipelines.Remove(actorName);
+      HandleLayer(actorName);
+
+      Context.System.EventStream.Publish(new PipelineCompleted(actorName));
+    });
+
     Receive<StartPipeline>(msg => HandleStartPipeline(msg));
-    Receive<PipelineCompleted>(msg => HandlePipelineCompleted(msg));
     Receive<StopPipeline>(msg => HandleStopPipeline(msg));
   }
 
@@ -88,6 +96,7 @@ public class PipelineManagerActor : ReceiveActor
       {
          var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, context)), context.Name);
         _pipelines[context.Name] = pipelineActor;
+        Context.Watch(pipelineActor);
         _logger.Info($"Started pipeline with ID {context.Name}.");
         Context.System.EventStream.Publish(new PipelineStarted(context.Name));
       }
@@ -106,9 +115,9 @@ public class PipelineManagerActor : ReceiveActor
     
   }
 
-  private void HandlePipelineCompleted(PipelineCompleted msg)
+  private void HandleLayer(string actorName)
   {
-    _completedPipelines.Add(msg.Name);
+    _completedPipelines.Add(actorName);
     var currentLayer = _layers[_currentLayerIndex];
     if(_completedPipelines.IsSupersetOf(currentLayer))
     {
@@ -117,7 +126,7 @@ public class PipelineManagerActor : ReceiveActor
       StartNextLayer();
     }
     
-    _logger.Info($"Pipeline {msg.Name} completed.");
+    _logger.Info($"Pipeline {actorName} completed.");
   }
 
   private void HandleStopPipeline(StopPipeline msg)

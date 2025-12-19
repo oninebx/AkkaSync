@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Core.Actors;
@@ -18,6 +19,7 @@ public class SyncRuntimeActor : ReceiveActor
   public SyncRuntimeActor(IEnumerable<ActorHook> hooks)
   {
     _hooks = hooks;
+
     Receive<Terminated>(t =>
     {
       _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
@@ -43,10 +45,8 @@ public class SyncRuntimeActor : ReceiveActor
       if(hook.Name == "pipeline-manager")
       {
         _pipelineManager = actorRef;
+         _pipelineManager?.Tell(new StartPipelineManager());
       }
     }
-
-    _pipelineManager?.Tell(new StartPipelineManager());
   }
- 
 }

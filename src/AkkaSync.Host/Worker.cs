@@ -1,4 +1,5 @@
 using Akka.Actor;
+using AkkaSync.Core.Events;
 using AkkaSync.Core.Messages;
 
 namespace AkkaSync.Host;
@@ -18,15 +19,17 @@ public class Worker : BackgroundService
     {
         _logger.LogInformation("AkkaSync Host Worker started...");
         // var dashboard = _actorSystem.ActorSelection("/user/dashboard-proxy");
-        // while (!stoppingToken.IsCancellationRequested)
-        // {
+        var random = new Random();
+        while (!stoppingToken.IsCancellationRequested)
+        {
         //     if (_logger.IsEnabled(LogLevel.Information))
         //     {
         //         _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
         //     }
         //     dashboard.Tell(new DashboardEvent("heartbeat", DateTime.Now));
-        //     await Task.Delay(1000, stoppingToken);
-        // }
+          _actorSystem.EventStream.Publish(new PipelineStarted($"test-{random.Next(0, 10)}"));
+          await Task.Delay(5000, stoppingToken);
+        }
     }
 
   public override async Task StopAsync(CancellationToken cancellationToken)

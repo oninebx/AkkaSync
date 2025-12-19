@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { HostSnapshot } from '@/app/overview/types';
+import type { HostSnapshot } from '@/types/host';
 
 interface HostState {
   snapshot: HostSnapshot | null;

@@ -15,8 +15,9 @@ public class DashboardHub : Hub
     _store = store;
   }
 
-  public Task<HostSnapshot> GetHostSnapshot()
+  public override async Task OnConnectedAsync()
   {
-    return Task.FromResult(_store.GetSnapshot());
+    await Clients.Caller.SendAsync("HostSnapshot", _store.Snapshot);
+    await base.OnConnectedAsync();
   }
 }
