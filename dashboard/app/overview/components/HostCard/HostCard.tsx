@@ -2,10 +2,7 @@ import Card from "@/components/Card";
 import { StatusRow } from "@/components/StatusRow";
 import { cn } from "@/lib/utils";
 import { SignalRConnectionStatus } from "@/providers/SignalRProvider";
-import { useHostSnapshot } from "@/app/overview/hooks/useHostSnapshot";
 import { HostStatus, StatusType } from "@/types/host";
-
-
 
 interface HostCardProps {
   name: string;

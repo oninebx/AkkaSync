@@ -4,7 +4,7 @@ namespace AkkaSync.Abstractions.Models;
 
 public record PipelineContext{
   public required string Name { get; init; }
-  public bool AutoStart { get; init; } = false;
+  public bool AutoStart { get; init; } = true;
   public required PluginContext SourceProvider { get; init; }
   public required PluginContext TransformerProvider { get; init; }
   public required PluginContext SinkProvider { get; init; }

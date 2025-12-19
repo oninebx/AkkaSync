@@ -1,22 +1,24 @@
 using System;
 using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Domain.Entities;
+using AkkaSync.Host.Web;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AkkaSync.Host.Infrastructure.SignalR;
 
 public class SignalRHostSnapshotPublisher : IHostSnapshotPublisher
 {
-  private readonly IEnumerable<IHubContext<Hub>> _hubs;
+  private readonly IHubContext<DashboardHub> _hub;
+  private readonly ILogger<SignalRHostSnapshotPublisher> _logger;
 
-  public SignalRHostSnapshotPublisher(IEnumerable<IHubContext<Hub>> hubs)
+   public SignalRHostSnapshotPublisher(IHubContext<DashboardHub> hub, ILogger<SignalRHostSnapshotPublisher> logger)
   {
-    _hubs = hubs;
+    _hub = hub;
+    _logger = logger;
   }
 
   public Task BroadcastSnapshot(HostSnapshot snapshot)
   {
-    var tasks = _hubs.Select(hub => hub.Clients.All.SendAsync("HostSnapshot", snapshot));
-    return Task.WhenAll(tasks);
+    return _hub.Clients.All.SendAsync("HostSnapshot", snapshot);
   }
 }

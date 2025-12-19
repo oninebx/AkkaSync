@@ -6,31 +6,23 @@ namespace AkkaSync.Host.Infrastructure.StateStore;
 
 public class InMomeryHostStateStore : IHostStateStore
 {
-  private HostSnapshot _snapshot = HostSnapshot.Empty;
-  private readonly ReaderWriterLockSlim _lock = new ();
-  public HostSnapshot GetSnapshot()
+  private volatile HostSnapshot _snapshot = HostSnapshot.Empty;
+  public HostSnapshot Snapshot => _snapshot;
+  private readonly IHostSnapshotPublisher _publisher;
+  private readonly ILogger<InMomeryHostStateStore> _logger;
+
+
+  public InMomeryHostStateStore(IHostSnapshotPublisher publisher, ILogger<InMomeryHostStateStore> logger)
   {
-    _lock.EnterReadLock();
-    try
-    {
-      return _snapshot;
-    }
-    finally
-    {
-      _lock.ExitReadLock();
-    }
+    _publisher = publisher;
+    _logger = logger;
   }
 
   public void Update(HostSnapshot snapshot)
   {
-    _lock.EnterWriteLock();
-    try
-    {
-      _snapshot = snapshot;
-    }
-    finally
-    {
-      _lock.ExitWriteLock();
-    }
+   _snapshot = snapshot;
+   _publisher.BroadcastSnapshot(snapshot);
+  _logger.LogInformation("Broadcast a new snapshot at {1}.", DateTimeOffset.UtcNow);
+
   }
 }

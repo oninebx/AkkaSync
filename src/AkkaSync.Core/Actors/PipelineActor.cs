@@ -1,16 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Messages;
-using AkkaSync.Core.PluginProviders;
-using Microsoft.VisualBasic;
 
 namespace AkkaSync.Core.Actors
 {
@@ -117,12 +110,13 @@ namespace AkkaSync.Core.Actors
       private void HandleTerminated(Terminated msg)
       {
         var actorName = msg.ActorRef.Path.Name;
-          _workers.Remove(actorName);
-          if(_workers.Count == 0)
-          {
-              Context.Parent.Tell(new PipelineCompleted(Self.Path.Name));
-          }
-          _logger.Info($"Worker terminated. Name={actorName}, Path={msg.ActorRef.Path}");
+        _workers.Remove(actorName);
+        _logger.Info($"Worker terminated. Name={actorName}, Path={msg.ActorRef.Path}");
+        if(_workers.Count == 0)
+        {
+          
+            Context.Stop(Self);
+        }
       }
 
       private void PrintTablesData(TransformContext context)

@@ -5,4 +5,3 @@ namespace AkkaSync.Core.Messages;
 
 public record StartPipeline(PipelineContext Context);
 public record StopPipeline(string Name);
-public record PipelineCompleted(string Name);

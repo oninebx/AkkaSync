@@ -5,7 +5,6 @@ namespace AkkaSync.Host.Application.Dashboard;
 
 public interface IHostStateStore
 {
-  HostSnapshot GetSnapshot();
-
+  HostSnapshot Snapshot { get; }
   void Update(HostSnapshot snapshot);
 }
