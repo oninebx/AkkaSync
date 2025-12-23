@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Domain/Events/" />
+    <Folder Include="Domain/Queries/" />
     <Folder Include="Domain/States/" />
-    <Folder Include="Infrastructure/StateStore/" />
   </ItemGroup>
 </Project>

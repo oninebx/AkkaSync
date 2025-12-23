@@ -1,9 +1,10 @@
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Host;
-using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Host.Application.Dashboard.Publishers;
+using AkkaSync.Host.Application.Dashboard.Stores;
 using AkkaSync.Host.Infrastructure.Actors;
 using AkkaSync.Host.Infrastructure.SignalR;
-using AkkaSync.Host.Infrastructure.StateStore;
+using AkkaSync.Host.Infrastructure.Stores;
 using AkkaSync.Host.Web;
 using AkkaSync.Infrastructure;
 using AkkaSync.Infrastructure.DependencyInjection;
@@ -31,7 +32,9 @@ builder.Services.AddAkkaSync((resolver, actorHooks) =>
 }).AddAkkaSyncPlugins("plugins")
 .AddSingleton(config);
 builder.Services.AddSingleton<IHostSnapshotPublisher, SignalRHostSnapshotPublisher>();
-builder.Services.AddSingleton<IHostStateStore, InMomeryHostStateStore>();
+builder.Services.AddSingleton<IEventEnvelopePublisher, SignalREventEnvelopePublisher>();
+builder.Services.AddSingleton<IHostStateStore, InMemoryHostStateStore>();
+builder.Services.AddSingleton<IDashboardEventStore, InMemoryDashboardEventStore>();
 builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();

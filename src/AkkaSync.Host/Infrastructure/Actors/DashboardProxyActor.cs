@@ -2,30 +2,37 @@ using System;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Events;
-using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Host.Application.Dashboard.Events;
+using AkkaSync.Host.Application.Dashboard.Stores;
 using AkkaSync.Host.Domain.States;
-using AkkaSync.Host.Web;
-using Microsoft.AspNetCore.SignalR;
 
 namespace AkkaSync.Host.Infrastructure.Actors;
 
 public class DashboardProxyActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  private readonly IHostStateStore _store;
-  public DashboardProxyActor(IHostStateStore store)
+  private readonly IHostStateStore _stateStore;
+  private readonly IDashboardEventStore _eventStore;
+  public DashboardProxyActor(IHostStateStore stateStore, IDashboardEventStore eventStore)
   {
-    _store = store;
+    _stateStore = stateStore;
+    _eventStore = eventStore;
+
     Receive<ISyncEvent>(evt =>
     {
-      var current = _store.Snapshot;
+      var current = _stateStore.Snapshot;
       var next = HostStateReducer.Reduce(current, evt);
       if(!ReferenceEquals(current, next))
       {
-        _store.Update(next);
+        _stateStore.Update(next);
+      }
+      var dashboardEvent = DashboardEventMapper.TryMap(evt);
+      if(dashboardEvent != null)
+      {
+        _eventStore.Append(dashboardEvent);
       }
     });
+
   }
 
   protected override void PreStart()
