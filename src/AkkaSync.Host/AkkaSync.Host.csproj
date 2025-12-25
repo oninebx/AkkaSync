@@ -23,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Domain/Events/" />
-    <Folder Include="Domain/Queries/" />
-    <Folder Include="Domain/States/" />
+    <Folder Include="Application/Common/" />
+    <Folder Include="Application/Messaging/" />
+    <Folder Include="Domain/Dashboard/Repositories/" />
   </ItemGroup>
 </Project>
