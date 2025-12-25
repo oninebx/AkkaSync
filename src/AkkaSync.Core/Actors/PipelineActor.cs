@@ -114,8 +114,7 @@ namespace AkkaSync.Core.Actors
         _logger.Info($"Worker terminated. Name={actorName}, Path={msg.ActorRef.Path}");
         if(_workers.Count == 0)
         {
-          
-            Context.Stop(Self);
+          Context.Stop(Self);
         }
       }
 
