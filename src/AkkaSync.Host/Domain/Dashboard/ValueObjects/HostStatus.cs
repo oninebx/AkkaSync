@@ -1,6 +1,6 @@
 using System;
 
-namespace AkkaSync.Host.Domain.Entities;
+namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 public enum HostStatus
 {

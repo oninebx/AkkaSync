@@ -2,9 +2,10 @@ using System;
 using System.Collections.Immutable;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Events;
-using AkkaSync.Host.Domain.Entities;
+using AkkaSync.Host.Domain.Dashboard;
+using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
-namespace AkkaSync.Host.Domain.States;
+namespace AkkaSync.Host.Domain.Dashboard.Services;
 
 public static class HostStateReducer
 {
