@@ -1,6 +1,6 @@
-import { HostSnapshot } from "@/types/host";
 import { useMemo } from "react";
 import { Kpi } from "./KpiCard";
+import { HostSnapshot } from "@/features/host/host.types";
 
 const KPI_TEMPLATES = [
   { id: 'running', title: "Running Pipelines", color: "#1F2937" },

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import {getDashboardHub} from '@/lib/signalr';
-import { useDashboardStore } from '@/stores/dashboardStore';
 
 export default function DashboardPage() {
   // const { addEvent, events } = useDashboardStore();

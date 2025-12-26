@@ -1,13 +1,7 @@
-// components/host/RecentEventsCard.tsx
 'use client';
 
 import Card from '@/components/Card';
-
-export interface EventItem {
-  time: string;
-  level: "INFO" | "DEBUG" | "ERROR";
-  message: string;
-}
+import { EventItem } from '@/features/syncevents/syncevents.viewmodels';
 
 interface RecentEventsCardProps {
   events: EventItem[];

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SignalRProvider } from "@/providers/SignalRProvider";
 import Sidebar from "@/components/Sidebar";
+import { ReduxProvider } from "@/providers/ReduxProvider";
+import { SignalRProvider } from "@/providers/SingalRProvider";
 
 
 export const metadata: Metadata = {
@@ -22,9 +23,12 @@ export default function RootLayout({
       <body className='bg-background flex min-h-screen'>
         <Sidebar />
         <div className="flex-1 p-6 max-w-6xl mx-auto">
-          <SignalRProvider url={SIGNALR_HUB_URL} autoReconnect={true}>
-            {children}
-          </SignalRProvider>
+          <ReduxProvider>
+            <SignalRProvider url={SIGNALR_HUB_URL} autoReconnect>
+              {children}
+            </SignalRProvider>
+            
+          </ReduxProvider>
         </div>
       </body>
     </html>
