@@ -27,7 +27,7 @@ public class Worker : BackgroundService
         //         _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
         //     }
         //     dashboard.Tell(new DashboardEvent("heartbeat", DateTime.Now));
-          _actorSystem.EventStream.Publish(new PipelineStarted($"test-{random.Next(0, 10)}"));
+          // _actorSystem.EventStream.Publish(new PipelineStarted($"test-{random.Next(0, 10)}"));
           await Task.Delay(5000, stoppingToken);
         }
     }

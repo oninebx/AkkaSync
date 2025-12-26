@@ -2,18 +2,24 @@
 
 import Card from "@/components/Card";
 import HostCard from "./components/HostCard/HostCard";
-import RecentEventsCard, { EventItem } from "./components/RecentEventsCard";
+import RecentEventsCard from "./components/RecentEventsCard";
 import DisplayTable, { Column } from "@/components/DisplayTable";
 import { cn } from "@/lib/utils";
 import { useHostSnapshot } from "./hooks/useHostSnapshot";
 import { KpiBanner } from "./components/KpiBanner";
 import useKpis from "./components/KpiBanner/useKpis";
+import { useSelector } from "react-redux";
+import { selectConnectionStatus } from "@/features/host/connection.selectors";
+import { selectEventsOrdered } from "@/features/syncevents/syncevents.selectors";
+import { mapEnvelope } from "@/features/syncevents/syncevents.config";
+import { HostStatus } from "@/features/host/host.types";
+import { useSignalRInvoke, useSignalRQuery } from "@/providers/SingalRProvider";
 
-const events: EventItem[] = [
-  { time: "14:02:01", level: "INFO", message: "Pipeline UserSync started" },
-  { time: "14:02:02", level: "DEBUG", message: "Task FetchUsers completed (32ms)" },
-  { time: "14:02:03", level: "INFO", message: "Task SyncUsers completed (153ms)" },
-];
+// const events: EventItem[] = [
+//   { time: "14:02:01", level: "INFO", message: "Pipeline UserSync started" },
+//   { time: "14:02:02", level: "DEBUG", message: "Task FetchUsers completed (32ms)" },
+//   { time: "14:02:03", level: "INFO", message: "Task SyncUsers completed (153ms)" },
+// ];
 
 const pipelinesData: Pipeline[] = [
   { name: "UserSync", status: "running", progress: 60, start: "14:00", duration: "2m" },
@@ -73,10 +79,39 @@ const columns: Column<Pipeline>[] = [
   { key: "duration", header: "Duration" },
 ];
 
+interface PingResponse {
+  value: string
+}
+
 export default function HomePage() {
-  const snapshot = useHostSnapshot();
-  const KpiData = useKpis(snapshot);
-  const { connectionStatus, status, startAt } = snapshot;
+  // const snapshot = useHostSnapshot();
+  // const KpiData = useKpis(snapshot);
+  // const { status, startAt } = snapshot;
+  // const connectionStatus = useSelector(selectConnectionStatus);
+  const events = useSelector(selectEventsOrdered);
+  const KpiData = [
+    { id: 'running', title: "Running Pipelines", color: "#1F2937", value: '1' },
+    { id: 'failed', title: "Failed (24h)", color: "#EF4444", value: '2' },
+    { id: 'total', title: "Total Pipelines", color: "#1F2937", value: '3' },
+    { id: 'queued', title: "Queued Jobs", color: "#FBBF24", value: '4' },
+  ];
+  const connectionStatus = 'connected';
+  const status = HostStatus.Idle;
+  const startAt = new Date().toISOString();
+
+  // const {loading, data, error} = useSignalRQuery<PingResponse>('QueryTest', {Value: 'ping'}, true);
+  // console.log(loading, data, error);
+  // console.log('-----');
+  const { queryInvoke } = useSignalRInvoke<PingResponse>();
+  
+  const handleClick = async () => {
+    try{
+      const data = await queryInvoke('QueryTest', { Value: 'ping' }, true);
+      console.log(data);
+    }catch(err){
+      console.log(err);
+    }
+  }
   return (
     <>
       <div className="min-h-screen px-4 py-6">
@@ -88,12 +123,13 @@ export default function HomePage() {
               connectionStatus={connectionStatus}
               status={status}
               startTime={startAt} />
-            <RecentEventsCard events={events}/>
+            <RecentEventsCard events={events.map(e => mapEnvelope(e))}/>
           </div>
           <Card>
               <h2 className="text-lg font-semibold text-gray-700 mb-4">Pipelines Status</h2>
               <DisplayTable columns={columns} data={pipelinesData} />
           </Card>
+          <div onClick={handleClick}>Ping Test</div>
         </div>
       </div>
     </>

@@ -1,29 +1,33 @@
+import { selectConnectionStatus } from "@/features/host/connection.selectors";
+import { HostSnapshot, HostStatus } from "@/features/host/host.types";
 import { useHostSignalR } from "@/providers/SignalRProvider";
-import { HostSnapshot, HostStatus } from "@/types/host";
+import { EventEnvelope } from "@/shared/events/EventEnvelope";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 export const useHostSnapshot = () => {
-  const {status, on, off } = useHostSignalR();
+  const { on, off } = useHostSignalR();
   const [snapshot, setSnapshot] = useState<HostSnapshot>({ status: HostStatus.Stopped, pipelinesTotal: 0, startAt: new Date().toUTCString()});
-  const handleSnapshot = useCallback((payload : HostSnapshot) => { 
-    setSnapshot(payload); 
-    console.log('on: HostSnapshot---->', payload);
+  const handleSnapshot = useCallback((envelope : EventEnvelope) => { 
+    // setSnapshot(envelope.payload as HostSnapshot); 
+    console.log(envelope);
   }, []);
+  
+  const status = useSelector(selectConnectionStatus);
 
   useEffect(() => {
-    if(status != 'connected') {
-      return;
+    if(status === 'connected') {
+      on('ReceiveDashboardEvent', handleSnapshot);
     }
-    on('HostSnapshot', handleSnapshot);
 
     return () => {
-      off('HostSnapshot', handleSnapshot);
+      off('ReceiveDashboardEvent', handleSnapshot);
     }
   }, [status, off, on, handleSnapshot]);
  
   return {
-    connectionStatus: status, 
     ...snapshot
   }
 }
