@@ -1,4 +1,4 @@
-import { EventEnvelope } from "@/shared/events/EventEnvelope";
+import { EventEnvelope } from "@/shared/events/types";
 import { signalREventReceived } from "@/shared/events/signalr.actions";
 import { AppDispatch } from "@/store";
 import { HubConnection } from "@microsoft/signalr";

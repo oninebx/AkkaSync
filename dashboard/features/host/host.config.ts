@@ -1,4 +1,4 @@
-import { ConnectionStatus } from "./connection.types";
+import { ConnectionStatus } from "../../infrastructure/signalr/signalr.types";
 import { StatusType } from "./host.types";
 
 export const HOST_STATUS_CONFIG: Record<StatusType, { color: string; text: string }> = {

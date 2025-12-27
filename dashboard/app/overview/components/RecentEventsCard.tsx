@@ -1,7 +1,7 @@
 'use client';
 
 import Card from '@/components/Card';
-import { EventItem } from '@/features/syncevents/syncevents.viewmodels';
+import { EventItem } from '@/features/recentevents/syncevents.viewmodels';
 
 interface RecentEventsCardProps {
   events: EventItem[];

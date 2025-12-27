@@ -3,10 +3,11 @@
 import { useDispatch } from "react-redux";
 import * as signalR from "@microsoft/signalr";
 import { createContext, ReactNode, useEffect, useRef } from "react";
-import { createConnection } from "../../infrastructure/signalr/createConnection";
+import { createConnection, createLifecycleEnvelope } from "../../infrastructure/signalr/connection.utils";
 import { registerSignalRHandlers } from "@/infrastructure/signalr/registerHandlers";
 import { registerConnectionLifecycle } from "@/infrastructure/signalr/retisterConnectionLifecycle";
 import { QueryEnvelope } from "./types";
+import { signalREventReceived } from "@/shared/events/signalr.actions";
 
 interface Props {
   url: string;
@@ -37,8 +38,10 @@ export const SignalRProvider = ({ children, url, autoReconnect = false }: Props)
     registerConnectionLifecycle(connection, dispatch);
 
     connection.start()
-      .then(() => { console.log('signalR connected.'); })
-      .catch(err => {console.error(err);});
+      .then(() => dispatch(signalREventReceived(createLifecycleEnvelope('connected'))))
+      .catch(err => { 
+        dispatch(signalREventReceived(createLifecycleEnvelope('unavailable')));
+      });
     
     return () => {
       unregister();

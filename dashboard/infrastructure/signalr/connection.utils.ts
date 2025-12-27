@@ -1,4 +1,6 @@
+import { EventEnvelope } from "@/shared/events/types";
 import * as signalR from "@microsoft/signalr";
+import { ConnectionStatus } from "./signalr.types";
 
 interface CreateConnectionOptions {
   url: string;
@@ -15,3 +17,11 @@ export const createConnection = ({ url, autoReconnect = false }: CreateConnectio
   console.log(`create signalR connection to ${url}`);
   return builder.build();
 }
+  
+export const createLifecycleEnvelope = (payload: ConnectionStatus):EventEnvelope => ({
+  id: crypto.randomUUID(),
+  type: 'connection.status.changed',
+  sequence: -1,
+  occurredAt: new Date().toISOString(),
+  payload: payload
+});
