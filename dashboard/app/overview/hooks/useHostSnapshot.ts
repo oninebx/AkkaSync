@@ -1,7 +1,7 @@
-import { selectConnectionStatus } from "@/features/host/connection.selectors";
+import { selectConnectionStatus } from "@/infrastructure/signalr/connection.selectors";
 import { HostSnapshot, HostStatus } from "@/features/host/host.types";
 import { useHostSignalR } from "@/providers/SignalRProvider";
-import { EventEnvelope } from "@/shared/events/EventEnvelope";
+import { EventEnvelope } from "@/shared/events/types";
 
 
 import { useCallback, useEffect, useState } from "react";

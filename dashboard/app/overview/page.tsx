@@ -9,9 +9,9 @@ import { useHostSnapshot } from "./hooks/useHostSnapshot";
 import { KpiBanner } from "./components/KpiBanner";
 import useKpis from "./components/KpiBanner/useKpis";
 import { useSelector } from "react-redux";
-import { selectConnectionStatus } from "@/features/host/connection.selectors";
-import { selectEventsOrdered } from "@/features/syncevents/syncevents.selectors";
-import { mapEnvelope } from "@/features/syncevents/syncevents.config";
+import { selectConnectionStatus } from "@/infrastructure/signalr/connection.selectors";
+import { selectEventsOrdered } from "@/features/recentevents/syncevents.selectors";
+import { mapEnvelope } from "@/features/recentevents/syncevents.config";
 import { HostStatus } from "@/features/host/host.types";
 import { useSignalRInvoke, useSignalRQuery } from "@/providers/SingalRProvider";
 
@@ -87,7 +87,7 @@ export default function HomePage() {
   // const snapshot = useHostSnapshot();
   // const KpiData = useKpis(snapshot);
   // const { status, startAt } = snapshot;
-  // const connectionStatus = useSelector(selectConnectionStatus);
+  const connectionStatus = useSelector(selectConnectionStatus);
   const events = useSelector(selectEventsOrdered);
   const KpiData = [
     { id: 'running', title: "Running Pipelines", color: "#1F2937", value: '1' },
@@ -95,7 +95,7 @@ export default function HomePage() {
     { id: 'total', title: "Total Pipelines", color: "#1F2937", value: '3' },
     { id: 'queued', title: "Queued Jobs", color: "#FBBF24", value: '4' },
   ];
-  const connectionStatus = 'connected';
+  // const connectionStatus = 'connected';
   const status = HostStatus.Idle;
   const startAt = new Date().toISOString();
 

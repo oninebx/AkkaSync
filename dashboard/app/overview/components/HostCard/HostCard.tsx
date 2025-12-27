@@ -3,7 +3,7 @@ import { LabeledBadgeRow } from "@/app/overview/components/HostCard/LabeledBadge
 import { cn } from "@/lib/utils";
 import { HostStatus, StatusType } from "@/features/host/host.types";
 import { CONNECTION_STATUS_COLORS, HOST_STATUS_CONFIG, } from "@/features/host/host.config";
-import { ConnectionStatus } from "@/features/host/connection.types";
+import { ConnectionStatus } from "@/infrastructure/signalr/signalr.types";
 
 interface HostCardProps {
   name: string;

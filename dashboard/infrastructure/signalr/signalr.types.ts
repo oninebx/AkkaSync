@@ -2,4 +2,5 @@ export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'un
 export type ConnectionState = {
   status: ConnectionStatus;
   retryCount: number;
+  lastError?: string;
 }
