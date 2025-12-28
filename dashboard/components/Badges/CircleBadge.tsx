@@ -16,4 +16,4 @@ const CircleBadge = ({color, text, className}: Props) => {
   )
 }
 
-export default CircleBadge
+export default CircleBadge;

@@ -1,6 +1,6 @@
 import React from 'react'
-import CircleBadge from './CircleBadge';
 import { cn } from '@/lib/utils';
+import { CircleBadge } from '@/components/Badges';
 
 interface Props {
   label: string;

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import React from 'react';
 
-export interface Column<T> {
+export interface Column<T = string> {
   key: keyof T;
   header: string;
   render?: (item: T) => React.ReactNode;
@@ -15,6 +15,7 @@ interface TableProps<T> {
 }
 
 function DisplayTable<T>({columns, data, className}: TableProps<T>){
+
   return (
     <div className={cn('overflow-x-auto', className)}>
       <table className="min-w-full text-sm">
