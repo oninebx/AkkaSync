@@ -4,7 +4,7 @@ import { AppDispatch } from "@/store";
 import { HubConnection } from "@microsoft/signalr";
 
 export function registerSignalRHandlers(connection: HubConnection, dispatch: AppDispatch) {
-  const onEvent = (envelope: EventEnvelope) => {
+  const onEvent = <T extends object>(envelope: EventEnvelope<T>) => {
     dispatch(signalREventReceived(envelope));
   }
   connection.on('ReceiveDashboardEvent', onEvent);

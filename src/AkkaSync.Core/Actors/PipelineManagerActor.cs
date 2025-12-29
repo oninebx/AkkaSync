@@ -40,7 +40,9 @@ public class PipelineManagerActor : ReceiveActor
     Receive<StartPipelineManager>(_ =>
     {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      Context.System.EventStream.Publish(new PipelineManagerStarted(_config.Pipelines.Count));
+      IReadOnlyList<string> pipelines = [.. _layers.SelectMany(layer => layer)];
+
+      Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
       StartNextLayer();
     });
 

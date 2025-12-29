@@ -4,3 +4,6 @@ export type ConnectionState = {
   retryCount: number;
   lastError?: string;
 }
+export interface ConnectionStatusEvent {
+  status: ConnectionStatus;
+}

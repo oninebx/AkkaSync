@@ -3,7 +3,7 @@ using AkkaSync.Abstractions;
 
 namespace AkkaSync.Core.Events;
 
-public sealed record PipelineManagerStarted(int PipelinesTotal) : ISyncEvent
+public sealed record PipelineManagerStarted(IReadOnlyList<string> Pipelines) : ISyncEvent
 {
   public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
 }

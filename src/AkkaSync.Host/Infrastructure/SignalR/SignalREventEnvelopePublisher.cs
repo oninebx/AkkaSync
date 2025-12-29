@@ -22,7 +22,7 @@ public class SignalREventEnvelopePublisher : IEventEnvelopePublisher
     var clients = _registry.GetClientsForEnvelope(envelope);
     foreach(var clientId in clients)
     {
-      await _hub.Clients.Client(clientId).SendAsync("ReceiveDashboardEvent", new List<EventEnvelope<T>> { envelope });
+      await _hub.Clients.Client(clientId).SendAsync("ReceiveDashboardEvent", envelope);
       _registry.UpdateLastSeen(clientId, envelope.Sequence);
     }
   }

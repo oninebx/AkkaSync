@@ -12,6 +12,8 @@ import { HostStatus } from "@/features/host/host.types";
 import { useSignalRInvoke, useSignalRQuery } from "@/providers/SingalRProvider";
 import PipelineTable from "./components/PipelineTable/PipelineTable";
 import SyncWorkerTable from "./components/SyncWorkerTable/SyncWorkerTable";
+import { selectHostPipelines } from "@/features/host/host.selectors";
+import useKpis from "./components/KpiBanner/useKpis";
 
 // const events: EventItem[] = [
 //   { time: "14:02:01", level: "INFO", message: "Pipeline UserSync started" },
@@ -29,11 +31,13 @@ export default function HomePage() {
   // const KpiData = useKpis(snapshot);
   // const { status, startAt } = snapshot;
   const connectionStatus = useSelector(selectConnectionStatus);
+  const pipelines = useSelector(selectHostPipelines);
+
   const events = useSelector(selectEventsOrdered);
   const KpiData = [
     { id: 'running', title: "Running Pipelines", color: "#1F2937", value: '1' },
     { id: 'failed', title: "Failed (24h)", color: "#EF4444", value: '2' },
-    { id: 'total', title: "Total Pipelines", color: "#1F2937", value: '3' },
+    { id: 'total', title: "Total Pipelines", color: "#1F2937", value: pipelines.length.toString() },
     { id: 'queued', title: "Queued Jobs", color: "#FBBF24", value: '4' },
   ];
   // const connectionStatus = 'connected';
@@ -42,7 +46,6 @@ export default function HomePage() {
 
   // const {loading, data, error} = useSignalRQuery<PingResponse>('QueryTest', {Value: 'ping'}, true);
   // console.log(loading, data, error);
-  // console.log('-----');
   const { queryInvoke } = useSignalRInvoke<PingResponse>();
   
   const handleClick = async () => {

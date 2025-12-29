@@ -7,7 +7,7 @@ using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 
-public class InMemoryHostStateStore( ILogger<InMemoryHostStateStore> logger) : IHostStateStore, IReplayStore<HostSnapshot>
+public class InMemoryHostStateStore( ILogger<InMemoryHostStateStore> logger) : IHostStateStore, IReplayStore<IStoreValue>
 {
   private volatile HostSnapshot _snapshot = HostSnapshot.Empty;
   public HostSnapshot Snapshot => _snapshot;
@@ -18,7 +18,7 @@ public class InMemoryHostStateStore( ILogger<InMemoryHostStateStore> logger) : I
    _snapshot = snapshot;
   }
 
-  IReadOnlyList<HostSnapshot> IReplayStore<HostSnapshot>.GetEventsToReplay(long lastSeenSequence)
+  IReadOnlyList<IStoreValue> IReplayStore<IStoreValue>.GetEventsToReplay(long lastSeenSequence)
   {
     return [_snapshot];
   }

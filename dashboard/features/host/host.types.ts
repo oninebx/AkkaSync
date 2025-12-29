@@ -7,12 +7,12 @@ export enum HostStatus {
 
 export interface PipelineSnapshot {
   id: string,
+  schedule: string,
   startAt: string
 }
 
 export interface HostSnapshot {
   status: HostStatus;
-  pipelinesTotal: number;
   startAt: string;
   pipelines?: PipelineSnapshot[];
 }

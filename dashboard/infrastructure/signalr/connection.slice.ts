@@ -1,5 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { ConnectionState } from "./signalr.types";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ConnectionState, ConnectionStatusEvent } from "./signalr.types";
 
 const initialState: ConnectionState = {
   status: 'connecting',
@@ -10,8 +10,8 @@ export const connectionSlice = createSlice({
   name: 'connection',
   initialState,
   reducers: {
-    connectionStatusChanged(state, action){
-      state.status = action.payload
+    connectionStatusChanged(state, action: PayloadAction<ConnectionStatusEvent>){
+      state.status = action.payload.status
     },
     connectionRetryIncremented(state) {
       state.retryCount += 1;

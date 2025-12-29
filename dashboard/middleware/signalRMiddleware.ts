@@ -4,14 +4,15 @@ import { Middleware } from "@reduxjs/toolkit";
 import { envelopeHandlers } from "./envelopeHandlers";
 
 export const signalRMiddleware: Middleware = store => next => action => {
+  console.log(action)
   if(signalREventReceived.match(action)) {
-    const envelope = action.payload as EventEnvelope;
+    const envelope = action.payload as EventEnvelope<object>;
     const handler = envelopeHandlers.get(envelope.type);
     if(handler) {
-      handler(envelope, store.dispatch, store.getState);
+      handler(envelope.event, store.dispatch, store.getState);
       console.log(`${envelope.type}(${envelope.id}) is handled.`);
     }
-    console.log(envelope);
+    // console.log(envelope);
   }
   return next(action);
 }

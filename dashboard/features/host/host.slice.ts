@@ -1,20 +1,29 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { HostSnapshot } from "./host.types";
+import { HostSnapshot, HostStatus, PipelineSnapshot } from "./host.types";
 
 export interface HostState {
-  snapshot: HostSnapshot | null;
+  status: HostStatus;
+  startAt: string;
+  pipelines: PipelineSnapshot[];
 }
 
 const initialState: HostState = {
-  snapshot: null,
+  status: HostStatus.Idle,
+  startAt: '',
+  pipelines: []
 }
 
 export const hostSlice = createSlice({
   name: 'host',
   initialState,
   reducers: {
-    snapshotUpdated(state, action: PayloadAction<HostSnapshot>){
-      state.snapshot = action.payload;
+    snapshotUpdated(state, action: PayloadAction<HostSnapshot>): HostState {
+      return {
+        status: action.payload.status,
+        startAt: action.payload.startAt,
+        pipelines: action.payload.pipelines ?? [],
+        
+      }
     }
   }
 });

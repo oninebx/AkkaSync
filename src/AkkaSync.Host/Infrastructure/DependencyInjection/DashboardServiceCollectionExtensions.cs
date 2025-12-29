@@ -18,8 +18,10 @@ public static class DashboardServiceExtension
     services.AddSingleton<ISequenceGenerator, InMemorySequenceGenerator>();
     services.AddSingleton<IEventEnvelopeFactory, EventEnvelopeFactory>();
 
-    services.AddSingleton<IReplayStore<HostSnapshot>, InMemoryHostStateStore>();
-    services.AddSingleton<IHostStateStore, InMemoryHostStateStore>();
+    services.AddSingleton<InMemoryHostStateStore>();
+    services.AddSingleton<IHostStateStore>(sp =>sp.GetRequiredService<InMemoryHostStateStore>());
+    services.AddSingleton<IReplayStore<IStoreValue>>(sp => sp.GetRequiredService<InMemoryHostStateStore>());
+
     services.AddSingleton<IDashboardClientRegistry, DashboardClientRegistry>();
     services.AddSingleton<IEventEnvelopePublisher, SignalREventEnvelopePublisher>();
 
