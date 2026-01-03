@@ -23,13 +23,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddSignalR();
 
 builder.Services.AddDashboard();
-var config = builder.Configuration.GetSection("AkkaSync").Get<PipelineConfig>()!;
+var options = builder.Configuration.GetSection("AkkaSync").Get<AkkaSyncOptions>()!;
 
 builder.Services.AddAkkaSync((resolver, actorHooks) =>
 {
   actorHooks.Add(new ActorHook(resolver.Props<DashboardProxyActor>(), "dashboard-proxy"));
 }).AddAkkaSyncPlugins("plugins")
-.AddSingleton(config);
+.AddSingleton(options);
 
 builder.Services.AddHostedService<Worker>();
 

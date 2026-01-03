@@ -3,8 +3,8 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Core.Actors;
-using AkkaSync.Core.Commands.PipelineManager;
 using AkkaSync.Core.Events;
+using AkkaSync.Core.Runtime.PipelineManager;
 
 namespace AkkaSync.Infrastructure;
 
@@ -45,7 +45,7 @@ public class SyncRuntimeActor : ReceiveActor
       if(hook.Name == "pipeline-manager")
       {
         _pipelineManager = actorRef;
-         _pipelineManager?.Tell(new StartPipelineManager());
+         _pipelineManager?.Tell(new PipelineManagerProtocol.Start());
       }
     }
   }

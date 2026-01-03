@@ -12,7 +12,7 @@ public class InMemoryHistoryStoreProvider : IPluginProvider<IHistoryStore>
   public string Key => nameof(InMemoryHistoryStoreProvider);
   private readonly ConcurrentDictionary<string, Lazy<IHistoryStore>> _stores = [];
 
-  public IEnumerable<IHistoryStore> Create(PluginContext context, CancellationToken cancellationToken = default)
+  public IEnumerable<IHistoryStore> Create(PluginSpec context, CancellationToken cancellationToken = default)
   {
     cancellationToken.ThrowIfCancellationRequested();
     var key = GenerateKey(context.Parameters);

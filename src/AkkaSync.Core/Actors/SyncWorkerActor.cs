@@ -3,12 +3,13 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
-using AkkaSync.Core.Messages;
+using AkkaSync.Core.Domain.Worker;
 
 namespace AkkaSync.Core.Actors;
 
 public class SyncWorkerActor : ReceiveActor
 {
+  private readonly WorkerId _id;
   private readonly ISyncSource _source;
   private ISyncTransformer _transformer;
   private readonly ISyncSink _sink;
@@ -17,6 +18,7 @@ public class SyncWorkerActor : ReceiveActor
   private readonly int _batchSize;
   private readonly string? _cursor;
   public SyncWorkerActor(
+    WorkerId id,
     ISyncSource source, 
     ISyncTransformer transformer, 
     ISyncSink sink, 
@@ -24,19 +26,22 @@ public class SyncWorkerActor : ReceiveActor
     string? cursor,
     CancellationToken cancellationToken)
   {
+    _id = id;
     _source = source;
     _transformer = transformer;
     _sink = sink;
     _cancellationToken = cancellationToken;
     _batchSize = batchSize;
     _cursor = cursor;
-    ReceiveAsync<StartProcessing>(async _ => await RunPipeline());
+
+    ReceiveAsync<WorkerProtocol.Start>(_ => StartAsync());
+    // ReceiveAsync<StartProcessing>(async _ => await RunPipeline());
   }
 
-  override protected void PreStart() => Self.Tell(new StartProcessing());
-
-  private async Task RunPipeline()
+  private async Task StartAsync()
   {
+    Context.System.EventStream.Publish(new WorkerStarted(_id));
+
     _cancellationToken.ThrowIfCancellationRequested();
     _logger.Info($"Worker {Self.Path.Name} started processing.");
 
@@ -45,7 +50,7 @@ public class SyncWorkerActor : ReceiveActor
       if(batch.Count >= size)
       {
         await _sink.WriteAsync(batch, _cancellationToken);
-        Context.Parent.Tell(new ProcessingProgress(_source.Id, batch.Last().Cursor));
+        Context.Parent.Tell(new WorkerProgressed(_id, batch.Last().Cursor));
         batch.Clear();
       }
     }
@@ -62,11 +67,12 @@ public class SyncWorkerActor : ReceiveActor
 
       await FlushAsync(batch, 1);
       
-      Context.Parent.Tell(new ProcessingCompleted(Self.Path.Name, _source.Id, _source.ETag));
+      // Context.Parent.Tell(new ProcessingCompleted(Self.Path.Name, _source.Id, _source.ETag));
+      Context.Parent.Tell(new WorkerCompleted(_id, _source.ETag));
     }
     catch (Exception ex)
     {
-      Context.Parent.Tell(new ProcessingFailed(Self.Path.Name, _source.Id, ex.Message));
+      Context.Parent.Tell(new WorkerFailed(_id, ex.Message));
       _logger.Error(ex, $"Worker {Self.Path.Name} encountered an error: {ex.Message}");
     }
     finally

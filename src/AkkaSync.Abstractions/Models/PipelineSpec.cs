@@ -2,17 +2,18 @@ using System;
 
 namespace AkkaSync.Abstractions.Models;
 
-public record PipelineContext{
+public record PipelineSpec 
+{
   public required string Name { get; init; }
   public bool AutoStart { get; init; } = true;
-  public required PluginContext SourceProvider { get; init; }
-  public required PluginContext TransformerProvider { get; init; }
-  public required PluginContext SinkProvider { get; init; }
-  public required PluginContext HistoryStoreProvider { get; init; }
+  public required PluginSpec SourceProvider { get; init; }
+  public required PluginSpec TransformerProvider { get; init; }
+  public required PluginSpec SinkProvider { get; init; }
+  public required PluginSpec HistoryStoreProvider { get; init; }
   public required List<string> DependsOn { get; init; } = [];
 }
 
-public record PluginContext
+public record PluginSpec
 {
   public required string Type { get; init; }
   public IReadOnlyDictionary<string, string> Parameters { get; init; } = new Dictionary<string, string>();
