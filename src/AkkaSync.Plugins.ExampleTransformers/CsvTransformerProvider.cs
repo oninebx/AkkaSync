@@ -8,7 +8,7 @@ public class CsvTransformerProvider : IPluginProvider<ISyncTransformer>
 {
   public string Key => nameof(CsvTransformerProvider);
 
-  public IEnumerable<ISyncTransformer> Create(PluginContext context,CancellationToken cancellationToken)
+  public IEnumerable<ISyncTransformer> Create(PluginSpec context,CancellationToken cancellationToken)
   {
     switch (context.Parameters["transform"])
     {

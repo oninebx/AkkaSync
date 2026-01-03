@@ -15,7 +15,7 @@ using AkkaSync.Plugins.Transformer.examples;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).AddEnvironmentVariables();
-var config = builder.Configuration.GetSection("AkkaSync").Get<PipelineConfig>()!;
+var syncOptions = builder.Configuration.GetSection("AkkaSync").Get<AkkaSyncOptions>()!;
 
 var services = new ServiceCollection();
 services.AddLogging(config =>
@@ -30,7 +30,7 @@ services.AddAkkaSync()
         .AddFileSource()
         .AddInMemoryHistoryStore();
 
-services.AddSingleton<PipelineConfig>(config);
+services.AddSingleton(syncOptions);
 var serviceProvider = services.BuildServiceProvider();
 
 // var actorSystem = serviceProvider.RunAkkaSync();

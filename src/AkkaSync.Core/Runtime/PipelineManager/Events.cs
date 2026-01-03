@@ -1,7 +1,7 @@
 using System;
 using AkkaSync.Abstractions;
 
-namespace AkkaSync.Core.Events;
+namespace AkkaSync.Core.Runtime.PipelineManager;
 
 public sealed record PipelineManagerStarted(IReadOnlyList<string> Pipelines) : ISyncEvent
 {

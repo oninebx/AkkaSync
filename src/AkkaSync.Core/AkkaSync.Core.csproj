@@ -14,9 +14,4 @@
     <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Commands/PipelineManager/" />
-    <Folder Include="Events/" />
-  </ItemGroup>
-
 </Project>

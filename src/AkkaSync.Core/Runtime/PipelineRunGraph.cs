@@ -1,15 +1,31 @@
 using System;
+using Akka.Actor;
+using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Domain.Pipeline;
+using AkkaSync.Core.Domain.Shared;
 
-namespace AkkaSync.Abstractions.Models;
+namespace AkkaSync.Core.Runtime;
 
-public record PipelineConfig
+public sealed class PipelineRunGraph
 {
-  public IReadOnlyList<PipelineContext> Pipelines { get; init; } = [];
+  private IReadOnlyList<IReadOnlySet<string>> _layers { get; }
 
-  public IReadOnlyList<IReadOnlySet<string>> BuildLayers()
+  private PipelineRunGraph(IReadOnlyList<IReadOnlySet<string>> layers)
   {
-    var pipelineDict = Pipelines.ToDictionary(p => p.Name, p => p);
-    foreach (var pipeline in Pipelines)
+    _layers = layers;
+  }
+
+  public IReadOnlySet<string> Layer(int index)
+  {
+    return _layers[index];
+  }
+
+  public int LayerCount => _layers.Count;
+
+  public static PipelineRunGraph Create(IReadOnlyList<PipelineSpec> pipelineSpecs)
+  {
+    var pipelineDict = pipelineSpecs.ToDictionary(p => p.Name, p => p);
+    foreach (var pipeline in pipelineSpecs)
     {
       foreach (var dep in pipeline.DependsOn)
       {
@@ -23,11 +39,11 @@ public record PipelineConfig
     var layers = new List<HashSet<string>>();
     var processed = new HashSet<string>();
 
-    while (processed.Count < Pipelines.Count)
+    while (processed.Count < pipelineSpecs.Count)
     {
       var currentLayer = new HashSet<string>();
 
-      foreach (var pipeline in Pipelines)
+      foreach (var pipeline in pipelineSpecs)
       {
         if (processed.Contains(pipeline.Name))
           continue;
@@ -48,7 +64,6 @@ public record PipelineConfig
       }
     }
 
-    return layers;
+    return new PipelineRunGraph(layers);
   }
-
 }

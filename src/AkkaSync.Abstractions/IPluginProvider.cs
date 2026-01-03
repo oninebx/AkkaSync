@@ -7,5 +7,5 @@ namespace AkkaSync.Abstractions;
 public interface IPluginProvider<T> where T : class
 {
   string Key { get; }
-  IEnumerable<T> Create(PluginContext context, CancellationToken cancellationToken = default);
+  IEnumerable<T> Create(PluginSpec context, CancellationToken cancellationToken = default);
 }

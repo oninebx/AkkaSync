@@ -18,7 +18,7 @@ public class FolderWatcherSourceProvider : IPluginProvider<ISyncSource>
     _generator = generator;
   }
 
-  IEnumerable<ISyncSource> IPluginProvider<ISyncSource>.Create(PluginContext context, CancellationToken cancellationToken)
+  IEnumerable<ISyncSource> IPluginProvider<ISyncSource>.Create(PluginSpec context, CancellationToken cancellationToken)
   {
     var extension = context.Parameters["source"];
     var files = Directory.GetFiles(context.Parameters["folder"], $"*.{extension}");

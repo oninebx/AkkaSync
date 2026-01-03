@@ -15,7 +15,7 @@ public class SqliteSinkProvider : IPluginProvider<ISyncSink>
     _factory = factory;
   }
 
-  public IEnumerable<ISyncSink> Create(PluginContext context, CancellationToken cancellationToken = default)
+  public IEnumerable<ISyncSink> Create(PluginSpec context, CancellationToken cancellationToken = default)
   {
     var connectionString = context.Parameters["connectionString"];
 

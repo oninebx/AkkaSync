@@ -2,7 +2,6 @@ using System;
 using Akka.Actor;
 using Akka.DependencyInjection;
 using AkkaSync.Core.Actors;
-using AkkaSync.Core.Messging;
 
 namespace AkkaSync.Examples;
 

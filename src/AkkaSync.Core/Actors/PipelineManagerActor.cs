@@ -3,11 +3,13 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
-using AkkaSync.Core.Commands.PipelineManager;
 using AkkaSync.Core.Common;
+using AkkaSync.Core.Domain.Pipeline;
+using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Events;
-using AkkaSync.Core.Messages;
 using AkkaSync.Core.PluginProviders;
+using AkkaSync.Core.Runtime;
+using AkkaSync.Core.Runtime.PipelineManager;
 
 namespace AkkaSync.Core.Actors;
 
@@ -17,10 +19,12 @@ public class PipelineManagerActor : ReceiveActor
   private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
   private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
-  private readonly PipelineConfig _config;
-  private readonly Dictionary<string, IActorRef> _pipelines = [];
+  // private readonly PipelineConfig _config;
+  // private readonly Dictionary<string, IActorRef> _pipelines = [];
+  private readonly Dictionary<string, PipelineSpec> _pipelineSpecs;
   private readonly HashSet<string> _completedPipelines = [];
-  private IReadOnlyList<IReadOnlySet<string>> _layers;
+  private PipelineRunGraph _runGraph;
+  // private IReadOnlyList<string> _pipelines;
   private int _currentLayerIndex = 0;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   public PipelineManagerActor(
@@ -28,118 +32,130 @@ public class PipelineManagerActor : ReceiveActor
     IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
     IPluginProviderRegistry<ISyncSink> sinkRegistry,
     IPluginProviderRegistry<IHistoryStore> storeRegistry,
-    PipelineConfig config)
+    AkkaSyncOptions config)
   {
     _sourceRegistry = sourceRegistry;
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
     _storeRegistry = storeRegistry;
-    _config = config;
-    _layers = _config.BuildLayers();
+    // _config = config;
+    _runGraph = PipelineRunGraph.Create(config.Pipelines);
+    _pipelineSpecs = config.Pipelines.ToDictionary(p => p.Name, p => p);
 
-    Receive<StartPipelineManager>(_ =>
+    Receive<PipelineManagerProtocol.Start>(_ =>
     {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      IReadOnlyList<string> pipelines = [.. _layers.SelectMany(layer => layer)];
-
-      Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
+      var pipelines = _pipelineSpecs.Values.Select(s => s.Name).ToList().AsReadOnly();
       StartNextLayer();
+      Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
+    });
+    Receive<PipelineProtocol.Create>(msg => CreatePipeline(msg));
+    Receive<PipelineCompleted>(msg => {
+      var pipelineName = msg.PipelineId.Name;
+      _logger.Info($"Pipeline {msg.PipelineId} completed");
+      HandleLayer(pipelineName);
     });
 
-    Receive<Terminated>(msg =>
-    {
-      var actorName = msg.ActorRef.Path.Name;
-      _pipelines.Remove(actorName);
-      HandleLayer(actorName);
+    // Receive<Terminated>(msg =>
+    // {
+    //   var actorRef = msg.ActorRef;
+    //   var pipelineName = actorRef.Path.Name;
+      
+    //   _logger.Info($"Pipeline {pipelineName} terminated.");
+      
+    //   // 处理层级调度
+    //   HandleLayer(pipelineName);
+    // });
 
-      Context.System.EventStream.Publish(new PipelineCompleted(actorName));
-    });
+    
+    // Receive<PipelineStarted>(msg => {
+    //   Context.System.EventStream.Publish(msg);
+    // });
+    // Receive<PipelineCompleted>(msg => {
 
-    Receive<StartPipeline>(msg => HandleStartPipeline(msg));
-    Receive<StopPipeline>(msg => HandleStopPipeline(msg));
+    //   Context.System.EventStream.Publish(msg);
+    // });
+    // Receive<StopPipeline>(msg => HandleStopPipeline(msg));
+  }
+
+  protected override void PreStart()
+  {
+    Context.System.EventStream.Subscribe(Self, typeof(PipelineCompleted));
   }
 
   private void StartNextLayer()
   {
-    if(_currentLayerIndex >= _layers.Count)
+    if(_currentLayerIndex >= _runGraph.LayerCount)
     {
       _logger.Info("All pipeline layers have been started.");
       return;
     }
-    var layer = _layers[_currentLayerIndex];
-    var contexts = _config.Pipelines.Where(p => p.AutoStart).ToDictionary(p => p.Name, p => p);
+    var layer = _runGraph.Layer(_currentLayerIndex);
     foreach(var name in layer)
     {
-      if(contexts.TryGetValue(name, out var context))
-      {
-        Self.Tell(new StartPipeline(context));
-      }
+      var runId = RunId.New();
+      Self.Tell(new PipelineProtocol.Create(runId, name));
     }
   }
 
-  private void HandleStartPipeline(StartPipeline msg)
+  private void CreatePipeline(PipelineProtocol.Create msg)
   {
-    var context = msg.Context;
-    if (!_pipelines.ContainsKey(context.Name))
+    var spec = _pipelineSpecs[msg.Name];
+    var actorName = $"{msg.Name}-${msg.RunId}";
+    if (Context.Child(actorName).IsNobody())
     {
-      var source = context.SourceProvider;
+      var source = spec.SourceProvider;
       var sourceProvider = _sourceRegistry.GetProvider(source.Type);
 
-      var transformer = context.TransformerProvider;
+      var transformer = spec.TransformerProvider;
       var transformerChain = _transformerRegistry.GetProvider(transformer.Type);
 
-      var sink = context.SinkProvider;
+      var sink = spec.SinkProvider;
       var sinkProvider = _sinkRegistry.GetProvider(sink.Type);
 
-      var store = context.HistoryStoreProvider;
+      var store = spec.HistoryStoreProvider;
       var storeProvider = _storeRegistry.GetProvider(store?.Type ?? string.Empty);
       
       if(sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
       {
-         var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, context)), context.Name);
-        _pipelines[context.Name] = pipelineActor;
-        Context.Watch(pipelineActor);
-        _logger.Info($"Started pipeline with ID {context.Name}.");
-        Context.System.EventStream.Publish(new PipelineStarted(context.Name));
+        var pipelineId = new PipelineId(msg.RunId, msg.Name);
+        var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, pipelineId, spec)), pipelineId.ToString());
+        // Context.Watch(pipelineActor);
+        pipelineActor.Tell(new PipelineProtocol.Start());
       }
       else
       {
-        _logger.Warning($"Failed to create pipeline {context.Name}. Source, Transformer or Sink provider not found.");
+        _logger.Warning($"Failed to create pipeline {spec.Name}. Source, Transformer or Sink provider not found.");
         return;
       }
     }
     else
     {
-      _logger.Warning($"Pipeline with ID {context.Name} already exists.");
+      _logger.Warning($"Pipeline with ID {spec.Name} already exists.");
     }
-    var actor = _pipelines[context.Name];
-    actor.Tell(new StartSync(), Sender);
-    
   }
 
-  private void HandleLayer(string actorName)
+  private void HandleLayer(string pipelineName)
   {
-    _completedPipelines.Add(actorName);
-    var currentLayer = _layers[_currentLayerIndex];
+    _completedPipelines.Add(pipelineName);
+    var currentLayer = _runGraph.Layer(_currentLayerIndex);
     if(_completedPipelines.IsSupersetOf(currentLayer))
     {
       _logger.Info($"All pipelines in layer {_currentLayerIndex} have completed. Starting next layer.");
       _currentLayerIndex++;
       StartNextLayer();
     }
-    
-    _logger.Info($"Pipeline {actorName} completed.");
   }
 
-  private void HandleStopPipeline(StopPipeline msg)
-  {
-    if(_pipelines.TryGetValue(msg.Name, out var actor))
-    {
-      actor.Tell(new StopSync(), Sender);
-    }
-    else
-    {
-      _logger.Warning($"Pipeline with ID {msg.Name} does not exist.");
-    }
-  }
+  // private void HandleStopPipeline(StopPipeline msg)
+  // {
+  //   if(_pipelines.TryGetValue(msg.Name, out var actor))
+  //   {
+  //     actor.Tell(new StopSync(), Sender);
+  //   }
+  //   else
+  //   {
+  //     _logger.Warning($"Pipeline with ID {msg.Name} does not exist.");
+  //   }
+  // }
 }

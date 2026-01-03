@@ -7,7 +7,6 @@ using Akka.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using AkkaSync.Core.Actors;
 using System.Reflection;
-using AkkaSync.Core.Commands.PipelineManager;
 
 namespace AkkaSync.Infrastructure.DependencyInjection;
 
