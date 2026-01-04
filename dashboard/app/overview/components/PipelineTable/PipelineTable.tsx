@@ -5,7 +5,7 @@ import { OverviewPipeline, usePipelines } from './usePipelines';
 
 const pipelineColumns: Column<OverviewPipeline>[] = [
   { key: "name", header: "Pipeline" },
-  { key: 'activeRuns', header: 'Active Runs' },
+  { key: 'duration', header: 'Duration' },
   { key: "schedule", header: "Schedule" },
   { key: "lastRun", header: "Last Run" },
 ];

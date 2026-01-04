@@ -1,6 +1,4 @@
 using Akka.Actor;
-using AkkaSync.Core.Events;
-using AkkaSync.Core.Messages;
 
 namespace AkkaSync.Host;
 

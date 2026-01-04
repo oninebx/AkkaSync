@@ -70,7 +70,6 @@ export default function HomePage() {
             <RecentEventsCard events={events.map(e => mapEnvelope(e))}/>
           </div>
           <PipelineTable />
-          <SyncWorkerTable />
           <div onClick={handleClick}>Ping Test</div>
         </div>
       </div>

@@ -3,11 +3,9 @@ using System;
 namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 public record PipelineSnapshot(
-  string Id, 
+  string Id,
   string Schedule)
 {
-  public static PipelineSnapshot FromId(string Id)
-  {
-    return new PipelineSnapshot(Id, "Every 10 mins");
-  }
+  public DateTimeOffset? StartedAt {get; init;}
+  public DateTimeOffset? FinishedAt {get; init;}
 };

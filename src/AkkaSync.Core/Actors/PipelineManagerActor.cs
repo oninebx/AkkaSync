@@ -6,7 +6,6 @@ using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipeline;
 using AkkaSync.Core.Domain.Shared;
-using AkkaSync.Core.Events;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Core.Runtime;
 using AkkaSync.Core.Runtime.PipelineManager;
@@ -19,12 +18,9 @@ public class PipelineManagerActor : ReceiveActor
   private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
   private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
-  // private readonly PipelineConfig _config;
-  // private readonly Dictionary<string, IActorRef> _pipelines = [];
   private readonly Dictionary<string, PipelineSpec> _pipelineSpecs;
   private readonly HashSet<string> _completedPipelines = [];
   private PipelineRunGraph _runGraph;
-  // private IReadOnlyList<string> _pipelines;
   private int _currentLayerIndex = 0;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   public PipelineManagerActor(
@@ -38,14 +34,13 @@ public class PipelineManagerActor : ReceiveActor
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
     _storeRegistry = storeRegistry;
-    // _config = config;
     _runGraph = PipelineRunGraph.Create(config.Pipelines);
     _pipelineSpecs = config.Pipelines.ToDictionary(p => p.Name, p => p);
 
     Receive<PipelineManagerProtocol.Start>(_ =>
     {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      var pipelines = _pipelineSpecs.Values.Select(s => s.Name).ToList().AsReadOnly();
+      var pipelines = _pipelineSpecs.Values.Select(s => new PipelineInfo(s.Name, s.Schedule)).ToList().AsReadOnly();
       StartNextLayer();
       Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
     });
