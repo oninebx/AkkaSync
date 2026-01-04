@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Immutable;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Events;
+using AkkaSync.Core.Domain.Pipeline;
+using AkkaSync.Core.Runtime.PipelineManager;
 using AkkaSync.Host.Domain.Dashboard;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
@@ -13,9 +14,11 @@ public static class HostStateReducer
   {
     return @event switch
     {
-      PipelineManagerStarted e => current with { StartAt = @event.Timestamp, Pipelines = [..e.Pipelines.Select(p => PipelineSnapshot.FromId(p))] },
-      // PipelineStarted e => current with { Pipelines =  current.Pipelines.Add(PipelineSnapshot.FromId(e.Id))},
-      // PipelineCompleted e => current with { Pipelines = [.. current.Pipelines.Where(p => p.Id != e.Id)] },
+      PipelineManagerStarted e => current with { StartAt = @event.Timestamp, Pipelines = [..e.Pipelines.Select(p => new PipelineSnapshot(p.Name, p.Schedule))] },
+      PipelineStarted e => current with { Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Name ? 
+        p with { StartedAt = e.Timestamp } : p)] },
+      PipelineCompleted e => current with { Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Name ?
+        p with { FinishedAt = e.Timestamp } : p)]},
       _ => current
     };
   }

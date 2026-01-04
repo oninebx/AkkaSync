@@ -1,7 +1,6 @@
 using System;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Pipeline;
-using AkkaSync.Core.Events;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 

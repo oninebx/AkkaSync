@@ -5,6 +5,7 @@ namespace AkkaSync.Abstractions.Models;
 public record PipelineSpec 
 {
   public required string Name { get; init; }
+  public required string Schedule { get; init; } = "0 0 * * *";
   public bool AutoStart { get; init; } = true;
   public required PluginSpec SourceProvider { get; init; }
   public required PluginSpec TransformerProvider { get; init; }

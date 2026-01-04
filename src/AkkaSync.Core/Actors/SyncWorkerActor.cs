@@ -35,7 +35,6 @@ public class SyncWorkerActor : ReceiveActor
     _cursor = cursor;
 
     ReceiveAsync<WorkerProtocol.Start>(_ => StartAsync());
-    // ReceiveAsync<StartProcessing>(async _ => await RunPipeline());
   }
 
   private async Task StartAsync()

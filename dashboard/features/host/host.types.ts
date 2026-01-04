@@ -8,7 +8,8 @@ export enum HostStatus {
 export interface PipelineSnapshot {
   id: string,
   schedule: string,
-  startAt: string
+  startedAt: string,
+  finishedAt: string
 }
 
 export interface HostSnapshot {

@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Core.Actors;
-using AkkaSync.Core.Events;
 using AkkaSync.Core.Runtime.PipelineManager;
 
 namespace AkkaSync.Infrastructure;

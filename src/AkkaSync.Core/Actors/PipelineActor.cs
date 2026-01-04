@@ -55,7 +55,7 @@ namespace AkkaSync.Core.Actors
         {
           Self.Tell(new WorkerProtocol.Create(_id, source));
         }
-        Context.System.EventStream.Publish(new PipelineStarted(_id, DateTimeOffset.UtcNow));
+        Context.System.EventStream.Publish(new PipelineStarted(_id));
         _logger.Info($"Pipeline {_id} started successfully.");
       }
 
