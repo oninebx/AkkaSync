@@ -1,9 +1,11 @@
 using System;
 using AkkaSync.Host.Application.Common;
+using AkkaSync.Host.Application.Dashboard.Events;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Application.Query.Handlers;
 using AkkaSync.Host.Domain.Dashboard.Repositories;
+using AkkaSync.Host.Domain.Dashboard.Services;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 using AkkaSync.Host.Infrastructure.SignalR;
 using AkkaSync.Host.Infrastructure.Stores;
@@ -18,20 +20,18 @@ public static class DashboardServiceExtension
     services.AddSingleton<ISequenceGenerator, InMemorySequenceGenerator>();
     services.AddSingleton<IEventEnvelopeFactory, EventEnvelopeFactory>();
 
-    services.AddSingleton<InMemoryHostStateStore>();
-    services.AddSingleton<IHostStateStore>(sp =>sp.GetRequiredService<InMemoryHostStateStore>());
-    services.AddSingleton<IReplayStore<IStoreValue>>(sp => sp.GetRequiredService<InMemoryHostStateStore>());
+    services.AddSingleton<IDashboardStore, InMemoryDashboardStore>();
+    services.AddSingleton(sp => 
+      new EventReducerRegistryBuilder()
+      .Add<HostSnapshot>(HostStateReducer.Reduce)
+      .Add<PipelineSchedules>(ScheduleStateReducer.Reduce)
+      .Build());
 
     services.AddSingleton<IDashboardClientRegistry, DashboardClientRegistry>();
     services.AddSingleton<IEventEnvelopePublisher, SignalREventEnvelopePublisher>();
 
     services.AddSingleton<IDashboardQueryDispatcher, DashboardQueryDispatcher>();
     services.AddSingleton<IQueryHandler, QueryTestHandler>();
-
-    // services.AddSingleton<IHostSnapshotPublisher, SignalRHostSnapshotPublisher>();
-    // builder.Services.AddSingleton<IEventEnvelopePublisher, SignalREventEnvelopePublisher>();
-    
-    // services.AddSingleton<IDashboardEventStore, InMemoryDashboardEventStore>();
     return services;
   }
 }

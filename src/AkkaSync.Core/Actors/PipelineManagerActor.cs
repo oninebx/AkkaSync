@@ -28,14 +28,14 @@ public class PipelineManagerActor : ReceiveActor
     IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
     IPluginProviderRegistry<ISyncSink> sinkRegistry,
     IPluginProviderRegistry<IHistoryStore> storeRegistry,
-    AkkaSyncOptions config)
+    PipelineOptions options)
   {
     _sourceRegistry = sourceRegistry;
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
     _storeRegistry = storeRegistry;
-    _runGraph = PipelineRunGraph.Create(config.Pipelines);
-    _pipelineSpecs = config.Pipelines.ToDictionary(p => p.Name, p => p);
+    _runGraph = PipelineRunGraph.Create(options.Pipelines);
+    _pipelineSpecs = options.Pipelines.ToDictionary(p => p.Name, p => p);
 
     Receive<PipelineManagerProtocol.Start>(_ =>
     {

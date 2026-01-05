@@ -1,8 +1,41 @@
 using System;
-using System.Collections.Immutable;
-using AkkaSync.Host.Application.Dashboard.Stores;
+using AkkaSync.Host.Domain.Dashboard.Repositories;
+using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
+
+public class InMemoryDashboardStore : IDashboardStore
+{
+  private volatile HostSnapshot _snapshot = HostSnapshot.Empty;
+  private volatile PipelineSchedules _schedules = PipelineSchedules.Empty;
+
+  public HostSnapshot Snapshot => _snapshot;
+
+  public PipelineSchedules Schedules => _schedules;
+
+  public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
+  {
+    return [
+      _snapshot,
+      _schedules
+    ];
+  }
+
+  public void Update<TValue>(TValue state) where TValue : IStoreValue
+  {
+    switch (state)
+    {
+      case HostSnapshot snapshot:
+        _snapshot = snapshot;
+        break;
+      case PipelineSchedules schedules:
+        _schedules = schedules;
+        break;
+      default:
+        throw new InvalidOperationException($"Unsupported store value type: {typeof(TValue).Name}");
+    }
+  }
+}
 
 // public class InMemoryDashboardEventStore : IDashboardEventStore
 // {

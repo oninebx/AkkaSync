@@ -1,6 +1,6 @@
 import { Column } from "@/components/DisplayTable";
 import { selectHostPipelines } from "@/features/host/host.selectors";
-import { cronToText, formatDuration, formatTimeMixed } from "@/shared/utils/time";
+import { cronToNext, cronToText, formatDuration, formatTimeMixed } from "@/shared/utils/time";
 import { useSelector } from "react-redux";
 
 interface OverviewPipeline {
@@ -10,13 +10,8 @@ interface OverviewPipeline {
   schedule: string;
   duration: string;
   lastRun: string;
+  nextRun: string;
 }
-
-// const pipelinesData: OverviewPipeline[] = [
-//   { name: "UserSync", schedule: "every 10 mins", activeRuns: '2 / 6', lastRun: 'Success(2m32s)' },
-//   { name: "OrderSync", schedule: "Weekly", activeRuns: '1 / 5', lastRun: 'Failed'},
-//   { name: "PaymentSync", schedule: "Daily at 2:00 pm", activeRuns: '2 / 3', lastRun: "Success(1m54s)" },
-// ];
 
 const usePipelines = () => {
   const pipelines = useSelector(selectHostPipelines);
@@ -24,7 +19,8 @@ const usePipelines = () => {
     name: p.id,
     schedule: cronToText(p.schedule),
     duration: formatDuration(p.startedAt, p.finishedAt ?? new Date()),
-    lastRun: formatTimeMixed(p.startedAt)
+    lastRun: formatTimeMixed(p.startedAt),
+    nextRun: formatTimeMixed(cronToNext(p.schedule))
   } as OverviewPipeline));
   return data;
 }

@@ -1,3 +1,5 @@
+import parser from 'cron-parser';
+
 function calcDuration(startedAt: string | Date, finishedAt?: string | Date): number | null {
   if (!startedAt) return null;
 
@@ -21,19 +23,32 @@ function formatDuration(startedAt: string | Date, finishedAt?: string | Date): s
          `${seconds.toString().padStart(2, '0')}`;
 }
 
-function timeAgo(isoString: string | Date): string {
+function formatRelativeTime(date: string | Date): string {
   const now = Date.now();
-  const dt = new Date(isoString).getTime();
-  const diffSeconds = Math.floor((now - dt) / 1000);
+  const target = new Date(date).getTime();
+  const diffSeconds = Math.floor((target - now) / 1000);
+  const abs = Math.abs(diffSeconds);
 
-  if (diffSeconds < 60) return `${diffSeconds}s ago`;
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays}d ago`;
+  const isFuture = diffSeconds > 0;
+
+  if (abs < 60) {
+    return isFuture ? `in ${abs}s` : `${abs}s ago`;
+  }
+
+  const minutes = Math.floor(abs / 60);
+  if (minutes < 60) {
+    return isFuture ? `in ${minutes}m` : `${minutes}m ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return isFuture ? `in ${hours}h` : `${hours}h ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  return isFuture ? `in ${days}d` : `${days}d ago`;
 }
+
 function formatDateTime(isoString: string | Date): string {
   const date = new Date(isoString);
   const pad = (n: number) => n.toString().padStart(2, "0");
@@ -43,19 +58,22 @@ function formatDateTime(isoString: string | Date): string {
 }
 
 function formatTimeMixed(
-  isoString: string | Date,
+  date: string | Date | null | undefined,
   thresholdMinutes = 60
 ): string {
-  const now = Date.now();
-  const dt = new Date(isoString).getTime();
-  const diffMinutes = (now - dt) / 1000 / 60;
+  if (!date) return '—';
 
-  if (diffMinutes < thresholdMinutes) {
-    return timeAgo(isoString);
-  } else {
-    return formatDateTime(isoString);
+  const now = Date.now();
+  const target = new Date(date).getTime();
+  const diffMinutes = Math.abs(target - now) / 1000 / 60;
+
+  if (diffMinutes <= thresholdMinutes) {
+    return formatRelativeTime(date);
   }
+
+  return formatDateTime(date);
 }
+
 
 function dayOfWeekName(dow: string): string {
   const map = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -97,10 +115,24 @@ function cronToText(cronExpr: string): string {
   }
 }
 
+function cronToNext(cronExpr: string): string | undefined {
+  try {
+    const interval = parser.parse(cronExpr);
+    const next = interval.next().toDate(); // 得到原生 Date 对象
+    // 格式化为 YYYY-MM-DD HH:mm:ss
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())} ` +
+           `${pad(next.getHours())}:${pad(next.getMinutes())}:${pad(next.getSeconds())}`;
+  } catch {
+    return undefined;
+  }
+}
+
 export {
   formatDuration,
-  timeAgo,
+  formatRelativeTime,
   formatDateTime,
   formatTimeMixed,
-  cronToText
+  cronToText,
+  cronToNext
 }

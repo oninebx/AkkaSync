@@ -2,7 +2,7 @@ using System;
 
 namespace AkkaSync.Abstractions.Models;
 
-public record AkkaSyncOptions
+public record PipelineOptions
 {
   public IReadOnlyList<PipelineSpec> Pipelines { get; init; } = [];
 
