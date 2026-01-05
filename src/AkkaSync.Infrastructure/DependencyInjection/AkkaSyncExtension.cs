@@ -29,7 +29,8 @@ public static class AkkaSyncExtension
 
       var actorHooks = new List<ActorHook>
       {
-        new(resolver.Props<PipelineManagerActor>(), "pipeline-manager")
+        new(resolver.Props<PipelineManagerActor>(), "pipeline-manager"),
+        new(resolver.Props<PipelineSchedulerActor>(), "pipeline-scheduler")
       };
       config?.Invoke(resolver, actorHooks);
       system.ActorOf(resolver.Props<SyncRuntimeActor>(actorHooks), "sync-runtime");

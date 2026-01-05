@@ -1,4 +1,5 @@
 using System;
+using AkkaSync.Host.Application.Dashboard.Events;
 using AkkaSync.Host.Application.HostState.Events;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
@@ -11,6 +12,7 @@ public static class DashboardEventMapper
     return value switch
     {
       HostSnapshot snapshot => new SnapshotUpdated(snapshot),
+      PipelineSchedules schedules => new ScheduleUpdated(schedules.Data),
       _ => throw new NotImplementedException(nameof(value))
     };
   }

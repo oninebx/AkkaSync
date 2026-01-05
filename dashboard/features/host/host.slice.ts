@@ -22,7 +22,6 @@ export const hostSlice = createSlice({
       state.status = action.payload.status;
       state.startAt = action.payload.startAt;
       state.pipelines = action.payload.pipelines ?? [];
-      console.log(action.payload);
     }
   }
 });

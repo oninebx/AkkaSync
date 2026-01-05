@@ -4,9 +4,14 @@ using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 namespace AkkaSync.Host.Application.HostState.Events;
 
-public record SnapshotUpdated(HostSnapshot Snapshot) : IDashboardEvent
+public sealed record SnapshotUpdated : IDashboardEvent
 {
-  public string TypeName => "host.snapshot.updated";
+  public SnapshotUpdated(HostSnapshot Snapshot)
+  {
+    Payload = Snapshot;
+  }
 
-  public object Payload => Snapshot;
+  public string TypeName => "sync.snapshot.updated";
+
+  public object Payload { get; init; }
 }

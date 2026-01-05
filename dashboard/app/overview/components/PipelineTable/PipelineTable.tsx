@@ -8,9 +8,8 @@ const pipelineColumns: Column<OverviewPipeline>[] = [
   { key: 'duration', header: 'Duration' },
   { key: "schedule", header: "Schedule" },
   { key: "lastRun", header: "Last Run" },
+  { key: 'nextRun', header: 'Next Run'}
 ];
-
-// type Props = {}
 
 const PipelineTable = () => {
   const data = usePipelines();

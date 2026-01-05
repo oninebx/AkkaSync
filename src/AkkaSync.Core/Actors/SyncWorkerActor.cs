@@ -66,7 +66,6 @@ public class SyncWorkerActor : ReceiveActor
 
       await FlushAsync(batch, 1);
       
-      // Context.Parent.Tell(new ProcessingCompleted(Self.Path.Name, _source.Id, _source.ETag));
       Context.Parent.Tell(new WorkerCompleted(_id, _source.ETag));
     }
     catch (Exception ex)
