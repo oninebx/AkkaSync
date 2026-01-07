@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Core.Actors;
+using AkkaSync.Core.Domain.Pipeline.Scheduling;
 using AkkaSync.Core.Runtime.PipelineManager;
 
 namespace AkkaSync.Infrastructure;
@@ -12,7 +13,8 @@ public record ActorHook(Props Props, string Name);
 public class SyncRuntimeActor : ReceiveActor
 {
   private readonly IEnumerable<ActorHook> _hooks;
-  private IActorRef? _pipelineManager;
+  // private IActorRef? _pipelineManager;
+  // private IActorRef? _pipelineScheduer;
   private ILoggingAdapter _logger = Context.GetLogger();
   
   public SyncRuntimeActor(IEnumerable<ActorHook> hooks)
@@ -22,8 +24,11 @@ public class SyncRuntimeActor : ReceiveActor
     Receive<Terminated>(t =>
     {
       _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
-      if (t.ActorRef.Equals(_pipelineManager))
-        Context.System.EventStream.Publish(new PipelineManagerFailed());
+      // if (t.ActorRef.Equals(_pipelineManager))
+      // {
+      //   Context.System.EventStream.Publish(new PipelineManagerFailed());
+      // }
+        
     });
   }
 
@@ -43,9 +48,19 @@ public class SyncRuntimeActor : ReceiveActor
       Context.Watch(actorRef);
       if(hook.Name == "pipeline-manager")
       {
-        _pipelineManager = actorRef;
-         _pipelineManager?.Tell(new PipelineManagerProtocol.Start());
+        // _pipelineManager = actorRef;
+        //  _pipelineManager?.Tell(new PipelineManagerProtocol.Start());
+        actorRef.Tell(new PipelineManagerProtocol.Start());
       }
+      switch(hook.Name) {
+        case"pipeline-manager":
+          actorRef.Tell(new PipelineManagerProtocol.Start());
+          break;
+        case "pipeline-scheduler":
+          actorRef.Tell(new PipelineSchedulerProtocol.Start());
+          break;
+      }
+      
     }
   }
 }

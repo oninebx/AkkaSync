@@ -2,10 +2,10 @@ using System;
 
 namespace AkkaSync.Host.Application.Messaging;
 
-public record EventEnvelope<TEvent>(
+public record EventEnvelope(
   string Id,
   string Type,
   long Sequence,
-  TEvent Event,
+  DashboardEvent Event,
   DateTimeOffset OccurredAt
-) where TEvent: IDashboardEvent;
+);

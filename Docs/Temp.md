@@ -216,3 +216,17 @@ MQTT broker → Transform → Timeseries DB Sink
 * GitHub 开源视频介绍
 
 * 录制 YouTube 教程
+
+
+
+| purpose        | 中文说明       | scheduleId 示例                 | cron 表达式            | 说明                        |
+| -------------- | ---------- | ----------------------------- | ------------------- | ------------------------- |
+| every-5-min    | 每 5 分钟运行   | `sync-orders::every-5-min`    | `*/5 * * * *`       | 每 5 分钟                    |
+| every-15-min   | 每 15 分钟运行  | `sync-orders::every-15-min`   | `*/15 * * * *`      | 每 15 分钟                   |
+| hourly         | 每小时运行      | `sync-orders::hourly`         | `0 * * * *`         | 每小时整点                     |
+| daily          | 每天固定时间运行   | `sync-orders::daily`          | `0 3 * * *`         | 每天 03:00                  |
+| nightly        | 每夜固定时间（凌晨） | `sync-orders::nightly`        | `0 1 * * *`         | 每天 01:00                  |
+| weekly         | 每周运行       | `sync-orders::weekly`         | `0 3 * * 1`         | 每周一 03:00                 |
+| monthly        | 每月运行       | `sync-orders::monthly`        | `0 3 1 * *`         | 每月 1 日 03:00              |
+| business-hours | 仅工作时间内运行   | `sync-orders::business-hours` | `*/15 9-17 * * 1-5` | 周一至周五 09:00–17:59 每 15 分钟 |
+| weekend        | 周末运行       | `sync-orders::weekend`        | `0 10 * * 6,0`      | 周六、周日 10:00               |

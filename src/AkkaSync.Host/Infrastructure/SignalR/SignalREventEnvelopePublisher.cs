@@ -17,7 +17,7 @@ public class SignalREventEnvelopePublisher : IEventEnvelopePublisher
     _registry = registry;
   }
 
-  public async Task PublishAsync<T>(EventEnvelope<T> envelope) where T : IDashboardEvent
+  public async Task PublishAsync(EventEnvelope envelope)
   {
     var clients = _registry.GetClientsForEnvelope(envelope);
     foreach(var clientId in clients)

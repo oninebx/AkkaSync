@@ -1,6 +1,6 @@
 using System;
 using AkkaSync.Host.Application.Common;
-using AkkaSync.Host.Application.Dashboard.Events;
+using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Application.Query.Handlers;

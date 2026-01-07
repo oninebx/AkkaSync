@@ -4,7 +4,7 @@ namespace AkkaSync.Abstractions.Models;
 
 public sealed record ScheduleSpec
 {
-  public required string PipelineId { get; init; }
-  public string? Cron { get; init; }
-  public bool Enabled { get; init; } = false;
+  public required string Pipeline { get; init; }
+  public string Cron { get; init; } = "* * * * *";
+  public bool Enabled { get; init; } = true;
 }

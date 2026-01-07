@@ -11,13 +11,13 @@ public class EventEnvelopeFactory : IEventEnvelopeFactory
     _sequenceGenerator = sequenceGenerator;
     _eventIdGenerator = eventIdGenerator;
   }
-  public EventEnvelope<T> Create<T>(string eventType, T payload, DateTimeOffset occurredAt) where T : IDashboardEvent
+  public EventEnvelope Create(string eventType, DashboardEvent payload, DateTimeOffset occurredAt)
   {
     if(payload is null)
     {
       throw new ArgumentNullException(nameof(payload));
     }
-    return new EventEnvelope<T>(
+    return new EventEnvelope(
       _eventIdGenerator.NewId(), 
       eventType,
       _sequenceGenerator.Next(),

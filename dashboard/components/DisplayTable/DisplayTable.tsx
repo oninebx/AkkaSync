@@ -27,7 +27,7 @@ function DisplayTable<T>({columns, data, className}: TableProps<T>){
           </tr>
         </thead>
         <tbody>
-          {data.map((item, rowIndex) => (
+          {data?.map((item, rowIndex) => (
             <tr key={rowIndex} className="border-b last:border-none">
               {columns.map((column) => (
                 <td key={String(column.key)} className={cn('py-2 px-4', column.className)}>

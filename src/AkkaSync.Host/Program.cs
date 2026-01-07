@@ -1,6 +1,6 @@
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Host;
-using AkkaSync.Host.Infrastructure.Actors;
+using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Infrastructure.Extensions;
 using AkkaSync.Host.Web;
 using AkkaSync.Infrastructure;

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Kpi } from "./KpiCard";
-import { HostSnapshot } from "@/features/host/host.types";
+import { PipelineSnapshot } from "@/features/host/host.types";
+import { PipelineJob } from "@/features/scheduler/scheduler.types";
 
 const KPI_TEMPLATES = [
   { id: 'running', title: "Running Pipelines", color: "#1F2937" },
@@ -9,13 +10,14 @@ const KPI_TEMPLATES = [
   { id: 'queued', title: "Queued Jobs", color: "#FBBF24" },
 ];
 
-const useKpis = (snapshot: HostSnapshot): Kpi[] => {
+const useKpis = (pipelines: PipelineSnapshot[], jobs: PipelineJob[]): Kpi[] => {
   return useMemo(() => {
-    const pipelines = snapshot?.pipelines ?? [];
-    const total = snapshot.pipelinesTotal;
-    const running = pipelines.length;
+    // const pipelines = pipelines ?? [];
+    const total = pipelines.length;
+    // const running = pipelines.length;
+    const running = 0;
     const failed = 0;
-    const queued = 0;
+    const queued = jobs.length;
 
     return KPI_TEMPLATES.map(template => {
       switch(template.id){
@@ -32,7 +34,7 @@ const useKpis = (snapshot: HostSnapshot): Kpi[] => {
           return { ...template, value: '0' };
       }
     });
-  }, [snapshot])
+  }, [pipelines, jobs]);
 };
 
 export default useKpis;

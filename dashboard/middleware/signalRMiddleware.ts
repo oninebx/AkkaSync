@@ -9,6 +9,7 @@ export const signalRMiddleware: Middleware = store => next => action => {
     console.log(action.payload);
     const envelope = action.payload as EventEnvelope<PayloadEvent<object>>;
     const handler = envelopeHandlers.get(envelope.type);
+    console.log('Handling event:', envelope.type, envelope.id, handler);
     if(handler) {
       handler(envelope.event, store.dispatch, store.getState);
       console.log(`${envelope.type}(${envelope.id}) is handled.`);
