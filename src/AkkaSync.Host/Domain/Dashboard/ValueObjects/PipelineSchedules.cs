@@ -2,9 +2,12 @@ using System;
 
 namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
-public sealed record PipelineSchedules(IReadOnlyDictionary<string, IReadOnlyList<string>> Data) : IStoreValue
+public sealed record PipelineSchedules(
+  IReadOnlyDictionary<string, string> Specs,
+  IReadOnlyList<PipelineJob> Jobs) : IStoreValue
 {
   public static PipelineSchedules Empty => new(
-    Data: new Dictionary<string, IReadOnlyList<string>>()
+    Specs: new Dictionary<string, string>(),
+    Jobs: []
   );
 }

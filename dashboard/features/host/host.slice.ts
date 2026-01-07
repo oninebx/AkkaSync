@@ -18,7 +18,6 @@ export const hostSlice = createSlice({
   initialState,
   reducers: {
     snapshotUpdated(state, action: PayloadAction<HostSnapshot>) {
-
       state.status = action.payload.status;
       state.startAt = action.payload.startAt;
       state.pipelines = action.payload.pipelines ?? [];

@@ -8,14 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Akka" Version="1.5.55" />
+    <PackageReference Include="NCrontab" Version="3.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Runtime/PipelineScheduler/" />
   </ItemGroup>
 
 </Project>

@@ -1,7 +1,7 @@
 import { Column } from '@/components/DisplayTable';
 import { TableCard } from '@/components/TableCard';
 import React from 'react';
-import { OverviewPipeline, usePipelines } from './usePipelines';
+import { OverviewPipeline } from './usePipelines';
 
 const pipelineColumns: Column<OverviewPipeline>[] = [
   { key: "name", header: "Pipeline" },
@@ -11,8 +11,11 @@ const pipelineColumns: Column<OverviewPipeline>[] = [
   { key: 'nextRun', header: 'Next Run'}
 ];
 
-const PipelineTable = () => {
-  const data = usePipelines();
+interface Props {
+  data: OverviewPipeline[];
+}
+
+const PipelineTable = ({ data }: Props) => {
   return (
     <TableCard title='Active Pipelines Overview' columns={pipelineColumns} data={data} />
   )

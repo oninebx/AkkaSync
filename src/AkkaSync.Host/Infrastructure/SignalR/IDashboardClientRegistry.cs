@@ -7,6 +7,6 @@ public interface IDashboardClientRegistry
 {
   void RegisterClientAsync(string connectionId, long lastSeenSequence);
   void UnregisterClient(string connectionId);
-  IEnumerable<string> GetClientsForEnvelope<T>(EventEnvelope<T> envelope) where T: IDashboardEvent;
+  IEnumerable<string> GetClientsForEnvelope(EventEnvelope envelope);
   void UpdateLastSeen(string connectionId, long sequence);
 }

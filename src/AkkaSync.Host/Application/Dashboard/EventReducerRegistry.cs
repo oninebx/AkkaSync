@@ -2,7 +2,7 @@ using System;
 using AkkaSync.Abstractions;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
-namespace AkkaSync.Host.Application.Dashboard.Events;
+namespace AkkaSync.Host.Application.Dashboard;
 
 public sealed class EventReducerRegistry
 {

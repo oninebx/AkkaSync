@@ -41,10 +41,11 @@ public class PipelineManagerActor : ReceiveActor
     {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
       var pipelines = _pipelineSpecs.Values.Select(s => new PipelineInfo(s.Name, s.Schedule)).ToList().AsReadOnly();
-      StartNextLayer();
+      // StartNextLayer();
       Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
     });
-    Receive<PipelineProtocol.Create>(msg => CreatePipeline(msg));
+    Receive<PipelineManagerProtocol.StartPipeline>(msg => CreatePipeline(msg));
+    // Receive<PipelineProtocol.Create>(msg => CreatePipeline(msg));
     Receive<PipelineCompleted>(msg => {
       var pipelineName = msg.PipelineId.Name;
       _logger.Info($"Pipeline {msg.PipelineId} completed");
@@ -73,10 +74,10 @@ public class PipelineManagerActor : ReceiveActor
     // Receive<StopPipeline>(msg => HandleStopPipeline(msg));
   }
 
-  protected override void PreStart()
-  {
-    Context.System.EventStream.Subscribe(Self, typeof(PipelineCompleted));
-  }
+  // protected override void PreStart()
+  // {
+  //   Context.System.EventStream.Subscribe(Self, typeof(PipelineCompleted));
+  // }
 
   private void StartNextLayer()
   {
@@ -93,10 +94,11 @@ public class PipelineManagerActor : ReceiveActor
     }
   }
 
-  private void CreatePipeline(PipelineProtocol.Create msg)
+  private void CreatePipeline(PipelineManagerProtocol.StartPipeline msg)
   {
     var spec = _pipelineSpecs[msg.Name];
-    var actorName = $"{msg.Name}-${msg.RunId}";
+    var runId = RunId.New();
+    var actorName = $"{msg.Name}-${runId}";
     if (Context.Child(actorName).IsNobody())
     {
       var source = spec.SourceProvider;
@@ -113,7 +115,7 @@ public class PipelineManagerActor : ReceiveActor
       
       if(sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
       {
-        var pipelineId = new PipelineId(msg.RunId, msg.Name);
+        var pipelineId = new PipelineId(runId, msg.Name);
         var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, pipelineId, spec)), pipelineId.ToString());
         // Context.Watch(pipelineActor);
         pipelineActor.Tell(new PipelineProtocol.Start());

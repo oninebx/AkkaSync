@@ -13,7 +13,7 @@ public class DashboardClientRegistry : IDashboardClientRegistry
     
   }
 
-  public IEnumerable<string> GetClientsForEnvelope<T>(EventEnvelope<T> envelope) where T : IDashboardEvent => 
+  public IEnumerable<string> GetClientsForEnvelope(EventEnvelope envelope) => 
     _clients.Where(kv => kv.Value.LastSeenSequence < envelope.Sequence)
             .Select(kv => kv.Key);
 

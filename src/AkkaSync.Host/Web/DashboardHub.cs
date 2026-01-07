@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using Akka.Actor;
 using AkkaSync.Host.Application.Common;
-using AkkaSync.Host.Application.Dashboard.Events;
+using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Domain.Dashboard.Repositories;
@@ -48,7 +48,7 @@ public class DashboardHub : Hub
       return resultJson;
     }
     
-    var payload = new QueryEventTested(resultJson);
+    var payload = new DashboardEvent("query.event.tested", resultJson);
     var envelope = _factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
     await _envelopePublisher.PublishAsync(envelope);
     return null;
@@ -66,13 +66,6 @@ public class DashboardHub : Hub
         var payload = DashboardEventMapper.TryMap(value);
         return _factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
       });
-    // var eventsToSend = _replayStores
-    //   .SelectMany(store => store.GetEventsToReplay(lastSeenSeq))
-    //   .Select(value =>
-    //   {
-    //     var payload = DashboardEventMapper.TryMap(value);
-    //     return _factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
-    //   });
     foreach(var envelope in eventsToSend)
     {
       await _envelopePublisher.PublishAsync(envelope);

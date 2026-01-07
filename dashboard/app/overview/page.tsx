@@ -9,10 +9,11 @@ import { selectConnectionStatus } from "@/infrastructure/signalr/connection.sele
 import { selectEventsOrdered } from "@/features/recentevents/syncevents.selectors";
 import { mapEnvelope } from "@/features/recentevents/syncevents.config";
 import { HostStatus } from "@/features/host/host.types";
-import { useSignalRInvoke, useSignalRQuery } from "@/providers/SingalRProvider";
+import { useSignalRInvoke } from "@/providers/SingalRProvider";
 import PipelineTable from "./components/PipelineTable/PipelineTable";
-import SyncWorkerTable from "./components/SyncWorkerTable/SyncWorkerTable";
 import { selectHostPipelines } from "@/features/host/host.selectors";
+import { selectScheduleSpecs, selectSecheduleJobs } from "@/features/scheduler/scheduler.selectors";
+import { usePipelines } from "./components/PipelineTable/usePipelines";
 import useKpis from "./components/KpiBanner/useKpis";
 
 // const events: EventItem[] = [
@@ -32,14 +33,13 @@ export default function HomePage() {
   // const { status, startAt } = snapshot;
   const connectionStatus = useSelector(selectConnectionStatus);
   const pipelines = useSelector(selectHostPipelines);
+  const scheduleSpecs = useSelector(selectScheduleSpecs);
+  const scheduleJobs = useSelector(selectSecheduleJobs);
+  
+  const pipelineData = usePipelines(pipelines, scheduleSpecs);
+  const kpiData = useKpis(pipelines, scheduleJobs);
 
   const events = useSelector(selectEventsOrdered);
-  const KpiData = [
-    { id: 'running', title: "Running Pipelines", color: "#1F2937", value: '1' },
-    { id: 'failed', title: "Failed (24h)", color: "#EF4444", value: '2' },
-    { id: 'total', title: "Total Pipelines", color: "#1F2937", value: pipelines.length.toString() },
-    { id: 'queued', title: "Queued Jobs", color: "#FBBF24", value: '4' },
-  ];
   // const connectionStatus = 'connected';
   const status = HostStatus.Idle;
   const startAt = new Date().toISOString();
@@ -60,7 +60,7 @@ export default function HomePage() {
     <>
       <div className="min-h-screen px-4 py-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <KpiBanner data={KpiData} />
+          <KpiBanner data={kpiData}/>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <HostCard 
               name="AkkaSync-Primary"
@@ -69,7 +69,7 @@ export default function HomePage() {
               startTime={startAt} />
             <RecentEventsCard events={events.map(e => mapEnvelope(e))}/>
           </div>
-          <PipelineTable />
+          <PipelineTable data={pipelineData} />
           <div onClick={handleClick}>Ping Test</div>
         </div>
       </div>
