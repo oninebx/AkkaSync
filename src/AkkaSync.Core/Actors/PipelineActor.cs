@@ -151,16 +151,16 @@ namespace AkkaSync.Core.Actors
       //   }
       // }
 
-      private void PrintTablesData(TransformContext context)
-      {
-          foreach (var table in context.TablesData)
-          {
-              _logger.Info($"Table: {table.Key}");
-              foreach (var column in table.Value)
-              {
-                  _logger.Info($"  {column.Key}: {column.Value}");
-              }
-          }
-      }
+      // private void PrintTablesData(TransformContext context)
+      // {
+      //     foreach (var table in context.TablesData)
+      //     {
+      //         _logger.Info($"Table: {table.Key}");
+      //         foreach (var column in table.Value)
+      //         {
+      //             _logger.Info($"  {column.Key}: {column.Value}");
+      //         }
+      //     }
+      // }
     }
 }

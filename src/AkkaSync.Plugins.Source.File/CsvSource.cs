@@ -84,15 +84,15 @@ public class CsvSource : ISyncSource
         _logger.LogWarning(ex, "CSV format error at line {Line} in file {File}", lineNumber, _filePath);
         continue;
       }
-      var record = new Dictionary<string, object>();
+      var record = new Dictionary<string, object?>();
       for (int i = 0; i < headers.Length && i < values.Length; i++)
       {
         record[headers[i]] = values[i];
       }
       var ctx = new TransformContext
         {
-            RawData = line,
-            TablesData = new Dictionary<string, Dictionary<string, object>>
+            // RawData = line,
+            TablesData = new Dictionary<string, Dictionary<string, object?>>
             {
                 ["_rawCsv"] = record
             },

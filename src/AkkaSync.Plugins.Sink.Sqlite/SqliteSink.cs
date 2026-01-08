@@ -75,7 +75,7 @@ namespace AkkaSync.Plugins.Sink.Sqlite
 
     private async Task InsertTableDataAsync(
       string table, 
-      IEnumerable<Dictionary<string, object>> rows, 
+      IEnumerable<Dictionary<string, object?>> rows, 
       SqliteConnection connection, 
       SqliteTransaction transaction, 
       CancellationToken cancellationToken)

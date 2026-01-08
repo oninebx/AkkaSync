@@ -46,12 +46,6 @@ public class SyncRuntimeActor : ReceiveActor
     {
       var actorRef = Context.ActorOf(hook.Props.WithSupervisorStrategy(strategy), hook.Name);
       Context.Watch(actorRef);
-      if(hook.Name == "pipeline-manager")
-      {
-        // _pipelineManager = actorRef;
-        //  _pipelineManager?.Tell(new PipelineManagerProtocol.Start());
-        actorRef.Tell(new PipelineManagerProtocol.Start());
-      }
       switch(hook.Name) {
         case"pipeline-manager":
           actorRef.Tell(new PipelineManagerProtocol.Start());
