@@ -48,13 +48,14 @@ namespace AkkaSync.Plugins.Sink.Sqlite
         await connection.OpenAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 
-        var tables = contextBatch.Where(ctx => ctx?.TablesData?.Count > 0)
-                            .SelectMany(ctx => ctx.TablesData)
+        var tables = contextBatch.Where(ctx => ctx?.Artifacts?.Count > 0)
+                            .SelectMany(ctx => ctx.Artifacts)
                             .GroupBy(t => t.Key);
         foreach(var table in tables)
         {
           tableName = table.Key;
-          var rows = table.Select(t => t.Value).Where(r => r != null && r.Count > 0);
+          var rows = table.Select(t => t.Value).Where(r => r != null  && r is Dictionary<string, object?> d && d.Count > 0)
+                            .Cast<Dictionary<string, object?>>();
           await InsertTableDataAsync(tableName, rows, connection, transaction, cancellationToken);
         }
 

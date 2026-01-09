@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
+    <ProjectReference Include="../AkkaSync.Plugins.Transformer.DbTable/AkkaSync.Plugins.Transformer.DbTable.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <HostPipelinesDir>..\AkkaSync.Host\pipelines</HostPipelinesDir>
+  </PropertyGroup>
+
+  <Target Name="CopyPipelineConfigsToHost" AfterTargets="Build">
+    <Message Text="Copying pipeline configs to Host pipelines folder..." Importance="high" />
+    <ItemGroup>
+      <PipelineConfigs Include="**\pipeline_*.json;**\plugin_*.json" />
+    </ItemGroup>
+    <RemoveDir Directories="$(HostPipelinesDir)" Condition="Exists('$(HostPipelinesDir)')" />
+    <MakeDir Directories="$(HostPipelinesDir)" Condition="!Exists('$(HostPipelinesDir)')" />
+    <Copy SourceFiles="@(PipelineConfigs)" DestinationFolder="$(HostPipelinesDir)" SkipUnchangedFiles="true" />
+</Target>
+
+
+</Project>

@@ -24,45 +24,45 @@ public sealed class PipelineRunGraph
 
   public static PipelineRunGraph Create(IReadOnlyList<PipelineSpec> pipelineSpecs)
   {
-    var pipelineDict = pipelineSpecs.ToDictionary(p => p.Name, p => p);
-    foreach (var pipeline in pipelineSpecs)
-    {
-      foreach (var dep in pipeline.DependsOn)
-      {
-        if (!pipelineDict.ContainsKey(dep))
-        {
-          throw new InvalidOperationException($"Dependency '{dep}' of pipeline '{pipeline.Name}' not found in configuration.");
-        }
-      }
-    }
+    // var pipelineDict = pipelineSpecs.ToDictionary(p => p.Name, p => p);
+    // foreach (var pipeline in pipelineSpecs)
+    // {
+    //   foreach (var dep in pipeline.DependsOn)
+    //   {
+    //     if (!pipelineDict.ContainsKey(dep))
+    //     {
+    //       throw new InvalidOperationException($"Dependency '{dep}' of pipeline '{pipeline.Name}' not found in configuration.");
+    //     }
+    //   }
+    // }
 
     var layers = new List<HashSet<string>>();
-    var processed = new HashSet<string>();
+    // var processed = new HashSet<string>();
 
-    while (processed.Count < pipelineSpecs.Count)
-    {
-      var currentLayer = new HashSet<string>();
+    // while (processed.Count < pipelineSpecs.Count)
+    // {
+    //   var currentLayer = new HashSet<string>();
 
-      foreach (var pipeline in pipelineSpecs)
-      {
-        if (processed.Contains(pipeline.Name))
-          continue;
+    //   foreach (var pipeline in pipelineSpecs)
+    //   {
+    //     if (processed.Contains(pipeline.Name))
+    //       continue;
 
-        if (pipeline.DependsOn.All(d => processed.Contains(d)))
-        {
-          currentLayer.Add(pipeline.Name);
-        }
-      }
+    //     if (pipeline.DependsOn.All(d => processed.Contains(d)))
+    //     {
+    //       currentLayer.Add(pipeline.Name);
+    //     }
+    //   }
 
-      if (currentLayer.Count == 0)
-        throw new InvalidOperationException("Cyclic dependency detected among pipelines.");
+    //   if (currentLayer.Count == 0)
+    //     throw new InvalidOperationException("Cyclic dependency detected among pipelines.");
 
-      layers.Add(currentLayer);
-      foreach (var name in currentLayer)
-      {
-        processed.Add(name);
-      }
-    }
+    //   layers.Add(currentLayer);
+    //   foreach (var name in currentLayer)
+    //   {
+    //     processed.Add(name);
+    //   }
+    // }
 
     return new PipelineRunGraph(layers);
   }

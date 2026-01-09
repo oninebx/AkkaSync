@@ -73,7 +73,7 @@ public class CsvSource : ISyncSource
       string[] values;
       try
       {
-        values = line.Split(_delimiter);
+        values = ParseCsvLine(line, _delimiter);
         if(values.Length != headers.Length)
         {
           throw new FormatException("Column count does not match header");
@@ -89,13 +89,13 @@ public class CsvSource : ISyncSource
       {
         record[headers[i]] = values[i];
       }
-      var ctx = new TransformContext
+      var ctx = new TransformContext(record)
         {
             // RawData = line,
-            TablesData = new Dictionary<string, Dictionary<string, object?>>
-            {
-                ["_rawCsv"] = record
-            },
+            // TablesData = new Dictionary<string, Dictionary<string, object?>>
+            // {
+            //     ["_rawCsv"] = record
+            // },
             MetaData = new Dictionary<string, object>
             {
                 ["SourceType"] = "CSV",
@@ -108,5 +108,48 @@ public class CsvSource : ISyncSource
         yield return ctx;
         index++;
     } 
+  }
+
+  /// <summary>
+  /// Parse a CSV line handling quoted fields correctly
+  /// </summary>
+  private string[] ParseCsvLine(string line, char delimiter)
+  {
+    var fields = new List<string>();
+    var currentField = new System.Text.StringBuilder();
+    bool insideQuotes = false;
+    
+    for (int i = 0; i < line.Length; i++)
+    {
+      char c = line[i];
+      
+      if (c == '"')
+      {
+        // Check for escaped quote (double quote)
+        if (insideQuotes && i + 1 < line.Length && line[i + 1] == '"')
+        {
+          currentField.Append('"');
+          i++; // Skip the next quote
+        }
+        else
+        {
+          insideQuotes = !insideQuotes;
+        }
+      }
+      else if (c == delimiter && !insideQuotes)
+      {
+        fields.Add(currentField.ToString());
+        currentField.Clear();
+      }
+      else
+      {
+        currentField.Append(c);
+      }
+    }
+    
+    // Add the last field
+    fields.Add(currentField.ToString());
+    
+    return [.. fields];
   }
 }

@@ -1,0 +1,70 @@
+[
+  {
+    "name": "Customer",
+    "type": "TableTransformer",
+    "fields": [
+      "customer_external_id",
+      "customer_first_name",
+      "customer_last_name",
+      "customer_email",
+      "customer_phone",
+      "customer_dob",
+      "customer_country",
+      "customer_is_active"
+    ],
+    "columns": [
+      "id",
+      "first_name",
+      "last_name",
+      "email",
+      "phone",
+      "dob",
+      "country",
+      "is_active"
+    ],
+    "produce": "customer",
+    "dependsOn": []
+  },
+  {
+    "name": "Product",
+    "type": "TableTransformer",
+    "fields": [
+      "product_sku",
+      "product_name",
+      "product_price"
+    ],
+    "columns": [
+      "sku",
+      "name",
+      "price"
+    ],
+    "produce": "product",
+    "dependsOn": []
+  },
+  {
+    "name": "Order",
+    "type": "TableTransformer",
+    "fields": [
+      "order_external_id",
+      "customer_external_id",
+      "order_date",
+      "order_status",
+      "order_shipping_address",
+      "order_country",
+      "order_is_priority"
+    ],
+    "columns": [
+      "id",
+      "customer_id",
+      "date",
+      "status",
+      "shipping_address",
+      "country",
+      "is_priority"
+    ],
+    "produce": "order",
+    "dependsOn": [
+      "customer"
+    ]
+  }
+]

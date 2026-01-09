@@ -14,7 +14,7 @@ public static class HostStateReducer
   {
     return @event switch
     {
-      PipelineManagerStarted e => current with { StartAt = @event.Timestamp, Pipelines = [..e.Pipelines.Select(p => new PipelineSnapshot(p.Name, p.Schedule))] },
+      PipelineManagerStarted e => current with { StartAt = @event.Timestamp, Pipelines = [..e.Pipelines.Select(p => new PipelineSnapshot(p.Name))] },
       PipelineStarted e => current with { Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Name ? 
         p with { StartedAt = e.Timestamp } : p)] },
       PipelineCompleted e => current with { Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Name ?

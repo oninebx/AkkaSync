@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
 
@@ -29,7 +30,7 @@ public class InMemoryHistoryStoreProvider : IPluginProvider<IHistoryStore>
   {
     var sorted = parameters
         .OrderBy(kv => kv.Key)
-        .Select(kv => $"{kv.Key.Trim().ToLowerInvariant()}={kv.Value.Trim().ToLowerInvariant()}");
+        .Select(kv => $"{kv.Key.Trim().ToLowerInvariant()}={kv.Value?.Trim().ToLowerInvariant()}");
 
     var input = string.Join(",", sorted);
     var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));

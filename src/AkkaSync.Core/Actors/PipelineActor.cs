@@ -3,6 +3,7 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipeline;
 using AkkaSync.Core.Domain.Worker;
 
@@ -12,7 +13,7 @@ namespace AkkaSync.Core.Actors
     {
       private readonly PipelineId _id;
       private readonly IEnumerable<ISyncSource> _sources;
-      private readonly ISyncTransformer _transformer;
+      private readonly IReadOnlyList<IReadOnlyList<ISyncTransformer>> _transformers;
       private readonly ISyncSink _sink;
       private readonly int _batchSize;
       private readonly IHistoryStore? _historyStore;
@@ -32,9 +33,9 @@ namespace AkkaSync.Core.Actors
         _cancellationToken = _cancellationTokenSource.Token;
 
         _sources = sourceProvider.Create(spec.SourceProvider, _cancellationToken);
-        _transformer = transformerProvider.Create(spec.TransformerProvider, _cancellationToken).First();
+        _transformers = TransformerDagBuilder.Build(transformerProvider.Create(spec.TransformerProvider, _cancellationToken));
         _sink = sinkProvider.Create(spec.SinkProvider, _cancellationToken).First();
-        _batchSize = spec.SinkProvider.Parameters.TryGetValue("batchSize", out var s) && int.TryParse(s, out var size) ? size : 1;
+        _batchSize = spec.SinkProvider.Parameters.Get<int>("batchSize", 1);
 
         _historyStore = historyProvider?.Create(spec.HistoryStoreProvider).FirstOrDefault();
         _id = id;
@@ -80,7 +81,7 @@ namespace AkkaSync.Core.Actors
           return;
         }
         
-        var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformer, _sink, _batchSize, cursor, _cancellationToken)), workerId.ToString());
+        var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sink, _batchSize, cursor, _cancellationToken)), workerId.ToString());
         _runWorkers.Add(workerId);
         // Context.Watch(worker);
         worker.Tell(new WorkerProtocol.Start());

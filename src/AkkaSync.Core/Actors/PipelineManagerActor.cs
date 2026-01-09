@@ -40,11 +40,11 @@ public class PipelineManagerActor : ReceiveActor
     Receive<PipelineManagerProtocol.Start>(_ =>
     {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      var pipelines = _pipelineSpecs.Values.Select(s => new PipelineInfo(s.Name, s.Schedule)).ToList().AsReadOnly();
+      var pipelines = _pipelineSpecs.Values.Select(s => new PipelineInfo(s.Name)).ToList().AsReadOnly();
       // StartNextLayer();
       Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
     });
-    Receive<PipelineManagerProtocol.StartPipeline>(msg => CreatePipeline(msg));
+    Receive<PipelineManagerProtocol.CreatePipeline>(msg => CreatePipeline(msg));
     // Receive<PipelineProtocol.Create>(msg => CreatePipeline(msg));
     Receive<PipelineCompleted>(msg => {
       var pipelineName = msg.PipelineId.Name;
@@ -94,9 +94,14 @@ public class PipelineManagerActor : ReceiveActor
     }
   }
 
-  private void CreatePipeline(PipelineManagerProtocol.StartPipeline msg)
+  private void CreatePipeline(PipelineManagerProtocol.CreatePipeline msg)
   {
-    var spec = _pipelineSpecs[msg.Name];
+    if(_pipelineSpecs.TryGetValue(msg.Name, out var spec) is false)
+    {
+      _logger.Warning($"Pipeline spec with name {msg.Name} not found.");
+
+      return;
+    }
     var runId = RunId.New();
     var actorName = $"{msg.Name}-${runId}";
     if (Context.Child(actorName).IsNobody())

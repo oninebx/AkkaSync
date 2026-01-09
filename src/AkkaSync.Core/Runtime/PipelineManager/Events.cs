@@ -12,3 +12,8 @@ public sealed record PipelineManagerFailed() : ISyncEvent
 {
   public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
 }
+
+// public sealed record PipelineCreationFailed(string Name) : ISyncEvent
+// {
+//   public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
+// }
