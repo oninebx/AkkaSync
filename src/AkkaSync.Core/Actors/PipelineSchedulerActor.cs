@@ -39,7 +39,7 @@ public class PipelineSchedulerActor : ReceiveActor
     {
       _logger.Info($"Pipeline triggered: { msg.Name }");
       var manager = Context.ActorSelection("/user/sync-runtime/pipeline-manager");
-      manager.Tell(new PipelineManagerProtocol.StartPipeline(msg.Name));
+      manager.Tell(new PipelineManagerProtocol.CreatePipeline(msg.Name));
       var spec = _schedules.FirstOrDefault(s => s.Key.Contains(msg.Name)).Value;
       Context.System.EventStream.Publish(new PipelineTriggered(msg.Name));
     });

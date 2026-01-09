@@ -11,7 +11,7 @@ public class SyncWorkerActor : ReceiveActor
 {
   private readonly WorkerId _id;
   private readonly ISyncSource _source;
-  private ISyncTransformer _transformer;
+  private readonly IReadOnlyList<IReadOnlyList<ISyncTransformer>> _transformers;
   private readonly ISyncSink _sink;
   private readonly CancellationToken _cancellationToken;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
@@ -19,16 +19,16 @@ public class SyncWorkerActor : ReceiveActor
   private readonly string? _cursor;
   public SyncWorkerActor(
     WorkerId id,
-    ISyncSource source, 
-    ISyncTransformer transformer, 
-    ISyncSink sink, 
+    ISyncSource source,
+    IReadOnlyList<IReadOnlyList<ISyncTransformer>> transformers,
+    ISyncSink sink,
     int batchSize,
     string? cursor,
     CancellationToken cancellationToken)
   {
     _id = id;
     _source = source;
-    _transformer = transformer;
+    _transformers = transformers;
     _sink = sink;
     _cancellationToken = cancellationToken;
     _batchSize = batchSize;
@@ -46,7 +46,7 @@ public class SyncWorkerActor : ReceiveActor
 
     async Task FlushAsync(List<TransformContext> batch, int size)
     {
-      if(batch.Count >= size)
+      if (batch.Count >= size)
       {
         await _sink.WriteAsync(batch, _cancellationToken);
         Context.Parent.Tell(new WorkerProgressed(_id, batch.Last().Cursor));
@@ -59,13 +59,20 @@ public class SyncWorkerActor : ReceiveActor
     {
       await foreach (var context in _source.ReadAsync(_cursor, _cancellationToken))
       {
-        _transformer.Transform(context);
+        // _transformer.Transform(context, _cancellationToken);
+        foreach (var transformerLayer in _transformers)
+        {
+          await Task.WhenAll(
+            transformerLayer.Select(t => t.Transform(context, _cancellationToken))
+          );
+          context.CommitLayer();
+        }
         batch.Add(context);
         await FlushAsync(batch, _batchSize);
       }
 
       await FlushAsync(batch, 1);
-      
+
       Context.Parent.Tell(new WorkerCompleted(_id, _source.ETag));
     }
     catch (Exception ex)

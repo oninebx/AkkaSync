@@ -6,22 +6,18 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <PluginOutputDir>../AkkaSync.Host/plugins</PluginOutputDir>
   </PropertyGroup>
-
+  
   <Target Name="CopyPluginToHost" AfterTargets="Build">
     <Message Text="Copying plugin to Host plugins folder..." Importance="high" />
     <MakeDir Directories="$(PluginOutputDir)" Condition="!Exists('$(PluginOutputDir)')" />
-    <Copy
-      SourceFiles="$(OutputPath)\$(AssemblyName).dll"
-      DestinationFolder="$(PluginOutputDir)"
-      SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFolder="$(PluginOutputDir)" SkipUnchangedFiles="true" />
 
   </Target>
-
+  
+  <ItemGroup>
+    <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
+  </ItemGroup>
 </Project>

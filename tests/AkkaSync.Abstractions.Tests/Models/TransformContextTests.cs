@@ -11,7 +11,7 @@ public class TransformContextTests
         // Arrange & Act
         var context = new TransformContext
         {
-            RawData = "test,data,row",
+            // RawData = "test,data,row",
             TablesData = new Dictionary<string, Dictionary<string, object>>
             {
                 { "table1", new Dictionary<string, object> { { "col1", "value1" }, { "col2", 123 } } }
@@ -22,7 +22,7 @@ public class TransformContextTests
 
         // Assert
         Assert.NotNull(context);
-        Assert.Equal("test,data,row", context.RawData);
+        // Assert.Equal("test,data,row", context.RawData);
         Assert.Single(context.TablesData);
         Assert.NotNull(context.MetaData);
         Assert.Equal("0", context.Cursor);
@@ -40,7 +40,7 @@ public class TransformContextTests
 
         var context = new TransformContext
         {
-            RawData = "1,John",
+            // RawData = "1,John",
             TablesData = tablesData,
             Cursor = "1"
         };

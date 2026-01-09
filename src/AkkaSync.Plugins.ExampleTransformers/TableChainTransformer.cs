@@ -5,13 +5,13 @@ using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Plugins.ExampleTransformers;
 
-public class TableTransformer : TransformerBase
+public class TableChainTransformer : TransformerBase
 {
   private readonly string _sourceTable;
   private readonly string _targetTable;
   private readonly Func<Dictionary<string, object?>, Dictionary<string, object?>> _mapRow;
 
-  public TableTransformer(
+  public TableChainTransformer(
     string sourceTable,
     string targetTable,
     Func<Dictionary<string, object?>, Dictionary<string, object?>> mapRow)
@@ -23,13 +23,13 @@ public class TableTransformer : TransformerBase
 
   protected override TransformContext Process(TransformContext context)
   {
-    if (!context.TablesData.TryGetValue(_sourceTable, out var tableData))
-        throw new InvalidOperationException($"Source table '{_sourceTable}' not found.");
+    // if (!context.TablesData.TryGetValue(_sourceTable, out var tableData))
+    //     throw new InvalidOperationException($"Source table '{_sourceTable}' not found.");
 
-    var mappedRow = _mapRow(tableData);
-    context.TablesData[_targetTable] = mappedRow;
+    // var mappedRow = _mapRow(tableData);
+    // context.TablesData[_targetTable] = mappedRow;
 
-    context.TablesData.Remove(_sourceTable);
+    // context.TablesData.Remove(_sourceTable);
 
     return context;
   }

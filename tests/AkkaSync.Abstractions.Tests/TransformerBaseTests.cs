@@ -76,7 +76,7 @@ public class TransformerBaseTests
         var transformer = new UpperCaseTransformer();
         var context = new TransformContext
         {
-            RawData = "john,active",
+            // RawData = "john,active",
             TablesData = new Dictionary<string, Dictionary<string, object>>
             {
                 { "users", new Dictionary<string, object> { { "name", "john" }, { "status", "active" } } }
@@ -102,7 +102,7 @@ public class TransformerBaseTests
 
         var context = new TransformContext
         {
-            RawData = "john",
+            // RawData = "john",
             TablesData = new Dictionary<string, Dictionary<string, object>>
             {
                 { "users", new Dictionary<string, object> { { "name", "john" } } }
@@ -125,7 +125,7 @@ public class TransformerBaseTests
         var transformer = new UpperCaseTransformer();
         var context = new TransformContext
         {
-            RawData = "john,123",
+            // RawData = "john,123",
             TablesData = new Dictionary<string, Dictionary<string, object>>
             {
                 { "users", new Dictionary<string, object> { { "name", "john" }, { "age", 123 } } }
@@ -153,7 +153,7 @@ public class TransformerBaseTests
 
         var context = new TransformContext
         {
-            RawData = "test",
+            // RawData = "test",
             TablesData = new Dictionary<string, Dictionary<string, object>>
             {
                 { "data", new Dictionary<string, object> { { "value", "test" } } }

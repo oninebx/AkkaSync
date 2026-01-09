@@ -1,7 +1,0 @@
-Id,FirstName,LastName,Email,Phone,DateOfBirth,Country,IsActive
-10,Jane,Doe,jane.doe@example.com,+44-20-7946-0958,1990-07-24,UK,true         
-12,Alice,Johnson,alice.johnsonexample.com,+1-415-555-0199,1992-11-30,USA,true
-13,Charlie,Brown,charlie.brown@example.com,1988-02-14,USA,true
-16,Frank,Black,frank.black@example.com,+1-646-555-0156,1983-12-01,USA,true
-George,Hill,george.hill@example.com,+1-718-555-0137,1986-06-25,USA,true
-18,Helen,King,helen.king@example.com,+1-917-555-0149,1979-04-18,USA,true

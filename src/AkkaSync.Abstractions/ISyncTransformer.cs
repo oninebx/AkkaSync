@@ -8,7 +8,9 @@ namespace AkkaSync.Abstractions
 {
     public interface ISyncTransformer
     {
-        TransformContext Transform(TransformContext context);
-        ISyncTransformer SetNext(ISyncTransformer next);
+        Task<TransformContext> Transform(TransformContext context, CancellationToken cancellationToken);
+        // ISyncTransformer SetNext(ISyncTransformer next);
+        string Produce { get; init; }
+        string[] DependsOn { get; init; }
     }
 }

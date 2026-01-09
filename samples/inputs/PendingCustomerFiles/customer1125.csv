@@ -1,9 +1,0 @@
-Id,FirstName,LastName,Email,Phone,DateOfBirth,Country,IsActive
-1,John,Smith,john.smith@example.com,+1-202-555-0147,1987-05-12,USA,true
-2,Alice,Johnson,alice.johnson@example.com,+1-415-555-0198,1992-11-03,USA,true
-3,Michael,Wang,michael.wang@example.com,+64-21-555-0099,1984-08-27,New Zealand,false
-4,Sarah,Brown,sarah.brown@example.com,+44-20-5550-2233,1990-02-14,UK,true
-5,David,Lee,david.lee@example.com,+61-7-5550-4422,1988-12-08,Australia,true
-6,Emma,Tan,emma.tan@example.com,+65-800-555-1212,1995-03-21,Singapore,true
-7,Lucas,Miller,lucas.miller@example.com,+1-303-555-3399,1982-07-30,USA,false
-8,Hannah,Kim,hannah.kim@example.com,+82-10-5550-9876,1999-01-18,Korea,true
