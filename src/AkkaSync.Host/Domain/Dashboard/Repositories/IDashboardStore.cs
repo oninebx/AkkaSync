@@ -7,6 +7,7 @@ public interface IDashboardStore
 {
   HostSnapshot Snapshot { get; }
   PipelineSchedules Schedules { get; }
+  ErrorJournal ErrorJournal { get; }
   
   void Update<TValue>(TValue state) where TValue : IStoreValue;
   IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence);

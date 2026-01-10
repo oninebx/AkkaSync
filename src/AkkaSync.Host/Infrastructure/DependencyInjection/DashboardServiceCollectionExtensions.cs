@@ -25,6 +25,7 @@ public static class DashboardServiceExtension
       new EventReducerRegistryBuilder()
       .Add<HostSnapshot>(HostStateReducer.Reduce)
       .Add<PipelineSchedules>(ScheduleStateReducer.Reduce)
+      .Add<ErrorJournal>(ErrorStateReducer.Reduce)
       .Build());
 
     services.AddSingleton<IDashboardClientRegistry, DashboardClientRegistry>();

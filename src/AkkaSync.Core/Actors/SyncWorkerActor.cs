@@ -59,7 +59,6 @@ public class SyncWorkerActor : ReceiveActor
     {
       await foreach (var context in _source.ReadAsync(_cursor, _cancellationToken))
       {
-        // _transformer.Transform(context, _cancellationToken);
         foreach (var transformerLayer in _transformers)
         {
           await Task.WhenAll(

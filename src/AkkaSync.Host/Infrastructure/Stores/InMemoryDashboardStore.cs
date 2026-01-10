@@ -8,16 +8,19 @@ public class InMemoryDashboardStore : IDashboardStore
 {
   private volatile HostSnapshot _snapshot = HostSnapshot.Empty;
   private volatile PipelineSchedules _schedules = PipelineSchedules.Empty;
+  private volatile ErrorJournal _errorJournal = ErrorJournal.Empty;
 
   public HostSnapshot Snapshot => _snapshot;
 
   public PipelineSchedules Schedules => _schedules;
+  public ErrorJournal ErrorJournal => _errorJournal;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
     return [
       _snapshot,
-      _schedules
+      _schedules,
+      _errorJournal
     ];
   }
 
@@ -30,6 +33,9 @@ public class InMemoryDashboardStore : IDashboardStore
         break;
       case PipelineSchedules schedules:
         _schedules = schedules;
+        break;
+      case ErrorJournal journal:
+        _errorJournal = journal;
         break;
       default:
         throw new InvalidOperationException($"Unsupported store value type: {typeof(TValue).Name}");

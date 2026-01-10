@@ -34,7 +34,7 @@ namespace AkkaSync.Plugins.Sink.Sqlite
     }
     public async Task WriteAsync(IEnumerable<TransformContext> contextBatch, CancellationToken cancellationToken)
     {
-      
+
       if (contextBatch == null || !contextBatch.Any())
       {
         return;
@@ -44,17 +44,17 @@ namespace AkkaSync.Plugins.Sink.Sqlite
       try
       {
         using var connection = new SqliteConnection(_connectionString);
-        
+
         await connection.OpenAsync(cancellationToken);
         using var transaction = connection.BeginTransaction();
 
         var tables = contextBatch.Where(ctx => ctx?.Artifacts?.Count > 0)
                             .SelectMany(ctx => ctx.Artifacts)
                             .GroupBy(t => t.Key);
-        foreach(var table in tables)
+        foreach (var table in tables)
         {
           tableName = table.Key;
-          var rows = table.Select(t => t.Value).Where(r => r != null  && r is Dictionary<string, object?> d && d.Count > 0)
+          var rows = table.Select(t => t.Value).Where(r => r != null && r is Dictionary<string, object?> d && d.Count > 0)
                             .Cast<Dictionary<string, object?>>();
           await InsertTableDataAsync(tableName, rows, connection, transaction, cancellationToken);
         }
@@ -62,26 +62,26 @@ namespace AkkaSync.Plugins.Sink.Sqlite
         await transaction.CommitAsync(cancellationToken);
         _logger.LogInformation("Transaction committed successfully.");
       }
-      catch(Exception ex)
-        {
-          _logger.LogError(ex, "Fatal error occurred while inserting rows into table {TableName}.", tableName);
-          throw;
-        }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Fatal error occurred while inserting rows into table {TableName}.", tableName);
+        throw;
+      }
       finally
       {
         _writeLock.Release();
       }
-      
+
     }
 
     private async Task InsertTableDataAsync(
-      string table, 
-      IEnumerable<Dictionary<string, object?>> rows, 
-      SqliteConnection connection, 
-      SqliteTransaction transaction, 
+      string table,
+      IEnumerable<Dictionary<string, object?>> rows,
+      SqliteConnection connection,
+      SqliteTransaction transaction,
       CancellationToken cancellationToken)
     {
-      if(!rows.Any())
+      if (!rows.Any())
       {
         _logger.LogInformation("Table {TableName} has no data, skipping.", table);
         return;
@@ -94,16 +94,16 @@ namespace AkkaSync.Plugins.Sink.Sqlite
       var columnNames = string.Join(", ", columns.Select(Escape));
       var parameterNames = string.Join(", ", columns.Select(c => "@" + c));
       var insertStatement = $"INSERT INTO {tableName} ({columnNames}) VALUES ({parameterNames})";
-      
+
       await using var cmd = new SqliteCommand(insertStatement, connection, transaction);
-      foreach(var column in columns)
+      foreach (var column in columns)
       {
         cmd.Parameters.Add(new SqliteParameter($"@{column}", DBNull.Value));
       }
 
-      foreach(var row in rows)
+      foreach (var row in rows)
       {
-        foreach(var column in columns)
+        foreach (var column in columns)
         {
           cmd.Parameters[$"@{column}"].Value = row[column] ?? DBNull.Value;
         }
@@ -111,7 +111,7 @@ namespace AkkaSync.Plugins.Sink.Sqlite
         {
           await cmd.ExecuteNonQueryAsync(cancellationToken);
         }
-        catch(SqliteException ex) when (RECOVERABLE_ERROR_CODE.Contains(ex.SqliteErrorCode))
+        catch (SqliteException ex) when (RECOVERABLE_ERROR_CODE.Contains(ex.SqliteErrorCode))
         {
           _logger.LogWarning(ex, "Recoverable error inserting row into {TableName}, skipping row.", tableName);
           continue;

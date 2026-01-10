@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
-public record HostSnapshot(
+public sealed record HostSnapshot(
   HostStatus Status,
   ImmutableList<PipelineSnapshot> Pipelines, 
   DateTimeOffset StartAt) : IStoreValue
