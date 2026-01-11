@@ -1,13 +1,14 @@
-interface ErrorEntry {
-  occurredAt: string,
-  message: string
+interface DiagnosisRecord {
+  timestamp: string,
+  message: string,
+  level: 'Info' | 'Warn' | 'Error'
 }
 
-interface ErrorJournal {
-  errors: ErrorEntry[]
+interface DiagnosisJournal {
+  records: DiagnosisRecord[]
 }
 
 export type {
-  ErrorJournal,
-  ErrorEntry
+  DiagnosisJournal,
+  DiagnosisRecord
 }

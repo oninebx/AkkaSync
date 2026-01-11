@@ -4,7 +4,6 @@ using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Messaging;
-using AkkaSync.Host.Domain.Dashboard.Repositories;
 
 namespace AkkaSync.Host.Application.Dashboard;
 

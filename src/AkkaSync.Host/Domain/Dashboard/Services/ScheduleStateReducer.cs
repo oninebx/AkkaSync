@@ -1,6 +1,6 @@
 using System;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Domain.Pipeline.Scheduling;
+using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 namespace AkkaSync.Host.Domain.Dashboard.Services;

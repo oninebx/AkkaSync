@@ -1,8 +1,8 @@
 using System;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Domain.Pipeline;
+using AkkaSync.Core.Domain.Pipelines;
 
-namespace AkkaSync.Core.Domain.Worker;
+namespace AkkaSync.Core.Domain.Workers;
 
 public static class WorkerProtocol
 {

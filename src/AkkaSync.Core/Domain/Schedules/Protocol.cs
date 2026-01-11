@@ -1,8 +1,7 @@
 using System;
-using AkkaSync.Core.Domain.Pipeline;
 using AkkaSync.Core.Domain.Shared;
 
-namespace AkkaSync.Core.Domain.Pipeline.Scheduling;
+namespace AkkaSync.Core.Domain.Schedules;
 
 public static class PipelineSchedulerProtocol
 {

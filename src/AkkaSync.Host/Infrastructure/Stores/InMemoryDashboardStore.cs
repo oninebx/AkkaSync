@@ -1,5 +1,7 @@
 using System;
-using AkkaSync.Host.Domain.Dashboard.Repositories;
+using AkkaSync.Core.Application.Diagnosis;
+using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Host.Application.Store;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
@@ -8,19 +10,19 @@ public class InMemoryDashboardStore : IDashboardStore
 {
   private volatile HostSnapshot _snapshot = HostSnapshot.Empty;
   private volatile PipelineSchedules _schedules = PipelineSchedules.Empty;
-  private volatile ErrorJournal _errorJournal = ErrorJournal.Empty;
+  private volatile DiagnosisJournal _journal = DiagnosisJournal.Empty;
 
   public HostSnapshot Snapshot => _snapshot;
 
   public PipelineSchedules Schedules => _schedules;
-  public ErrorJournal ErrorJournal => _errorJournal;
+  public DiagnosisJournal Journal => _journal;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
     return [
       _snapshot,
       _schedules,
-      _errorJournal
+      _journal
     ];
   }
 
@@ -34,8 +36,8 @@ public class InMemoryDashboardStore : IDashboardStore
       case PipelineSchedules schedules:
         _schedules = schedules;
         break;
-      case ErrorJournal journal:
-        _errorJournal = journal;
+      case DiagnosisJournal journal:
+        _journal = journal;
         break;
       default:
         throw new InvalidOperationException($"Unsupported store value type: {typeof(TValue).Name}");

@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Immutable;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Domain.Pipeline;
+using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Runtime.PipelineManager;
-using AkkaSync.Host.Domain.Dashboard;
 using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
 namespace AkkaSync.Host.Domain.Dashboard.Services;

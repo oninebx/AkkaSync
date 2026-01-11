@@ -2,12 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Akka.Actor;
-using AkkaSync.Host.Application.Common;
 using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
-using AkkaSync.Host.Domain.Dashboard.Repositories;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 using AkkaSync.Host.Infrastructure.SignalR;
 using Microsoft.AspNetCore.SignalR;
 
@@ -17,7 +14,6 @@ public class DashboardHub : Hub
 {
   private readonly IDashboardClientRegistry _registry;
   private readonly IEventEnvelopePublisher _envelopePublisher;
-  // private readonly IEnumerable<IReplayStore<IStoreValue>> _replayStores;
   private readonly IEventEnvelopeFactory _factory;
   private readonly IDashboardQueryDispatcher _dispatcher;
   private readonly IDashboardStore _store;
@@ -25,7 +21,6 @@ public class DashboardHub : Hub
   public DashboardHub(
     IDashboardClientRegistry registry, 
     IEventEnvelopePublisher envelopePublisher,
-    // IEnumerable<IReplayStore<IStoreValue>> replayStores,
     IDashboardStore store,
     IEventEnvelopeFactory factory,
     IDashboardQueryDispatcher dispatcher
@@ -34,7 +29,6 @@ public class DashboardHub : Hub
     _registry = registry;
     _envelopePublisher = envelopePublisher;
     _store = store;
-    // _replayStores = replayStores;
     _factory = factory;
     _dispatcher = dispatcher;
   }

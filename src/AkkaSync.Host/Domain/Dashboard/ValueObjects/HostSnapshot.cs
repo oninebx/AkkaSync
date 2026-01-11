@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Immutable;
+using AkkaSync.Abstractions;
+using AkkaSync.Host.Application.Store;
 
 namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
 

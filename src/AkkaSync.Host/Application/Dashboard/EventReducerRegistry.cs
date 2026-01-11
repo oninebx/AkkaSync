@@ -1,6 +1,6 @@
 using System;
 using AkkaSync.Abstractions;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
+using AkkaSync.Host.Application.Store;
 
 namespace AkkaSync.Host.Application.Dashboard;
 

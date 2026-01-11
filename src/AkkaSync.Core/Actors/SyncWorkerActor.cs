@@ -3,7 +3,8 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
-using AkkaSync.Core.Domain.Worker;
+using AkkaSync.Core.Domain.Workers;
+using AkkaSync.Core.Domain.Workers.Events;
 
 namespace AkkaSync.Core.Actors;
 

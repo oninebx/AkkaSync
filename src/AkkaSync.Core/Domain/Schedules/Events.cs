@@ -1,7 +1,7 @@
 using System;
 using AkkaSync.Abstractions;
 
-namespace AkkaSync.Core.Domain.Pipeline.Scheduling;
+namespace AkkaSync.Core.Domain.Schedules.Events;
 
 public sealed record SchedulerStarted(IReadOnlyDictionary<string, string> Specs) : ISyncEvent
 {

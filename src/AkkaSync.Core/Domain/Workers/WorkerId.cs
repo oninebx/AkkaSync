@@ -1,8 +1,7 @@
 using System;
-using AkkaSync.Core.Domain.Pipeline;
-using AkkaSync.Core.Domain.Shared;
+using AkkaSync.Core.Domain.Pipelines;
 
-namespace AkkaSync.Core.Domain.Worker;
+namespace AkkaSync.Core.Domain.Workers;
 
 public readonly record struct WorkerId(
   PipelineId PipelineId,

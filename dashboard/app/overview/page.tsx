@@ -6,8 +6,6 @@ import RecentEventsCard from "./components/RecentEventsCard";
 import { KpiBanner } from "./components/KpiBanner";
 import { useSelector } from "react-redux";
 import { selectConnectionStatus } from "@/infrastructure/signalr/connection.selectors";
-import { selectEventsOrdered } from "@/features/recentevents/syncevents.selectors";
-import { mapEnvelope } from "@/features/recentevents/syncevents.config";
 import { HostStatus } from "@/features/host/host.types";
 import { useSignalRInvoke } from "@/providers/SingalRProvider";
 import PipelineTable from "./components/PipelineTable/PipelineTable";
@@ -15,7 +13,7 @@ import { selectHostPipelines } from "@/features/host/host.selectors";
 import { selectScheduleSpecs, selectSecheduleJobs } from "@/features/scheduler/scheduler.selectors";
 import { usePipelines } from "./components/PipelineTable/usePipelines";
 import useKpis from "./components/KpiBanner/useKpis";
-import { selectErrors } from "@/features/diagnosis/diagnosis.selectors";
+import { selectJournal } from "@/features/diagnosis/diagnosis.selectors";
 
 // const events: EventItem[] = [
 //   { time: "14:02:01", level: "INFO", message: "Pipeline UserSync started" },
@@ -37,12 +35,10 @@ export default function HomePage() {
   const scheduleSpecs = useSelector(selectScheduleSpecs);
   const scheduleJobs = useSelector(selectSecheduleJobs);
 
-  const errors = useSelector(selectErrors);
-  
   const pipelineData = usePipelines(pipelines, scheduleSpecs);
   const kpiData = useKpis(pipelines, scheduleJobs);
 
-  const events = useSelector(selectEventsOrdered);
+  const events = useSelector(selectJournal);
   // const connectionStatus = 'connected';
   const status = HostStatus.Idle;
   const startAt = new Date().toISOString();
@@ -70,27 +66,10 @@ export default function HomePage() {
               connectionStatus={connectionStatus}
               status={status}
               startTime={startAt} />
-            <RecentEventsCard events={events.map(e => mapEnvelope(e))}/>
+            <RecentEventsCard events={events}/>
           </div>
           <PipelineTable data={pipelineData} />
           <div onClick={handleClick}>Ping Test</div>
-          <div>
-            {errors.length > 0 && (
-              <Card>
-                <div className="p-4">
-                  <h2 className="text-lg font-medium mb-4">Error Journal</h2>
-                  <ul className="list-disc list-inside space-y-2">
-                    {errors.map((error, index) => (
-                      <li key={index} className="text-red-600">
-                        <div><strong>Time:</strong> {new Date(error.occurredAt).toLocaleString()}</div>
-                        <div><strong>Message:</strong> {error.message}</div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Card>
-            )}
-          </div>
         </div>
       </div>
     </>

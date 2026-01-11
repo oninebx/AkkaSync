@@ -4,8 +4,10 @@ using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
-using AkkaSync.Core.Domain.Pipeline;
-using AkkaSync.Core.Domain.Worker;
+using AkkaSync.Core.Domain.Pipelines;
+using AkkaSync.Core.Domain.Pipelines.Events;
+using AkkaSync.Core.Domain.Workers;
+using AkkaSync.Core.Domain.Workers.Events;
 
 namespace AkkaSync.Core.Actors
 {

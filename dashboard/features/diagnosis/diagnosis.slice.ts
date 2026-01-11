@@ -1,23 +1,23 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ErrorEntry, ErrorJournal } from "./diagnosis.types";
+import { DiagnosisJournal, DiagnosisRecord } from "./diagnosis.types";
 
 interface DiagnosisState {
-  errorJournal: ErrorJournal
+  journal: DiagnosisJournal
 }
 
 const initialState: DiagnosisState = {
-  errorJournal: { errors: [] }
+  journal: { records: [] }
 };
 
 const diagnosisSlice = createSlice({
   name: 'diagnosis',
   initialState,
   reducers: {
-    setErrorJournal(state, action: PayloadAction<ErrorJournal>) {
-      state.errorJournal = action.payload;
+    setErrorJournal(state, action: PayloadAction<DiagnosisJournal>) {
+      state.journal = action.payload;
     },
-    addError(state, action: PayloadAction<ErrorEntry>) {
-      state.errorJournal.errors.push(action.payload);
+    addError(state, action: PayloadAction<DiagnosisRecord>) {
+      state.journal.records.push(action.payload);
     }
   }
 });

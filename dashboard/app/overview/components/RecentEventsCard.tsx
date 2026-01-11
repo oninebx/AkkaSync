@@ -1,10 +1,10 @@
 'use client';
 
 import Card from '@/components/Card';
-import { EventItem } from '@/features/recentevents/syncevents.viewmodels';
+import { DiagnosisRecord } from '@/features/diagnosis/diagnosis.types';
 
 interface RecentEventsCardProps {
-  events: EventItem[];
+  events: DiagnosisRecord[];
 }
 
 export default function RecentEventsCard({ events }: RecentEventsCardProps) {
@@ -14,7 +14,7 @@ export default function RecentEventsCard({ events }: RecentEventsCardProps) {
       <ul className="text-sm space-y-1 overflow-y-auto">
         {events.map((e, idx) => (
           <li key={idx} className={getLevelClass(e.level)}>
-            [{e.time}] {e.level} {e.message}
+            [{e.timestamp}] {e.level} {e.message}
           </li>
         ))}
       </ul>

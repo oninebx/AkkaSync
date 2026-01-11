@@ -1,7 +1,8 @@
 import { RootState } from "@/store";
 
-const selectErrors = (state: RootState) => state.diagnosis.errorJournal.errors;
-
+const selectErrors = (state: RootState) => state.diagnosis.journal.records.filter(record => record.level === 'Error');
+const selectJournal = (state: RootState) => state.diagnosis.journal.records;
 export {
-  selectErrors
+  selectErrors,
+  selectJournal
 }

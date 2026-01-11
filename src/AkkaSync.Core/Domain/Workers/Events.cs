@@ -1,7 +1,7 @@
 using System;
 using AkkaSync.Abstractions;
 
-namespace AkkaSync.Core.Domain.Worker;
+namespace AkkaSync.Core.Domain.Workers.Events;
 
 public sealed record WorkerStarted(WorkerId WorkerId) : ISyncEvent
 {

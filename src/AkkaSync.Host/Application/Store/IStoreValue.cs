@@ -1,6 +1,6 @@
 using System;
 
-namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
+namespace AkkaSync.Host.Application.Store;
 
 public interface IStoreValue
 {
