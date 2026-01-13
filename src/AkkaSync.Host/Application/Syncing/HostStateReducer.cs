@@ -2,13 +2,12 @@ using System;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Runtime.PipelineManager;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
-namespace AkkaSync.Host.Domain.Dashboard.Services;
+namespace AkkaSync.Host.Application.Syncing;
 
 public static class HostStateReducer
 {
-  public static HostSnapshot Reduce(HostSnapshot current, ISyncEvent @event)
+  public static SyncState Reduce(SyncState current, ISyncEvent @event)
   {
     return @event switch
     {

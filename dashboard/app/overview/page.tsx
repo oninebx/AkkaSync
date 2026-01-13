@@ -14,22 +14,11 @@ import { selectScheduleSpecs, selectSecheduleJobs } from "@/features/scheduler/s
 import { usePipelines } from "./components/PipelineTable/usePipelines";
 import useKpis from "./components/KpiBanner/useKpis";
 import { selectJournal } from "@/features/diagnosis/diagnosis.selectors";
-
-// const events: EventItem[] = [
-//   { time: "14:02:01", level: "INFO", message: "Pipeline UserSync started" },
-//   { time: "14:02:02", level: "DEBUG", message: "Task FetchUsers completed (32ms)" },
-//   { time: "14:02:03", level: "INFO", message: "Task SyncUsers completed (153ms)" },
-// ];
-
-
 interface PingResponse {
   value: string
 }
 
 export default function HomePage() {
-  // const snapshot = useHostSnapshot();
-  // const KpiData = useKpis(snapshot);
-  // const { status, startAt } = snapshot;
   const connectionStatus = useSelector(selectConnectionStatus);
   const pipelines = useSelector(selectHostPipelines);
   const scheduleSpecs = useSelector(selectScheduleSpecs);
@@ -39,12 +28,9 @@ export default function HomePage() {
   const kpiData = useKpis(pipelines, scheduleJobs);
 
   const events = useSelector(selectJournal);
-  // const connectionStatus = 'connected';
   const status = HostStatus.Idle;
   const startAt = new Date().toISOString();
 
-  // const {loading, data, error} = useSignalRQuery<PingResponse>('QueryTest', {Value: 'ping'}, true);
-  // console.log(loading, data, error);
   const { queryInvoke } = useSignalRInvoke<PingResponse>();
   
   const handleClick = async () => {

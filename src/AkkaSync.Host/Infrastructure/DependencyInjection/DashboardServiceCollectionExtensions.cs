@@ -5,8 +5,8 @@ using AkkaSync.Host.Application.Diagnosis;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Application.Query.Handlers;
-using AkkaSync.Host.Domain.Dashboard.Services;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
+using AkkaSync.Host.Application.Scheduling;
+using AkkaSync.Host.Application.Syncing;
 using AkkaSync.Host.Infrastructure.SignalR;
 using AkkaSync.Host.Infrastructure.Stores;
 
@@ -23,7 +23,7 @@ public static class DashboardServiceExtension
     services.AddSingleton<IDashboardStore, InMemoryDashboardStore>();
     services.AddSingleton(sp => 
       new EventReducerRegistryBuilder()
-      .Add<HostSnapshot>(HostStateReducer.Reduce)
+      .Add<SyncState>(HostStateReducer.Reduce)
       .Add<PipelineSchedules>(ScheduleStateReducer.Reduce)
       .Add<DiagnosisJournal>(DiagnosisReducer.Reduce)
       .Build());

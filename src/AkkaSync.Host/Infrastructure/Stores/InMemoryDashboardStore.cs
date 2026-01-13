@@ -1,26 +1,26 @@
 using System;
 using AkkaSync.Core.Application.Diagnosis;
 using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Store;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
+using AkkaSync.Host.Application.Syncing;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 
 public class InMemoryDashboardStore : IDashboardStore
 {
-  private volatile HostSnapshot _snapshot = HostSnapshot.Empty;
+  private volatile SyncState _syncState = SyncState.Empty;
   private volatile PipelineSchedules _schedules = PipelineSchedules.Empty;
   private volatile DiagnosisJournal _journal = DiagnosisJournal.Empty;
 
-  public HostSnapshot Snapshot => _snapshot;
-
+  public SyncState SyncState => _syncState;
   public PipelineSchedules Schedules => _schedules;
   public DiagnosisJournal Journal => _journal;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
     return [
-      _snapshot,
+      _syncState,
       _schedules,
       _journal
     ];
@@ -30,8 +30,8 @@ public class InMemoryDashboardStore : IDashboardStore
   {
     switch (state)
     {
-      case HostSnapshot snapshot:
-        _snapshot = snapshot;
+      case SyncState syncState:
+        _syncState = syncState;
         break;
       case PipelineSchedules schedules:
         _schedules = schedules;

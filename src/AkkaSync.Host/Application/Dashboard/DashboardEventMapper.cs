@@ -4,8 +4,9 @@ using AkkaSync.Core.Application.Diagnosis;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Host.Application.Messaging;
+using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Store;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
+using AkkaSync.Host.Application.Syncing;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
@@ -15,7 +16,7 @@ public static class DashboardEventMapper
   {
     return value switch
     {
-      HostSnapshot snapshot => new DashboardEvent("sync.snapshot.updated", snapshot),
+      SyncState syncState => new DashboardEvent("sync.snapshot.updated", syncState),
       PipelineSchedules schedules => @event switch {
         SchedulerStarted e => new DashboardEvent("scheduler.specs.initialized", e.Specs),
         PipelineScheduled e => new DashboardEvent("scheduler.jobs.added", schedules.Jobs.FirstOrDefault(j => j.Name == e.Name)!),

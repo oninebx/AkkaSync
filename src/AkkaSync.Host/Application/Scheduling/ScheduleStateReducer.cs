@@ -1,9 +1,8 @@
 using System;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Schedules.Events;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
 
-namespace AkkaSync.Host.Domain.Dashboard.Services;
+namespace AkkaSync.Host.Application.Scheduling;
 
 public static class ScheduleStateReducer
 {

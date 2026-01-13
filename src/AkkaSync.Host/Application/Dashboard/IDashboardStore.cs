@@ -1,13 +1,14 @@
 using System;
 using AkkaSync.Core.Application.Diagnosis;
+using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Store;
-using AkkaSync.Host.Domain.Dashboard.ValueObjects;
+using AkkaSync.Host.Application.Syncing;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
 public interface IDashboardStore
 {
-  HostSnapshot Snapshot { get; }
+  SyncState SyncState { get; }
   PipelineSchedules Schedules { get; }
   DiagnosisJournal Journal { get; }
   

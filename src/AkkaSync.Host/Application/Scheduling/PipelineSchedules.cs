@@ -1,7 +1,7 @@
 using System;
 using AkkaSync.Host.Application.Store;
 
-namespace AkkaSync.Host.Domain.Dashboard.ValueObjects;
+namespace AkkaSync.Host.Application.Scheduling;
 
 public sealed record PipelineSchedules(
   IReadOnlyDictionary<string, string> Specs,
