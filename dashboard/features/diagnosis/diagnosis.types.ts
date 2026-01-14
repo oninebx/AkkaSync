@@ -1,7 +1,8 @@
+type RecordLevel = 'Info' | 'Warn' | 'Error'; 
 interface DiagnosisRecord {
   timestamp: string,
   message: string,
-  level: 'Info' | 'Warn' | 'Error'
+  level: RecordLevel
 }
 
 interface DiagnosisJournal {
@@ -10,5 +11,6 @@ interface DiagnosisJournal {
 
 export type {
   DiagnosisJournal,
-  DiagnosisRecord
+  DiagnosisRecord,
+  RecordLevel
 }

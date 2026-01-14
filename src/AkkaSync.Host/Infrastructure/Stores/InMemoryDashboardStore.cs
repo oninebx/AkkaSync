@@ -22,7 +22,7 @@ public class InMemoryDashboardStore : IDashboardStore
     return [
       _syncState,
       _schedules,
-      _journal
+      _journal.ToShow(50)
     ];
   }
 

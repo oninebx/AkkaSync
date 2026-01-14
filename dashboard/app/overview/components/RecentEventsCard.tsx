@@ -1,7 +1,8 @@
 'use client';
 
 import Card from '@/components/Card';
-import { DiagnosisRecord } from '@/features/diagnosis/diagnosis.types';
+import { DiagnosisRecord, RecordLevel } from '@/features/diagnosis/diagnosis.types';
+import { formatDateTime } from '@/shared/utils/time';
 
 interface RecentEventsCardProps {
   events: DiagnosisRecord[];
@@ -14,7 +15,7 @@ export default function RecentEventsCard({ events }: RecentEventsCardProps) {
       <ul className="text-sm space-y-1 overflow-y-auto">
         {events.map((e, idx) => (
           <li key={idx} className={getLevelClass(e.level)}>
-            [{e.timestamp}] {e.level} {e.message}
+            [{formatDateTime(e.timestamp)}] {e.level} {e.message}
           </li>
         ))}
       </ul>
@@ -22,13 +23,13 @@ export default function RecentEventsCard({ events }: RecentEventsCardProps) {
   );
 }
 
-function getLevelClass(level: string) {
+function getLevelClass(level: RecordLevel) {
   switch (level) {
-    case "INFO":
+    case 'Info':
       return "text-info";
-    case "DEBUG":
-      return "text-gray-500";
-    case "ERROR":
+    case 'Warn':
+      return "text-warning font-medium";
+    case 'Error':
       return "text-red-500 font-semibold";
     default:
       return "text-gray-600";
