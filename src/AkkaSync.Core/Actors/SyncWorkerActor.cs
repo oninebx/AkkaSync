@@ -40,7 +40,7 @@ public class SyncWorkerActor : ReceiveActor
 
   private async Task StartAsync()
   {
-    Context.System.EventStream.Publish(new WorkerStarted(_id));
+    Context.Parent.Tell(new WorkerStarted(_id));
 
     _cancellationToken.ThrowIfCancellationRequested();
     _logger.Info($"Worker {Self.Path.Name} started processing.");

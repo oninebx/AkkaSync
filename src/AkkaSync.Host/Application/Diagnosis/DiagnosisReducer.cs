@@ -3,18 +3,19 @@ using AkkaSync.Abstractions;
 using AkkaSync.Core.Application.Diagnosis;
 using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Workers.Events;
+using AkkaSync.Core.Notifications;
 
 namespace AkkaSync.Host.Application.Diagnosis;
 
 public static class DiagnosisReducer
 {
-  public static DiagnosisJournal Reduce(DiagnosisJournal current, ISyncEvent @event) => @event switch
+  public static DiagnosisJournal Reduce(DiagnosisJournal current, INotificationEvent @event) => @event switch
   {
-    PipelineStarted e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' started.") { Timestamp = e.Timestamp }),
-    PipelineCompleted e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' completed.") { Timestamp = e.Timestamp }),
-    WorkerStarted e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Worker '{e.WorkerId}' started.") { Timestamp = e.Timestamp }),
-    WorkerFailed e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Error, e.Reason) { Timestamp = e.Timestamp }),
-    WorkerCompleted e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Worker '{e.WorkerId}' completed.") { Timestamp = e.Timestamp }),
+    PipelineStartReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' started.") { Timestamp = @event.OccurredAt }),
+    PipelineCompleteReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' completed.") { Timestamp = @event.OccurredAt }),
+    WorkerStartReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Worker '{e.WorkerId}' started.") { Timestamp = @event.OccurredAt }),
+    WorkerFailureReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Error, e.Message) { Timestamp = @event.OccurredAt }),
+    WorkerCompleteReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Worker '{e.WorkerId}' completed.") { Timestamp = @event.OccurredAt }),
     _ => current 
   };
 }

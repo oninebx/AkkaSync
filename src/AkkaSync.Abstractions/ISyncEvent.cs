@@ -4,5 +4,5 @@ namespace AkkaSync.Abstractions;
 
 public interface ISyncEvent
 {
-  DateTimeOffset Timestamp {get;}
+  DateTimeOffset Timestamp {get => DateTimeOffset.UtcNow; }
 }

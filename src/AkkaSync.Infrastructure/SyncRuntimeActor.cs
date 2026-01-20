@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Core.Actors;
-using AkkaSync.Core.Domain.Pipelines;
-using AkkaSync.Core.Domain.Schedules;
-using AkkaSync.Core.Runtime.PipelineManager;
+using AkkaSync.Core.Domain.Shared;
 
 namespace AkkaSync.Infrastructure;
 
@@ -14,22 +11,16 @@ public record ActorHook(Props Props, string Name);
 public class SyncRuntimeActor : ReceiveActor
 {
   private readonly IEnumerable<ActorHook> _hooks;
-  // private IActorRef? _pipelineManager;
-  // private IActorRef? _pipelineScheduer;
+  private readonly IDictionary<string, Props> _props;
   private ILoggingAdapter _logger = Context.GetLogger();
   
-  public SyncRuntimeActor(IEnumerable<ActorHook> hooks)
+  public SyncRuntimeActor(IEnumerable<ActorHook> hooks, IDictionary<string, Props> props)
   {
     _hooks = hooks;
-
+    _props = props;
     Receive<Terminated>(t =>
     {
       _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
-      // if (t.ActorRef.Equals(_pipelineManager))
-      // {
-      //   Context.System.EventStream.Publish(new PipelineManagerFailed());
-      // }
-        
     });
   }
 
@@ -43,19 +34,26 @@ public class SyncRuntimeActor : ReceiveActor
         return Directive.Restart;
       }
     );
+
+    var managerActor = Context.ActorOf(Props.Create<PipelineManagerActor>(_props).WithSupervisorStrategy(strategy), "pipeline-manager");
+
+    IActorRef? dashboardActor = null;
     foreach(var hook in _hooks)
     {
       var actorRef = Context.ActorOf(hook.Props.WithSupervisorStrategy(strategy), hook.Name);
       Context.Watch(actorRef);
       switch(hook.Name) {
-        case"pipeline-manager":
-          actorRef.Tell(new PipelineManagerProtocol.Start());
-          break;
-        case "pipeline-scheduler":
-          actorRef.Tell(new PipelineSchedulerProtocol.Start());
+        case "dashboard-proxy":
+          dashboardActor = actorRef;
           break;
       }
-      
     }
+  
+    if (dashboardActor == null)
+    {
+      throw new InvalidOperationException("DashboardProxy actor is not initialized.");
+    }
+
+    dashboardActor.Tell(new SharedProtocol.RegisterPeer(managerActor));
   }
 }

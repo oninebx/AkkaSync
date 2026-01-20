@@ -55,11 +55,10 @@ public class DashboardHub : Hub
     _registry.RegisterClientAsync(Context.ConnectionId, lastSeenSeq);
     
     var eventsToSend = _store.GetEventsToReplay(lastSeenSeq)
-      .Select(value =>
-      {
-        var payload = DashboardEventMapper.TryMap(value);
-        return _factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
-      });
+    .Select(value => DashboardEventMapper.TryMap(value, new DashboardInitialized()))
+    .Where(payload => payload is not null)
+    .Select(payload => _factory.Create(payload!.TypeName, payload, DateTimeOffset.UtcNow));
+
     foreach(var envelope in eventsToSend)
     {
       await _envelopePublisher.PublishAsync(envelope);

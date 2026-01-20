@@ -3,17 +3,8 @@ using AkkaSync.Abstractions;
 
 namespace AkkaSync.Core.Domain.Schedules.Events;
 
-public sealed record SchedulerStarted(IReadOnlyDictionary<string, string> Specs) : ISyncEvent
-{
-  public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
-}
+// public sealed record SchedulerStarted(IReadOnlyDictionary<string, string> Specs) : ISyncEvent;
 
-public sealed record PipelineScheduled(string Name, DateTime NextUtc) : ISyncEvent
-{
-  public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
-}
+public sealed record PipelineScheduled(string Name, DateTime NextUtc) : INotificationEvent;
 
-public sealed record PipelineTriggered(string Name) : ISyncEvent
-{
-  public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
-}
+public sealed record PipelineTriggered(string Name) : INotificationEvent;

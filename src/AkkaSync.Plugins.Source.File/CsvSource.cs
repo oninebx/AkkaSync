@@ -32,7 +32,7 @@ public class CsvSource : ISyncSource
     {
       var info = new FileInfo(_filePath);
       var input = $"{info.Length}:{info.LastWriteTimeUtc.Ticks}";
-      
+
       return generator.ComputeSha256(info.Length.ToString(), info.LastWriteTimeUtc.Ticks.ToString());
     });
   }
@@ -57,7 +57,7 @@ public class CsvSource : ISyncSource
     var headers = headerLine.Split(_delimiter);
     int lineNumber = 1;
     int index = 0;
-    while(index < startRow && !reader.EndOfStream)
+    while (index < startRow && !reader.EndOfStream)
     {
       await reader.ReadLineAsync();
       index++;
@@ -74,7 +74,7 @@ public class CsvSource : ISyncSource
       try
       {
         values = ParseCsvLine(line, _delimiter);
-        if(values.Length != headers.Length)
+        if (values.Length != headers.Length)
         {
           throw new FormatException("Column count does not match header");
         }
@@ -90,24 +90,19 @@ public class CsvSource : ISyncSource
         record[headers[i]] = values[i];
       }
       var ctx = new TransformContext(record)
+      {
+        MetaData = new Dictionary<string, object>
         {
-            // RawData = line,
-            // TablesData = new Dictionary<string, Dictionary<string, object?>>
-            // {
-            //     ["_rawCsv"] = record
-            // },
-            MetaData = new Dictionary<string, object>
-            {
-                ["SourceType"] = "CSV",
-                ["FilePath"] = _filePath,
-                ["LineNumber"] = lineNumber,
-            },
-            Cursor = index.ToString()
-        };
+          ["SourceType"] = "CSV",
+          ["FilePath"] = _filePath,
+          ["LineNumber"] = lineNumber,
+        },
+        Cursor = index.ToString()
+      };
 
-        yield return ctx;
-        index++;
-    } 
+      yield return ctx;
+      index++;
+    }
   }
 
   /// <summary>
@@ -118,11 +113,11 @@ public class CsvSource : ISyncSource
     var fields = new List<string>();
     var currentField = new System.Text.StringBuilder();
     bool insideQuotes = false;
-    
+
     for (int i = 0; i < line.Length; i++)
     {
       char c = line[i];
-      
+
       if (c == '"')
       {
         // Check for escaped quote (double quote)
@@ -146,10 +141,10 @@ public class CsvSource : ISyncSource
         currentField.Append(c);
       }
     }
-    
+
     // Add the last field
     fields.Add(currentField.ToString());
-    
+
     return [.. fields];
   }
 }

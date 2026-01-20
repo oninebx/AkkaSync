@@ -8,6 +8,7 @@ using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
+using AkkaSync.Core.Notifications;
 
 namespace AkkaSync.Core.Actors
 {
@@ -44,35 +45,26 @@ namespace AkkaSync.Core.Actors
 
       ReceiveAsync<PipelineProtocol.Start>(msg => StartAsync(msg));
       ReceiveAsync<WorkerProtocol.Create>(msg => CreateWorkerAsync(msg));
+
+      Receive<WorkerStarted>(msg => HandleStartedWorker(msg));
       ReceiveAsync<WorkerCompleted>(msg => FinalizeWorker(msg));
       ReceiveAsync<WorkerProgressed>(msg => HandleWorkerProgress(msg));
       ReceiveAsync<WorkerFailed>(msg => HandleFailedWorker(msg));
-
-      // Receive<Terminated>(msg => HandleTerminated(msg));
-      // Receive<StopSync>(_ => HandleStop());
-    }
-
-    protected override void PreStart()
-    {
-      Context.System.EventStream.Subscribe(Self, typeof(WorkerFailed));
     }
 
     protected override void PostStop()
     {
       _cancellationTokenSource.Cancel();
       _cancellationTokenSource.Dispose();
-      
-      Context.System.EventStream.Unsubscribe(Self, typeof(WorkerFailed));
     }
 
     private async Task StartAsync(PipelineProtocol.Start _)
     {
-
       foreach (var source in _sources)
       {
         Self.Tell(new WorkerProtocol.Create(_id, source));
       }
-      Context.System.EventStream.Publish(new PipelineStarted(_id));
+      Context.Parent.Tell(new PipelineStarted(_id));
       _logger.Info($"Pipeline {_id} started successfully.");
     }
 
@@ -98,8 +90,6 @@ namespace AkkaSync.Core.Actors
       }
 
       var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sink, _batchSize, cursor, _cancellationToken)), workerId.ToString());
-      _runWorkers.Add(workerId);
-      // Context.Watch(worker);
       worker.Tell(new WorkerProtocol.Start());
     }
 
@@ -109,24 +99,16 @@ namespace AkkaSync.Core.Actors
       {
         await _historyStore.MarkCompletedAsync(msg.WorkerId.SourceId, msg.Etag);
       }
+      Context.System.EventStream.Publish(new WorkerCompleteReported(msg.WorkerId));
       FinalizePipeline(msg.WorkerId, msg);
     }
 
-    // private void HandleStop()
-    // {
-    //     _logger.Info($"Pipeline Pipeline-{_spec.Name} stopped syncing.");
-    //     // Add your stop logic here
-    // }
-
-    // private async Task HandleProcessingCompleted(ProcessingCompleted msg)
-    // {
-    //     _logger.Info($"Pipeline Pipeline-{_spec.Name} completed processing.");
-    //     if(_historyStore != null)
-    //     {
-    //       await _historyStore.MarkCompletedAsync(msg.SourceId, msg.ETag);
-    //     }
-
-    // }
+    private void HandleStartedWorker(WorkerStarted msg)
+    {
+      _runWorkers.Add(msg.WorkerId);
+      _logger.Info("Worker {0} started.", msg.WorkerId);
+      Context.System.EventStream.Publish(new WorkerStartReported(msg.WorkerId));
+    }
 
     private async Task HandleWorkerProgress(WorkerProgressed msg)
     {
@@ -146,42 +128,18 @@ namespace AkkaSync.Core.Actors
         await _historyStore.MarkFailedAsync(msg.WorkerId.SourceId, msg.Reason, _cancellationToken);
       }
       FinalizePipeline(msg.WorkerId, msg);
+      Context.System.EventStream.Publish(new WorkerFailureReported(msg.WorkerId, msg.Reason));
     }
 
     private void FinalizePipeline(WorkerId workerId, ISyncEvent msg)
     {
       _runWorkers.Remove(workerId);
-      Context.System.EventStream.Publish(msg);
       if (_runWorkers.Count == 0)
       {
         var pipelineId = workerId.PipelineId;
-        Context.System.EventStream.Publish(new PipelineCompleted(pipelineId));
-        _logger.Info($"Pipeline {pipelineId} completed.");
-
+        Context.Parent.Tell(new PipelineCompleted(pipelineId));
         Context.Stop(Self);
       }
     }
-    // private void HandleTerminated(Terminated msg)
-    // {
-    //   var actorName = msg.ActorRef.Path.Name;
-    //   _workers.Remove(actorName);
-    //   _logger.Info($"Worker terminated. Name={actorName}, Path={msg.ActorRef.Path}");
-    //   if(_workers.Count == 0)
-    //   {
-    //     Context.Stop(Self);
-    //   }
-    // }
-
-    // private void PrintTablesData(TransformContext context)
-    // {
-    //     foreach (var table in context.TablesData)
-    //     {
-    //         _logger.Info($"Table: {table.Key}");
-    //         foreach (var column in table.Value)
-    //         {
-    //             _logger.Info($"  {column.Key}: {column.Value}");
-    //         }
-    //     }
-    // }
   }
 }

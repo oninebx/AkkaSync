@@ -17,10 +17,22 @@ export const hostSlice = createSlice({
   name: 'host',
   initialState,
   reducers: {
-    snapshotUpdated(state, action: PayloadAction<HostSnapshot>) {
+    snapshotInitialized(state, action: PayloadAction<HostSnapshot>) {
       state.status = action.payload.status;
       state.startAt = action.payload.startAt;
       state.pipelines = action.payload.pipelines ?? [];
+    },
+    pipelineStarted(state, action: PayloadAction<PipelineSnapshot>) {
+      const pipeline = state.pipelines.find(p => p.id === action.payload.id);
+      if(pipeline){
+        pipeline.startedAt = action.payload.startedAt;
+      }
+    },
+    pipelineCompleted(state, action: PayloadAction<PipelineSnapshot>){
+      const pipeline = state.pipelines.find(p => p.id === action.payload.id);
+      if(pipeline){
+        pipeline.finishedAt = action.payload.finishedAt;
+      }
     }
   }
 });

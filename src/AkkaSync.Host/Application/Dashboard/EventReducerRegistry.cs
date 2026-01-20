@@ -6,14 +6,14 @@ namespace AkkaSync.Host.Application.Dashboard;
 
 public sealed class EventReducerRegistry
 {
-  private readonly IReadOnlyDictionary<Type, Func<IStoreValue, ISyncEvent, IStoreValue>> _reducers;
+  private readonly IReadOnlyDictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>> _reducers;
 
-  internal EventReducerRegistry(IReadOnlyDictionary<Type, Func<IStoreValue, ISyncEvent, IStoreValue>> reducers)
+  internal EventReducerRegistry(IReadOnlyDictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>> reducers)
   {
-    _reducers = new Dictionary<Type, Func<IStoreValue, ISyncEvent, IStoreValue>>(reducers);
+    _reducers = new Dictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>>(reducers);
   }
 
-  public bool TryReduce(IStoreValue current, ISyncEvent @event, out IStoreValue next)
+  public bool TryReduce(IStoreValue current, INotificationEvent @event, out IStoreValue next)
   {
     if(_reducers.TryGetValue(current.GetType(), out var reducer))
     {
@@ -27,10 +27,10 @@ public sealed class EventReducerRegistry
 
 public sealed class EventReducerRegistryBuilder
 {
-    private readonly Dictionary<Type, Func<IStoreValue, ISyncEvent, IStoreValue>> _reducers = [];
+    private readonly Dictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>> _reducers = [];
 
     public EventReducerRegistryBuilder Add<TState>(
-        Func<TState, ISyncEvent, TState> reducer)
+        Func<TState, INotificationEvent, TState> reducer)
         where TState : class, IStoreValue
     {
         var stateType = typeof(TState);

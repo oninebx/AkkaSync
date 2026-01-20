@@ -23,7 +23,7 @@ public static class DashboardServiceExtension
     services.AddSingleton<IDashboardStore, InMemoryDashboardStore>();
     services.AddSingleton(sp => 
       new EventReducerRegistryBuilder()
-      .Add<SyncState>(HostStateReducer.Reduce)
+      .Add<SyncState>(SyncStateReducer.Reduce)
       .Add<PipelineSchedules>(ScheduleStateReducer.Reduce)
       .Add<DiagnosisJournal>(DiagnosisReducer.Reduce)
       .Build());

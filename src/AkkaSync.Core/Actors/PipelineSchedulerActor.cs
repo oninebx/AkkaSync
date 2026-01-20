@@ -17,9 +17,9 @@ public class PipelineSchedulerActor : ReceiveActor
   private readonly IReadOnlyDictionary<string, ScheduleSpec> _schedules;
   private readonly Dictionary<string, ICancelable> _jobs = [];
   private readonly ILoggingAdapter _logger = Context.GetLogger();
+  private IActorRef? _pipelineRegistry;
   public PipelineSchedulerActor(ScheduleOptions options)
   {
-
     var enabledSchedules = options.Schedules?.Where(kv => kv.Value.Enabled).Select(kv => kv.Value).ToList()?? [];
     var duplicated = enabledSchedules.GroupBy(s => s.Pipeline).FirstOrDefault(g => g.Count() > 1);
     if (duplicated != null)
@@ -33,15 +33,15 @@ public class PipelineSchedulerActor : ReceiveActor
     {
       foreach(var schedule in _schedules)
       {
-        ScheduleNextRun(schedule.Value);
+        var nextUtc = ScheduleNextRun(schedule.Value);
+        Context.System.EventStream.Publish(new PipelineScheduled(schedule.Value.Pipeline, nextUtc));
       }
     });
 
     Receive<PipelineSchedulerProtocol.Trigger>(msg =>
     {
       _logger.Info($"Pipeline triggered: { msg.Name }");
-      var manager = Context.ActorSelection("/user/sync-runtime/pipeline-manager");
-      manager.Tell(new PipelineManagerProtocol.CreatePipeline(msg.Name));
+      _pipelineRegistry.Tell(new PipelineManagerProtocol.CreatePipeline(msg.Name));
       var spec = _schedules.FirstOrDefault(s => s.Key.Contains(msg.Name)).Value;
       Context.System.EventStream.Publish(new PipelineTriggered(msg.Name));
     });
@@ -49,22 +49,19 @@ public class PipelineSchedulerActor : ReceiveActor
     Receive<PipelineCompleted>(msg =>
     {
       var spec = _schedules[msg.PipelineId.Name];
-      ScheduleNextRun(spec);
+      var nextUtc = ScheduleNextRun(spec);
+      Context.System.EventStream.Publish(new PipelineScheduled(msg.PipelineId.Name, nextUtc));
+    });
+
+    Receive<SharedProtocol.RegisterPeer>(msg => {
+      _pipelineRegistry = msg.PeerRef;
+      _logger.Info("{0} actor is ready at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
+      var schedulesToPublish = _schedules.ToDictionary(s => s.Key, s => s.Value.Cron).AsReadOnly();
+      Context.Parent.Tell(new PeerRegistered(Self.Path.Name, schedulesToPublish));
     });
   }
-  protected override void PreStart()
-  {
-    Context.System.EventStream.Subscribe(Self, typeof(PipelineCompleted));
-    var schedulesToPublish = _schedules.ToDictionary(s => s.Key, s => s.Value.Cron).AsReadOnly();
-    Context.System.EventStream.Publish(new SchedulerStarted(schedulesToPublish));
-  }
 
-  protected override void PostStop()
-  {
-    Context.System.EventStream.Unsubscribe(Self, typeof(PipelineCompleted));
-  }
-
-  private void ScheduleNextRun(ScheduleSpec spec)
+  private DateTime ScheduleNextRun(ScheduleSpec spec)
   {
     var schedule = CrontabSchedule.Parse(spec.Cron);
     var nextUtc = schedule.GetNextOccurrence(DateTime.UtcNow);
@@ -84,6 +81,6 @@ public class PipelineSchedulerActor : ReceiveActor
     _jobs[spec.Pipeline] = cancelable;
     _logger.Info("{0} will run at {1}. Please wait for {2}.", spec.Pipeline, nextUtc, delay);
 
-    Context.System.EventStream.Publish(new PipelineScheduled(spec.Pipeline, nextUtc));
+    return nextUtc;
   }
 }

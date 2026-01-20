@@ -24,7 +24,6 @@ export const schedulerSlice = createSlice({
       state.specs = action.payload.specs;
     },
     addJob(state, action: PayloadAction<PipelineJob>) {
-      console.log('Adding job', action.payload);
       state.jobs.push(action.payload);
     },
     removeJob(state, action: PayloadAction<string>) {

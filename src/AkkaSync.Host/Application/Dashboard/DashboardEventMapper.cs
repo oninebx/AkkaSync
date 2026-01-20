@@ -2,32 +2,54 @@ using System;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Application.Diagnosis;
 using AkkaSync.Core.Domain.Schedules.Events;
+using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers.Events;
+using AkkaSync.Core.Notifications;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Store;
 using AkkaSync.Host.Application.Syncing;
+using SQLitePCL;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
 public static class DashboardEventMapper
 {
-  public static DashboardEvent TryMap(IStoreValue value, ISyncEvent? @event = null)
+  public static DashboardEvent? TryMap(IStoreValue value, INotificationEvent? @event = null)
   {
+
     return value switch
     {
-      SyncState syncState => new DashboardEvent("sync.snapshot.updated", syncState),
-      PipelineSchedules schedules => @event switch {
-        SchedulerStarted e => new DashboardEvent("scheduler.specs.initialized", e.Specs),
-        PipelineScheduled e => new DashboardEvent("scheduler.jobs.added", schedules.Jobs.FirstOrDefault(j => j.Name == e.Name)!),
-        PipelineTriggered e => new DashboardEvent("scheduler.jobs.removed", e.Name),
-        _ => new DashboardEvent("scheduler.none", schedules)
-      },
-      DiagnosisJournal journal => @event switch {
-        WorkerFailed e => new DashboardEvent("diagnosis.errors.added", journal.Records.LastOrDefault()!),
-        _ => new DashboardEvent("diagnosis.initialized", journal)
-      },
+      SyncState syncState => FromSyncState(syncState, @event),
+      PipelineSchedules schedules => FromPipelineSchedules(schedules, @event),
+      DiagnosisJournal journal => FromDiagnosisJournal(journal, @event),
       _ => throw new NotImplementedException(nameof(value))
     };
   }
+
+  private static DashboardEvent? FromSyncState(SyncState state, INotificationEvent? @event) => @event switch
+  {
+    PipelineStartReported e => new DashboardEvent("syncing.pipeline.started", new { Id = e.PipelineId.Name, StartedAt = @event.OccurredAt }),
+    PipelineCompleteReported e => new DashboardEvent("syncing.pipeline.complete", new { Id =e.PipelineId.Name, FinishAt = @event.OccurredAt }),
+    DashboardInitialized => new DashboardEvent("syncing.state.initialized", state),
+    _ => null
+  };
+
+  private static DashboardEvent? FromPipelineSchedules(PipelineSchedules schedules, INotificationEvent? @event) => @event switch
+  {
+    SyncEngineReady e => new DashboardEvent("scheduler.specs.initialized", e.Schedules),
+    PipelineScheduled e => new DashboardEvent("scheduler.jobs.added", schedules.Jobs.FirstOrDefault(j => j.Name == e.Name)!),
+    PipelineTriggered e => new DashboardEvent("scheduler.jobs.removed", e.Name),
+    DashboardInitialized => new DashboardEvent("scheduler.none", schedules),
+    _ => null
+  };
+
+  private static DashboardEvent? FromDiagnosisJournal(DiagnosisJournal journal, INotificationEvent? @event) => @event switch
+  {
+    WorkerFailureReported
+    or WorkerStartReported
+    or WorkerCompleteReported => new DashboardEvent("diagnosis.records.added", journal.Records.LastOrDefault()!),
+    DashboardInitialized => new DashboardEvent("diagnosis.records.initialized", journal),
+    _ => null
+  };
 }

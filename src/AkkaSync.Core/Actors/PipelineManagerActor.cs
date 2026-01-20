@@ -2,163 +2,70 @@ using System;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
-using AkkaSync.Abstractions.Models;
-using AkkaSync.Core.Common;
-using AkkaSync.Core.Domain.Pipelines;
-using AkkaSync.Core.Domain.Pipelines.Events;
+using AkkaSync.Core.Domain.Schedules;
 using AkkaSync.Core.Domain.Shared;
-using AkkaSync.Core.PluginProviders;
-using AkkaSync.Core.Runtime;
-using AkkaSync.Core.Runtime.PipelineManager;
+using AkkaSync.Core.Notifications;
 
 namespace AkkaSync.Core.Actors;
 
 public class PipelineManagerActor : ReceiveActor
 {
-  private readonly IPluginProviderRegistry<ISyncSource> _sourceRegistry;
-  private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
-  private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
-  private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
-  private readonly Dictionary<string, PipelineSpec> _pipelineSpecs;
-  private readonly HashSet<string> _completedPipelines = [];
-  private PipelineRunGraph _runGraph;
-  private int _currentLayerIndex = 0;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  public PipelineManagerActor(
-    IPluginProviderRegistry<ISyncSource> sourceRegistry, 
-    IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
-    IPluginProviderRegistry<ISyncSink> sinkRegistry,
-    IPluginProviderRegistry<IHistoryStore> storeRegistry,
-    PipelineOptions options)
+  private IActorRef? _schedulerActor;
+  private IDictionary<string, Props> _props;
+  private IReadOnlyList<PipelineInfo> _pipelines = [];
+  private IReadOnlyDictionary<string, string> _schedules = new Dictionary<string, string>();
+  public PipelineManagerActor(IDictionary<string, Props> props)
   {
-    _sourceRegistry = sourceRegistry;
-    _transformerRegistry = transformerRegistry;
-    _sinkRegistry = sinkRegistry;
-    _storeRegistry = storeRegistry;
-    _runGraph = PipelineRunGraph.Create(options.Pipelines);
-    _pipelineSpecs = options.Pipelines.ToDictionary(p => p.Name, p => p);
-
-    Receive<PipelineManagerProtocol.Start>(_ =>
-    {
-      _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      var pipelines = _pipelineSpecs.Values.Select(s => new PipelineInfo(s.Name)).ToList().AsReadOnly();
-      // StartNextLayer();
-      Context.System.EventStream.Publish(new PipelineManagerStarted(pipelines));
-    });
-    Receive<PipelineManagerProtocol.CreatePipeline>(msg => CreatePipeline(msg));
-    // Receive<PipelineProtocol.Create>(msg => CreatePipeline(msg));
-    Receive<PipelineCompleted>(msg => {
-      var pipelineName = msg.PipelineId.Name;
-      _logger.Info($"Pipeline {msg.PipelineId} completed");
-      HandleLayer(pipelineName);
-    });
-
-    // Receive<Terminated>(msg =>
-    // {
-    //   var actorRef = msg.ActorRef;
-    //   var pipelineName = actorRef.Path.Name;
-      
-    //   _logger.Info($"Pipeline {pipelineName} terminated.");
-      
-    //   // 处理层级调度
-    //   HandleLayer(pipelineName);
-    // });
-
-    
-    // Receive<PipelineStarted>(msg => {
-    //   Context.System.EventStream.Publish(msg);
-    // });
-    // Receive<PipelineCompleted>(msg => {
-
-    //   Context.System.EventStream.Publish(msg);
-    // });
-    // Receive<StopPipeline>(msg => HandleStopPipeline(msg));
+    _props = props;
+    Receive<PeerRegistered>(msg => HandlePeerRegistered(msg));
   }
 
-  // protected override void PreStart()
-  // {
-  //   Context.System.EventStream.Subscribe(Self, typeof(PipelineCompleted));
-  // }
-
-  private void StartNextLayer()
+  override protected void PreStart()
   {
-    if(_currentLayerIndex >= _runGraph.LayerCount)
-    {
-      _logger.Info("All pipeline layers have been started.");
-      return;
-    }
-    var layer = _runGraph.Layer(_currentLayerIndex);
-    foreach(var name in layer)
-    {
-      var runId = RunId.New();
-      Self.Tell(new PipelineProtocol.Create(runId, name));
-    }
-  }
-
-  private void CreatePipeline(PipelineManagerProtocol.CreatePipeline msg)
-  {
-    if(_pipelineSpecs.TryGetValue(msg.Name, out var spec) is false)
-    {
-      _logger.Warning($"Pipeline spec with name {msg.Name} not found.");
-
-      return;
-    }
-    var runId = RunId.New();
-    var actorName = $"{msg.Name}-${runId}";
-    if (Context.Child(actorName).IsNobody())
-    {
-      var source = spec.SourceProvider;
-      var sourceProvider = _sourceRegistry.GetProvider(source.Type);
-
-      var transformer = spec.TransformerProvider;
-      var transformerChain = _transformerRegistry.GetProvider(transformer.Type);
-
-      var sink = spec.SinkProvider;
-      var sinkProvider = _sinkRegistry.GetProvider(sink.Type);
-
-      var store = spec.HistoryStoreProvider;
-      var storeProvider = _storeRegistry.GetProvider(store?.Type ?? string.Empty);
-      
-      if(sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
+    var strategy = new OneForOneStrategy(
+      maxNrOfRetries: 3,
+      withinTimeRange: TimeSpan.FromSeconds(10),
+      localOnlyDecider: ex =>
       {
-        var pipelineId = new PipelineId(runId, msg.Name);
-        var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, pipelineId, spec)), pipelineId.ToString());
-        // Context.Watch(pipelineActor);
-        pipelineActor.Tell(new PipelineProtocol.Start());
+        return Directive.Restart;
       }
-      else
+    );
+    _schedulerActor = Context.ActorOf(_props["pipeline-scheduler"].WithSupervisorStrategy(strategy), "pipeline-scheduler");
+    var registryActor = Context.ActorOf(_props["pipeline-registry"].WithSupervisorStrategy(strategy), "pipeline-registry");
+    _schedulerActor.Tell(new SharedProtocol.RegisterPeer(registryActor));
+    registryActor.Tell(new SharedProtocol.RegisterPeer(_schedulerActor));
+  }
+
+  private void HandlePeerRegistered(PeerRegistered msg)
+  {
+     _logger.Info("{0} actor is ready at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
+      if(msg.Payload is IReadOnlyList<PipelineInfo> list)
       {
-        _logger.Warning($"Failed to create pipeline {spec.Name}. Source, Transformer or Sink provider not found.");
+        _pipelines = list;
+      }
+      
+      if(msg.Payload is IReadOnlyDictionary<string, string> dict)
+      {
+        _schedules = dict;
+      }
+
+      if(_pipelines.Count == 0)
+      {
+        _logger.Warning("No pipelines are registered in the system.");
         return;
       }
-    }
-    else
-    {
-      _logger.Warning($"Pipeline with ID {spec.Name} already exists.");
-    }
+      if(_schedules.Count == 0)
+      {
+        _logger.Warning("No schedules are registered in the system.");
+        return;
+      }
+      Context.System.EventStream.Publish(new SyncEngineReady(_pipelines, _schedules));
+      _schedulerActor.Tell(new PipelineSchedulerProtocol.Start());
   }
 
-  private void HandleLayer(string pipelineName)
+  protected override void PostStop()
   {
-    _completedPipelines.Add(pipelineName);
-    var currentLayer = _runGraph.Layer(_currentLayerIndex);
-    if(_completedPipelines.IsSupersetOf(currentLayer))
-    {
-      _logger.Info($"All pipelines in layer {_currentLayerIndex} have completed. Starting next layer.");
-      _currentLayerIndex++;
-      StartNextLayer();
-    }
+    Context.System.EventStream.Publish(new SyncEngineStopped());
   }
-
-  // private void HandleStopPipeline(StopPipeline msg)
-  // {
-  //   if(_pipelines.TryGetValue(msg.Name, out var actor))
-  //   {
-  //     actor.Tell(new StopSync(), Sender);
-  //   }
-  //   else
-  //   {
-  //     _logger.Warning($"Pipeline with ID {msg.Name} does not exist.");
-  //   }
-  // }
 }

@@ -78,7 +78,7 @@
     "columns": [
       "order_id",
       "product_sku",
-      "pro_quantity"
+      "quantity"
     ],
     "produce": "order_item",
     "dependsOn": [

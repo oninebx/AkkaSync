@@ -13,10 +13,10 @@ const diagnosisSlice = createSlice({
   name: 'diagnosis',
   initialState,
   reducers: {
-    setErrorJournal(state, action: PayloadAction<DiagnosisJournal>) {
+    setJournal(state, action: PayloadAction<DiagnosisJournal>) {
       state.journal = action.payload;
     },
-    addError(state, action: PayloadAction<DiagnosisRecord>) {
+    addRecord(state, action: PayloadAction<DiagnosisRecord>) {
       state.journal.records.push(action.payload);
     }
   }

@@ -19,7 +19,7 @@ public static class AkkaSyncExtension
     services.AddSingleton<IPluginProviderRegistry<ISyncTransformer>, PluginProviderRegistry<ISyncTransformer>>();
     services.AddSingleton<IPluginProviderRegistry<ISyncSink>, PluginProviderRegistry<ISyncSink>>();
     services.AddSingleton<IPluginProviderRegistry<IHistoryStore>, PluginProviderRegistry<IHistoryStore>>();
-
+    
     services.AddSingleton(provider =>
     {
       var bootstrap = BootstrapSetup.Create();
@@ -27,13 +27,14 @@ public static class AkkaSyncExtension
       var system = ActorSystem.Create("AkkaSyncSystem", bootstrap.And(di));
       var resolver = DependencyResolver.For(system);
 
-      var actorHooks = new List<ActorHook>
-      {
-        new(resolver.Props<PipelineManagerActor>(), "pipeline-manager"),
-        new(resolver.Props<PipelineSchedulerActor>(), "pipeline-scheduler")
-      };
+      var actorHooks = new List<ActorHook>();
       config?.Invoke(resolver, actorHooks);
-      system.ActorOf(resolver.Props<SyncRuntimeActor>(actorHooks), "sync-runtime");
+      var actorsProps = new Dictionary<string, Props>
+      {
+        { "pipeline-registry", resolver.Props<PipelineRegistryActor>() },
+        { "pipeline-scheduler", resolver.Props<PipelineSchedulerActor>()}
+      };
+      system.ActorOf(resolver.Props<SyncRuntimeActor>(actorHooks, actorsProps), "sync-runtime");
       
       return system;
     });
