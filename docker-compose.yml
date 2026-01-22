@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  host:
+    build:
+      context: .
+      dockerfile: src/AkkaSync.Host/Dockerfile
+    image: akkasync-host
+    container_name: akkasync-host
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_URLS=http://+:5000
+      - PLUGIN_FOLDER=/app/plugins
+    volumes:
+      - ./src/AkkaSync.Host/plugins:/app/plugins
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    image: akkasync-dashboard
+    container_name: akkasync-dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - host
+    restart: unless-stopped

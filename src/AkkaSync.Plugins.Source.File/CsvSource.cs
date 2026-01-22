@@ -12,20 +12,18 @@ public class CsvSource : ISyncSource
   private readonly string _filePath;
   private readonly char _delimiter;
   private readonly ILogger<CsvSource> _logger;
-  private readonly ISyncGenerator _generator;
   private readonly Lazy<string> _id;
   private readonly Lazy<string> _etag;
 
-  public CsvSource(string filePath, ISyncGenerator generator, ILogger<CsvSource> logger, char delimiter = ',')
+  public CsvSource(string filePath, ISyncEnvironment environment, ILogger<CsvSource> logger, char delimiter = ',')
   {
     _filePath = filePath;
     _delimiter = delimiter;
-    _generator = generator;
     _logger = logger;
 
     _id = new Lazy<string>(() =>
     {
-      return generator.ComputeSha256(Type, Key);
+      return environment.ComputeSha256(Type, Key);
     }, LazyThreadSafetyMode.ExecutionAndPublication);
 
     _etag = new Lazy<string>(() =>
@@ -33,7 +31,7 @@ public class CsvSource : ISyncSource
       var info = new FileInfo(_filePath);
       var input = $"{info.Length}:{info.LastWriteTimeUtc.Ticks}";
 
-      return generator.ComputeSha256(info.Length.ToString(), info.LastWriteTimeUtc.Ticks.ToString());
+      return environment.ComputeSha256(info.Length.ToString(), info.LastWriteTimeUtc.Ticks.ToString());
     });
   }
 

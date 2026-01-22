@@ -14,7 +14,17 @@ public static class AkkaSyncExtension
 {
   public static IServiceCollection AddAkkaSync(this IServiceCollection services, Action<DependencyResolver, List<ActorHook>>? config = null)
   {
-    services.AddSingleton<ISyncGenerator, SyncGenerator>();
+    ISyncEnvironment env;
+    if(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
+    {
+      env = SyncEnvironment.CreateDocker();
+    }
+    else
+    {
+      env = SyncEnvironment.Default();
+    }
+    services.AddSingleton(env);
+
     services.AddSingleton<IPluginProviderRegistry<ISyncSource>, PluginProviderRegistry<ISyncSource>>();
     services.AddSingleton<IPluginProviderRegistry<ISyncTransformer>, PluginProviderRegistry<ISyncTransformer>>();
     services.AddSingleton<IPluginProviderRegistry<ISyncSink>, PluginProviderRegistry<ISyncSink>>();

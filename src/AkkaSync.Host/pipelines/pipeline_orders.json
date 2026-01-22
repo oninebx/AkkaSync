@@ -12,7 +12,7 @@
         "SourceProvider": {
           "Type": "FolderWatcherSourceProvider",
           "Parameters": {
-            "folder": "../../samples/inputs/orders",
+            "folder": "samples/inputs/orders",
             "source": "csv"
           }
         },
@@ -25,7 +25,7 @@
         "SinkProvider": {
           "Type": "SqliteSinkProvider",
           "Parameters": {
-            "connectionString": "Data Source=../../samples/outputs/demostore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+            "connectionString": "Data Source=samples/outputs/demostore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
             "batchSize": 10
           }
         }

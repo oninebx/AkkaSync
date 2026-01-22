@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Host;
 using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Host.Infrastructure;
 using AkkaSync.Host.Infrastructure.DependencyInjection;
 using AkkaSync.Host.Infrastructure.Extensions;
 using AkkaSync.Host.Web;
@@ -21,6 +23,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+DataPath.Initialize();
+Debug.WriteLine($"AkkaSync DataRoot: {DataPath.DataRoot}");
+
 builder.Services.AddSignalR();
 builder.Services.AddAkkaSync((resolver, actorHooks) =>
 {
@@ -32,6 +37,7 @@ builder.Services.AddExamples(builder.Configuration);
 builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
+
 app.UseCors("AllowDashboard");
 app.MapHub<DashboardHub>("/hub/dashboard");
 app.Run();

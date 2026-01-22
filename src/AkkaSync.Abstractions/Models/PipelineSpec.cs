@@ -40,21 +40,21 @@ public static class ParametersExtensions
     var targetType = typeof(T);
     try
     {
-      // 1️⃣ string 直接返回
+      // string
       if (targetType == typeof(string))
         return (T)(object)raw;
 
-      // 2️⃣ Nullable<T>
+      // Nullable<T>
       var underlying = Nullable.GetUnderlyingType(targetType);
       if (underlying != null)
       {
         return (T)ConvertScalar(raw, underlying)!;
       }
-      // 3️⃣ enum / primitive / value type
+      // enum / primitive / value type
       if (IsScalar(targetType))
         return (T)ConvertScalar(raw, targetType)!;
 
-      // 4️⃣ 非标量 → 当作 JSON
+      // object
       return JsonSerializer.Deserialize<T>(raw)!;
     }
     catch
