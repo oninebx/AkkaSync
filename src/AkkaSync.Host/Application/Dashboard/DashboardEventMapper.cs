@@ -3,13 +3,11 @@ using AkkaSync.Abstractions;
 using AkkaSync.Core.Application.Diagnosis;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
-using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Core.Notifications;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Store;
 using AkkaSync.Host.Application.Syncing;
-using SQLitePCL;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
@@ -30,7 +28,7 @@ public static class DashboardEventMapper
   private static DashboardEvent? FromSyncState(SyncState state, INotificationEvent? @event) => @event switch
   {
     PipelineStartReported e => new DashboardEvent("syncing.pipeline.started", new { Id = e.PipelineId.Name, StartedAt = @event.OccurredAt }),
-    PipelineCompleteReported e => new DashboardEvent("syncing.pipeline.complete", new { Id =e.PipelineId.Name, FinishAt = @event.OccurredAt }),
+    PipelineCompleteReported e => new DashboardEvent("syncing.pipeline.completed", new { Id = e.PipelineId.Name, FinishAt = @event.OccurredAt }),
     DashboardInitialized => new DashboardEvent("syncing.state.initialized", state),
     _ => null
   };
@@ -48,7 +46,11 @@ public static class DashboardEventMapper
   {
     WorkerFailureReported
     or WorkerStartReported
-    or WorkerCompleteReported => new DashboardEvent("diagnosis.records.added", journal.Records.LastOrDefault()!),
+    or WorkerCompleteReported
+    or WorkerNonCreationReported
+    or PipelineStartReported
+    or PipelineSkipReported
+    or PipelineCompleteReported => new DashboardEvent("diagnosis.records.added", journal.Records.LastOrDefault()!),
     DashboardInitialized => new DashboardEvent("diagnosis.records.initialized", journal),
     _ => null
   };

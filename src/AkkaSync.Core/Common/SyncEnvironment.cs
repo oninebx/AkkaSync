@@ -66,19 +66,9 @@ public class SyncEnvironment : ISyncEnvironment
       return fullPath;
   }
 
-  public static ISyncEnvironment Default(string locator = "samples")
+  public static ISyncEnvironment Default()
   {
-    var dir = new DirectoryInfo(AppContext.BaseDirectory);
-    while (dir != null)
-    {
-      var locatorPath = Path.Combine(dir.FullName, locator);
-      if (Directory.Exists(locatorPath))
-      {
-        return new SyncEnvironment(Path.GetFullPath(dir.FullName));
-      }
-      dir = dir.Parent;
-    }
-    return new SyncEnvironment(Path.Combine(AppContext.BaseDirectory, locator));
+    return new SyncEnvironment(Path.Combine(AppContext.BaseDirectory, "data"));
   }
 
   public static ISyncEnvironment CreateDocker() => new SyncEnvironment("/app");

@@ -46,7 +46,7 @@ namespace AkkaSync.Core.Actors
       ReceiveAsync<PipelineProtocol.Start>(msg => StartAsync(msg));
       ReceiveAsync<WorkerProtocol.Create>(msg => CreateWorkerAsync(msg));
 
-      Receive<WorkerStarted>(msg => HandleStartedWorker(msg));
+      ReceiveAsync<WorkerStarted>(msg => HandleStartedWorkerAsync(msg));
       ReceiveAsync<WorkerCompleted>(msg => FinalizeWorker(msg));
       ReceiveAsync<WorkerProgressed>(msg => HandleWorkerProgress(msg));
       ReceiveAsync<WorkerFailed>(msg => HandleFailedWorker(msg));
@@ -60,28 +60,37 @@ namespace AkkaSync.Core.Actors
 
     private async Task StartAsync(PipelineProtocol.Start _)
     {
+      bool workerCreated = false;
       foreach (var source in _sources)
       {
-        Self.Tell(new WorkerProtocol.Create(_id, source));
+        string? cursor = default;
+        if(_historyStore is IHistoryStore store)
+        {
+          var record = await store.GetAsync(source.Id, _cancellationToken);
+          if (record is SyncHistoryRecord syncRecord && record.ETag == source.ETag && record.Status == "Completed")
+          {
+            Context.System.EventStream.Publish(new WorkerNonCreationReported(source.Id));
+            continue;
+          }
+          cursor = record?.Cursor;
+        }
+        
+        Self.Tell(new WorkerProtocol.Create(_id, source, cursor));
+        workerCreated = true;
       }
-      Context.Parent.Tell(new PipelineStarted(_id));
+      if (!workerCreated)
+      {
+        Context.Parent.Tell(new PipelineSkipped(_id, "No workers created"));
+        Context.Stop(Self);
+        return;
+      }
+      Context.System.EventStream.Publish(new PipelineStartReported(_id));
       _logger.Info($"Pipeline {_id} started successfully.");
     }
 
     private async Task CreateWorkerAsync(WorkerProtocol.Create msg)
     {
       var source = msg.Source;
-      string? cursor = default!;
-      if (_historyStore is IHistoryStore store)
-      {
-        var record = await store.GetAsync(source.Id, _cancellationToken);
-        if (record is SyncHistoryRecord syncRecord && record.ETag == source.ETag && record.Status == "Completed")
-        {
-          return;
-        }
-        cursor = record?.Cursor;
-        await _historyStore.MarkRunningAsync(source.Id);
-      }
 
       var workerId = new WorkerId(_id, source.Id);
       if (_runWorkers.Contains(workerId))
@@ -89,7 +98,8 @@ namespace AkkaSync.Core.Actors
         return;
       }
 
-      var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sink, _batchSize, cursor, _cancellationToken)), workerId.ToString());
+      var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sink, _batchSize, msg.Cursor, _cancellationToken)), workerId.ToString());
+      
       worker.Tell(new WorkerProtocol.Start());
     }
 
@@ -103,8 +113,12 @@ namespace AkkaSync.Core.Actors
       FinalizePipeline(msg.WorkerId, msg);
     }
 
-    private void HandleStartedWorker(WorkerStarted msg)
+    private async Task HandleStartedWorkerAsync(WorkerStarted msg)
     {
+      if(_historyStore is IHistoryStore store)
+      {
+        await store.MarkRunningAsync(msg.WorkerId.SourceId);
+      }
       _runWorkers.Add(msg.WorkerId);
       _logger.Info("Worker {0} started.", msg.WorkerId);
       Context.System.EventStream.Publish(new WorkerStartReported(msg.WorkerId));

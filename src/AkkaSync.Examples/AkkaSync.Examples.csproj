@@ -11,8 +11,15 @@
     <ProjectReference Include="../AkkaSync.Plugins.Transformer.DbTable/AkkaSync.Plugins.Transformer.DbTable.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Csv2Sqlite/input/" />
+    <Folder Include="Csv2Sqlite/input/orders/" />
+    <Folder Include="Csv2Sqlite/output/" />
+  </ItemGroup>
+
   <PropertyGroup>
     <HostPipelinesDir>..\AkkaSync.Host\pipelines</HostPipelinesDir>
+    <DataDir>..\AkkaSync.Host\data</DataDir>
   </PropertyGroup>
 
   <Target Name="CopyPipelineConfigsToHost" AfterTargets="Build">
@@ -23,6 +30,16 @@
     <RemoveDir Directories="$(HostPipelinesDir)" Condition="Exists('$(HostPipelinesDir)')" />
     <MakeDir Directories="$(HostPipelinesDir)" Condition="!Exists('$(HostPipelinesDir)')" />
     <Copy SourceFiles="@(PipelineConfigs)" DestinationFolder="$(HostPipelinesDir)" SkipUnchangedFiles="true" />
+</Target>
+<Target Name="CopyDataToHost" AfterTargets="Build">
+  <Message Text="Copying testing data to Host data folder..." Importance="high"/>
+  <ItemGroup>
+    <DataFiles Include="**\input\**\*.*;**\output\**\*.*" />
+  </ItemGroup>
+  <Copy
+    SourceFiles="@(DataFiles)"
+    DestinationFiles="@(DataFiles->'$(DataDir)\%(RecursiveDir)%(Filename)%(Extension)')"
+    SkipUnchangedFiles="true" />
 </Target>
 
 

@@ -4,6 +4,6 @@ using AkkaSync.Core.Domain.Shared;
 
 namespace AkkaSync.Core.Domain.Pipelines.Events;
 
-public sealed record PipelineStarted(PipelineId PipelineId) : ISyncEvent;
-
+// public sealed record PipelineStarted(PipelineId PipelineId) : ISyncEvent;
+public sealed record PipelineSkipped(PipelineId PipelineId, string Reason) : ISyncEvent;
 public sealed record PipelineCompleted(PipelineId PipelineId) : ISyncEvent;

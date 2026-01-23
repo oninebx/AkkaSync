@@ -68,7 +68,8 @@ public static class AkkaSyncExtension
               .Where(t => !t.IsAbstract && !t.IsInterface &&
                 (typeof(IPluginProvider<ISyncSource>).IsAssignableFrom(t)
                 || typeof(IPluginProvider<ISyncTransformer>).IsAssignableFrom(t)
-                || typeof(IPluginProvider<ISyncSink>).IsAssignableFrom(t)));
+                || typeof(IPluginProvider<ISyncSink>).IsAssignableFrom(t)
+                || typeof(IPluginProvider<IHistoryStore>).IsAssignableFrom(t)));
             
           foreach(var type in pluginTypes)
           {

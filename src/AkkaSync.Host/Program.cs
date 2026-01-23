@@ -23,9 +23,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-DataPath.Initialize();
-Debug.WriteLine($"AkkaSync DataRoot: {DataPath.DataRoot}");
-
 builder.Services.AddSignalR();
 builder.Services.AddAkkaSync((resolver, actorHooks) =>
 {

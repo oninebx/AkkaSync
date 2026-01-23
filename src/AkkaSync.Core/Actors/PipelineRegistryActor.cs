@@ -36,13 +36,12 @@ public class PipelineRegistryActor : ReceiveActor
 
     Receive<PipelineManagerProtocol.CreatePipeline>(msg => CreatePipeline(msg));
 
-    Receive<PipelineStarted>(msg => {
-      var pipelineName = msg.PipelineId.Name;
-      _logger.Info($"Pipeline {msg.PipelineId} started");
-      Context.System.EventStream.Publish(new PipelineStartReported(msg.PipelineId));
+    Receive<PipelineSkipped>(msg => {
+      _logger.Info($"Pipeline {msg.PipelineId} skipped (no workers created).");
+      _schedulerActor.Tell(msg);
+     Context.System.EventStream.Publish(new PipelineSkipReported(msg.PipelineId, msg.Reason));
     });
     Receive<PipelineCompleted>(msg => {
-      var pipelineName = msg.PipelineId.Name;
       _logger.Info($"Pipeline {msg.PipelineId} completed");
       _schedulerActor.Tell(msg);
       Context.System.EventStream.Publish(new PipelineCompleteReported(msg.PipelineId));

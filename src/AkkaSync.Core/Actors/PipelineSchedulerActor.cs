@@ -46,12 +46,9 @@ public class PipelineSchedulerActor : ReceiveActor
       Context.System.EventStream.Publish(new PipelineTriggered(msg.Name));
     });
 
-    Receive<PipelineCompleted>(msg =>
-    {
-      var spec = _schedules[msg.PipelineId.Name];
-      var nextUtc = ScheduleNextRun(spec);
-      Context.System.EventStream.Publish(new PipelineScheduled(msg.PipelineId.Name, nextUtc));
-    });
+    Receive<PipelineCompleted>(msg => HandlePipeline(msg.PipelineId));
+
+    Receive<PipelineSkipped>(msg => HandlePipeline(msg.PipelineId));
 
     Receive<SharedProtocol.RegisterPeer>(msg => {
       _pipelineRegistry = msg.PeerRef;
@@ -59,6 +56,13 @@ public class PipelineSchedulerActor : ReceiveActor
       var schedulesToPublish = _schedules.ToDictionary(s => s.Key, s => s.Value.Cron).AsReadOnly();
       Context.Parent.Tell(new PeerRegistered(Self.Path.Name, schedulesToPublish));
     });
+  }
+
+  private void HandlePipeline(PipelineId id)
+  {
+    var spec = _schedules[id.Name];
+    var nextUtc = ScheduleNextRun(spec);
+    Context.System.EventStream.Publish(new PipelineScheduled(id.Name, nextUtc));
   }
 
   private DateTime ScheduleNextRun(ScheduleSpec spec)
