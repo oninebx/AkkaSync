@@ -42,6 +42,10 @@ wwwroot/lib/
 *.ilk
 *.log
 
-# AkkaSync Plugins Dlls
+# AkkaSync Generated Folders
 plugins
+data
+pipelines
+
+# AkkaSync Samples
 samples

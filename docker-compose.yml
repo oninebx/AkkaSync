@@ -13,7 +13,9 @@ services:
       - ASPNETCORE_URLS=http://+:5000
       - PLUGIN_FOLDER=/app/plugins
     volumes:
-      - ./src/AkkaSync.Host/plugins:/app/plugins
+      - ./data/input:/app/data/input
+      - ./data/output:/app/data/output
+      - ./data/pipelines:/app/pipelines
     restart: unless-stopped
 
   dashboard:
