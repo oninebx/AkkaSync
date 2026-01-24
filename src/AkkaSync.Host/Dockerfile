@@ -13,11 +13,7 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 COPY src/AkkaSync.Host/plugins ./plugins
-COPY samples /app/samples
-
-ENV AKKASYNC_SAMPLES_PATH=/app/samples
 
 EXPOSE 5000
-EXPOSE 5001
 
 ENTRYPOINT [ "dotnet", "AkkaSync.Host.dll" ]
