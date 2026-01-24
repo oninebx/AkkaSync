@@ -33,7 +33,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-host:latest
-            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-host:${{ github.ref_name }} # Tag name from git
+            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-host:${{ github.ref_name }}
 
       # 4️⃣ Build and push AkkaSync Dashboard image
       - name: Build and push AkkaSync Dashboard
@@ -44,4 +44,4 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-dashboard:latest
-            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-dashboard:${{ github.ref_name }} # Tag name from git
+            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-dashboard:${{ github.ref_name }}
