@@ -1,3 +1,6 @@
+# Start MVP container with:
+# docker-compose up --build
+
 version: "3.9"
 
 services:

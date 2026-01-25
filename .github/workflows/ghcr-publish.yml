@@ -4,7 +4,7 @@ name: Build and Publish AkkaSync Docker Images to GHCR
 on:
   push:
     tags:
-      - '*'   # Trigger on any tag push
+      - 'v*'   # Trigger on any tag push
   workflow_dispatch: # Allow manual trigger if needed
 
 jobs:

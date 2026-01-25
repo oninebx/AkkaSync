@@ -1,4 +1,7 @@
-FROM node:20-alpine AS builder
+# Build the standalone AkkaSync Dashboard Docker image with:
+# docker build --no-cache -t akkasync-dashboard .
+
+FROM node:20.11-alpine AS builder
 
 WORKDIR /app
 
@@ -10,7 +13,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:20.11-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production

@@ -71,5 +71,5 @@ public class SyncEnvironment : ISyncEnvironment
     return new SyncEnvironment(Path.Combine(AppContext.BaseDirectory, "data"));
   }
 
-  public static ISyncEnvironment CreateDocker() => new SyncEnvironment("/app");
+  public static ISyncEnvironment CreateDocker() => new SyncEnvironment("/app/data");
 }
