@@ -32,14 +32,11 @@
     <Copy SourceFiles="@(PipelineConfigs)" DestinationFolder="$(HostPipelinesDir)" SkipUnchangedFiles="true" />
 </Target>
 <Target Name="CopyDataToHost" AfterTargets="Build">
-  <Message Text="Copying testing data to Host data folder..." Importance="high"/>
+  <Message Text="Copying testing data to Host data folder..." Importance="high" />
   <ItemGroup>
     <DataFiles Include="**\input\**\*.*;**\output\**\*.*" />
   </ItemGroup>
-  <Copy
-    SourceFiles="@(DataFiles)"
-    DestinationFiles="@(DataFiles->'$(DataDir)\%(RecursiveDir)%(Filename)%(Extension)')"
-    SkipUnchangedFiles="true" />
+  <Copy SourceFiles="@(DataFiles)" DestinationFiles="@(DataFiles->'$(DataDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
 </Target>
 
 

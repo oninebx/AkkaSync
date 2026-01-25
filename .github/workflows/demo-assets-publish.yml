@@ -1,0 +1,50 @@
+name: Publish Demo Assets
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      
+      - name: Restore
+        run: dotnet restore publish/AkkaSync.Publish/AkkaSync.Publish.csproj
+      
+      - name: Run AkkaSync.Publish
+        run: |
+          dotnet run \
+            --project publish/AkkaSync.Publish/AkkaSync.Publish.csproj \
+            --configuration Release
+      
+      - name: Extract version
+        id: vars
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+      - name: Zip release artifacts
+        run: |
+          cd publish/AkkaSync.Publish/releases
+          zip -r akkasync-${{ steps.vars.outputs.version }}.zip ${{ steps.vars.outputs.version }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: AkkaSync ${{ steps.vars.outputs.version }}
+          files: |
+            publish/AkkaSync.Publish/releases/akkasync-${{ steps.vars.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
