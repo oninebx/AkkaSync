@@ -1,0 +1,7 @@
+# git 
+.git
+.gitignore
+
+# .net generated
+**/bin
+**/obj

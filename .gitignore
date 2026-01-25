@@ -46,6 +46,4 @@ wwwroot/lib/
 plugins
 data
 pipelines
-
-# AkkaSync Samples
-samples
+releases

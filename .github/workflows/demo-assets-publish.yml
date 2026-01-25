@@ -39,7 +39,7 @@ jobs:
     
       - name: Zip release artifacts
         run: |
-          cd publish/AkkaSync.Publish/releases
+          cd publish/releases
           zip -r akkasync-${{ steps.vars.outputs.version }}.zip ${{ steps.vars.outputs.version }}
 
       - name: Create GitHub Release
@@ -48,6 +48,6 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: AkkaSync ${{ steps.vars.outputs.version }}
           files: |
-            publish/AkkaSync.Publish/releases/akkasync-${{ steps.vars.outputs.version }}.zip
+            publish/releases/akkasync-${{ steps.vars.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
