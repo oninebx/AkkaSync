@@ -28,7 +28,7 @@ jobs:
       - name: Build and push AkkaSync Host
         uses: docker/build-push-action@v4
         with:
-          context: ./src/AkkaSync.Host
+          context: .
           file: ./src/AkkaSync.Host/Dockerfile
           push: true
           tags: |
@@ -39,8 +39,8 @@ jobs:
       - name: Build and push AkkaSync Dashboard
         uses: docker/build-push-action@v4
         with:
-          context: ./src/dashboard
-          file: ./src/dashboard/Dockerfile
+          context: ./dashboard
+          file: ./dashboard/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-dashboard:latest
