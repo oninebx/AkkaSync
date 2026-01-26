@@ -1,21 +1,19 @@
 version: "3.9"
 
 services:
-  akkasync-host:
+  host:
     image: ghcr.io/oninebx/akkasync-host:${AKKASYNC_VERSION}
     container_name: akkasync-host
     restart: unless-stopped
     environment:
-      - AKKASYNC_ENV=demo
-      - CONFIG_PATH=/app/config
-      - DATA_PATH=/app/data
+      - ASPNETCORE_URLS=http://+:5000
     volumes:
       - ./config:/app/config:ro
-      - ./data:/app/data:ro
+      - ./data:/app/data
     ports:
       - "5000:5000"
 
-  akkasync-dashboard:
+  dashboard:
     image: ghcr.io/oninebx/akkasync-dashboard:${AKKASYNC_VERSION}
     container_name: akkasync-dashboard
     restart: unless-stopped
@@ -23,6 +21,6 @@ services:
       - DASHBOARD_ENV=demo
       - HOST_URL=http://akkasync-host:5000
     ports:
-      - "8080:80"
+      - "3000:3000"
     depends_on:
-      - akkasync-host
+      - host

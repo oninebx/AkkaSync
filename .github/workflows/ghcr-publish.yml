@@ -32,8 +32,8 @@ jobs:
           file: ./src/AkkaSync.Host/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-host:latest
-            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-host:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/akkasync-host:latest
+            ghcr.io/${{ github.repository_owner }}/akkasync-host:${{ github.ref_name }}
 
       # 4️⃣ Build and push AkkaSync Dashboard image
       - name: Build and push AkkaSync Dashboard
@@ -43,5 +43,5 @@ jobs:
           file: ./dashboard/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-dashboard:latest
-            ghcr.io/${{ secrets.GHCR_USERNAME }}/akkasync-dashboard:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/akkasync-dashboard:latest
+            ghcr.io/${{ github.repository_owner }}/akkasync-dashboard:${{ github.ref_name }}
