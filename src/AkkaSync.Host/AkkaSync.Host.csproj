@@ -20,4 +20,9 @@
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="data\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

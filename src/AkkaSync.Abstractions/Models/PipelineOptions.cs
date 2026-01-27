@@ -4,6 +4,6 @@ namespace AkkaSync.Abstractions.Models;
 
 public record PipelineOptions
 {
-  public IReadOnlyList<PipelineSpec> Pipelines { get; init; } = [];
+  public IReadOnlyDictionary<string, PipelineSpec>? Pipelines { get; init; }
 
 }

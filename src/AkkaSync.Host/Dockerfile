@@ -33,7 +33,7 @@ COPY --from=build /app/publish .
 COPY --from=build /app/plugins ./plugins
 
 ARG DATA_SCENARIOS="Csv2Sqlite"
-COPY src/AkkaSync.Examples /examples-data
+COPY examples/AkkaSync.Examples /examples-data
 
 RUN set -eux; \
     mkdir -p /app/data/pipelines; \

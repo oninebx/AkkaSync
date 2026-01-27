@@ -7,19 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
-    <ProjectReference Include="../AkkaSync.Plugins.Transformer.DbTable/AkkaSync.Plugins.Transformer.DbTable.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Csv2Sqlite/input/" />
     <Folder Include="Csv2Sqlite/input/orders/" />
-    <Folder Include="Csv2Sqlite/output/" />
   </ItemGroup>
 
   <PropertyGroup>
-    <HostPipelinesDir>..\AkkaSync.Host\pipelines</HostPipelinesDir>
-    <DataDir>..\AkkaSync.Host\data</DataDir>
+    <HostPipelinesDir>..\..\src\AkkaSync.Host\pipelines</HostPipelinesDir>
+    <DataDir>..\..\src\AkkaSync.Host\data</DataDir>
   </PropertyGroup>
 
   <Target Name="CopyPipelineConfigsToHost" AfterTargets="Build">

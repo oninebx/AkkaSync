@@ -6,8 +6,8 @@
     }
   },
   "AkkaSync": {
-    "Pipelines":[
-      {
+    "Pipelines":{
+      "sync-orders": {
         "Name": "sync-orders",
         "SourceProvider": {
           "Type": "FolderWatcherSourceProvider",
@@ -19,14 +19,14 @@
         "TransformerProvider": {
           "Type": "TableTransformerProvider",
           "Parameters": {
-            "transformers": "pipelines/plugin_transformers.json"
+            "transformers": "pipelines/plugin_transformers_order.json"
           }
         },
         "SinkProvider": {
           "Type": "SqliteSinkProvider",
           "Parameters": {
-            "connectionString": "Data Source=Csv2Sqlite/output/demostore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
-            "batchSize": 10
+            "connectionString": "Data Source=Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+            "batchSize": 50
           }
         },
         "HistoryStoreProvider": {
@@ -36,7 +36,7 @@
           }
         }
       }
-    ],
+    },
     "Schedules":{
       "sync-customer_daily": {
         "pipeline": "sync-customer",
@@ -50,7 +50,7 @@
       },
       "sync-order_every-1-min": {
         "pipeline": "sync-orders",
-        "cron": "* * * * *"
+        "cron": "*/1 * * * *"
       },
       "sync-order-item_weekly": {
         "pipeline": "sync-order-item",

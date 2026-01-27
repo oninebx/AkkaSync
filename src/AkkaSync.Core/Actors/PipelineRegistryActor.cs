@@ -18,7 +18,7 @@ public class PipelineRegistryActor : ReceiveActor
   private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
   private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
-  private readonly Dictionary<string, PipelineSpec> _pipelineSpecs;
+  private readonly IReadOnlyDictionary<string, PipelineSpec> _pipelineSpecs;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _schedulerActor;
   public PipelineRegistryActor(
@@ -32,7 +32,7 @@ public class PipelineRegistryActor : ReceiveActor
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
     _storeRegistry = storeRegistry;
-    _pipelineSpecs = options.Pipelines.ToDictionary(p => p.Name, p => p);
+    _pipelineSpecs = options.Pipelines!;
 
     Receive<PipelineManagerProtocol.CreatePipeline>(msg => CreatePipeline(msg));
 
@@ -50,7 +50,7 @@ public class PipelineRegistryActor : ReceiveActor
     Receive<SharedProtocol.RegisterPeer>(msg => {
       _schedulerActor = msg.PeerRef;
       _logger.Info("{0} actor is ready at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      var pipelines = _pipelineSpecs.Values.Select(s => new PipelineInfo(s.Name)).ToList().AsReadOnly();
+      var pipelines = _pipelineSpecs.Select(s => new PipelineInfo(s.Key)).ToList().AsReadOnly();
       Context.Parent.Tell(new PeerRegistered(Self.Path.Name, pipelines));
     });
   }
@@ -87,13 +87,13 @@ public class PipelineRegistryActor : ReceiveActor
       }
       else
       {
-        _logger.Warning($"Failed to create pipeline {spec.Name}. Source, Transformer or Sink provider not found.");
+        _logger.Warning($"Failed to create pipeline {msg.Name}. Source, Transformer or Sink provider not found.");
         return;
       }
     }
     else
     {
-      _logger.Warning($"Pipeline with ID {spec.Name} already exists.");
+      _logger.Warning($"Pipeline with ID {msg.Name} already exists.");
     }
   }
 }

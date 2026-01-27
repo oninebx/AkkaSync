@@ -1,0 +1,32 @@
+[
+  {
+    "name": "system_events",
+    "type": "TableTransformer",
+    "fields": [
+      "event_id",
+      "system_id",
+      "system_type",
+      "component",
+      "host",
+      "metric_name",
+      "metric_value",
+      "metric_unit",
+      "severity",
+      "occurred_at"
+    ],
+    "columns": [
+      "id",
+      "system_id",
+      "type",
+      "component",
+      "host",
+      "metric",
+      "value",
+      "unit",
+      "severity",
+      "timestamp"
+    ],
+    "produce": "system_events",
+    "dependsOn": []
+  }
+]

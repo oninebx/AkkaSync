@@ -1,0 +1,72 @@
+{
+  "AkkaSync": {
+    "Pipelines": {
+      "sync-system-events": {
+        "SourceProvider": {
+          "Type": "FolderWatcherSourceProvider",
+          "Parameters": {
+            "folder": "Csv2Sqlite/input/system_events",
+            "source": "csv"
+          }
+        },
+        "TransformerProvider": {
+          "Type": "TableTransformerProvider",
+          "Parameters": {
+            "transformers": "pipelines/plugin_transformers_events.json"
+          }
+        },
+        "SinkProvider": {
+          "Type": "SqliteSinkProvider",
+          "Parameters": {
+            "connectionString": "Data Source=Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+            "batchSize": 50
+          }
+        },
+        "HistoryStoreProvider": {
+          "Type": "InMemoryHistoryStoreProvider",
+          "Parameters": {
+            "name": "system-events-history"
+          }
+        }
+      },
+      "sync-system-metrics": {
+        "SourceProvider": {
+          "Type": "FolderWatcherSourceProvider",
+          "Parameters": {
+            "folder": "Csv2Sqlite/input/system_events",
+            "source": "csv"
+          }
+        },
+        "TransformerProvider": {
+          "Type": "TableTransformerProvider",
+          "Parameters": {
+            "transformers": "pipelines/plugin_transformers_metrics.json"
+          }
+        },
+        "SinkProvider": {
+          "Type": "SqliteSinkProvider",
+          "Parameters": {
+            "connectionString": "Data Source=Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+            "batchSize": 200
+          }
+        },
+        "HistoryStoreProvider": {
+          "Type": "InMemoryHistoryStoreProvider",
+          "Parameters": {
+            "name": "system-metrics-history"
+          }
+        }
+      }
+    },
+    "Schedules": {
+      "sync-system-events_every-30s": {
+        "pipeline": "sync-system-events",
+        "cron": "*/2 * * * *"
+      },
+      "sync-system-metrics_every-5-min": {
+        "pipeline": "sync-system-metrics",
+        "cron": "*/5 * * * *"
+      }
+    }
+  }
+}

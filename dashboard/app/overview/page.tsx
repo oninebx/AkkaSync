@@ -41,6 +41,9 @@ export default function HomePage() {
       console.log(err);
     }
   }
+  const handleReset = () => {
+    
+  }
   return (
     <>
       <div className="min-h-screen px-4 py-6">
@@ -55,7 +58,6 @@ export default function HomePage() {
             <RecentEventsCard events={events}/>
           </div>
           <PipelineTable data={pipelineData} />
-          <div onClick={handleClick}>Ping Test</div>
         </div>
       </div>
     </>
