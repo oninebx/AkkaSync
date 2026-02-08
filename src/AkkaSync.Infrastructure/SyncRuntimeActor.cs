@@ -35,7 +35,9 @@ public class SyncRuntimeActor : ReceiveActor
       }
     );
 
-    var managerActor = Context.ActorOf(Props.Create<PipelineManagerActor>(_props).WithSupervisorStrategy(strategy), "pipeline-manager");
+    var pipelineManagerActor = Context.ActorOf(Props.Create<PipelineManagerActor>(_props.Where(kv => kv.Key.StartsWith("pipeline")).ToDictionary()).WithSupervisorStrategy(strategy), "pipeline-manager");
+    var pluginManagerActor = Context.ActorOf(_props["plugin-manager"].WithSupervisorStrategy(strategy), "plugin-manager");
+    
 
     IActorRef? dashboardActor = null;
     foreach(var hook in _hooks)
@@ -54,6 +56,6 @@ public class SyncRuntimeActor : ReceiveActor
       throw new InvalidOperationException("DashboardProxy actor is not initialized.");
     }
 
-    dashboardActor.Tell(new SharedProtocol.RegisterPeer(managerActor));
+    dashboardActor.Tell(new SharedProtocol.RegisterPeer(pipelineManagerActor));
   }
 }

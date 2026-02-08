@@ -24,10 +24,14 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSignalR();
-builder.Services.AddAkkaSync((resolver, actorHooks) =>
+
+builder.Services.AddAkkaSync(sync =>
 {
-  actorHooks.Insert(0, new ActorHook(resolver.Props<DashboardProxyActor>(), "dashboard-proxy"));
-}).AddAkkaSyncPlugins("plugins");
+  sync.UsePlugins("plugins");
+  sync.AddActorHook<DashboardProxyActor>("dashboard-proxy");
+  sync.AddPlugins();
+});
+
 builder.Services.AddDashboard();
 builder.Services.AddExamples(builder.Configuration);
 
