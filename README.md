@@ -1,74 +1,80 @@
 # AkkaSync
 
-**AkkaSync** is a lightweight, extensible data-synchronization framework built on the **Akka.NET actor model**.
-It offers a configuration-driven **Extract → Transform → Load (ETL)**  pipeline featuring **high concurrency**, **failure isolation**, and **scalable parallel processing**.
+## Overview
+**AkkaSync** is an extensible data synchronization framework built on Akka.NET, designed to read, transform, and write data between heterogeneous systems through a plugin-driven pipeline. The framework uses the actor model as its execution core, enabling reliable pipeline orchestration, concurrent processing, and state tracking.
 
-AkkaSync was initially designed to support **reliable**, **concurrent**, and **parallel** data transformation and synchronization across heterogeneous storage mediums—such as files, databases, and message queues—commonly found in distributed application environments.
+AkkaSync aims to provide a lightweight yet structured foundation for ETL-style workflows, where components can evolve independently while remaining composable and predictable.
 
-The framework adopts a **plugin-oriented architecture**, defining four extensible module types:
+![akkasync-etl](./assets/akkasync-etl.png)
 
-- **Source**  – Responsible for extracting data from external systems or storage mediums.
-- **Transformer**  – Applies business logic to convert, filter, or reshape the extracted data.
-- **Sink**  – Persists the processed data into the target system or storage layer.
-- **HistoryStore** – Maintains synchronization metadata to support incremental and reliable processing.
+## Key Features
+### Plugin-Oriented Architecture
+AkkaSync is built around a modular plugin system that separates responsibilities into four provider contracts:
 
-This modular design allows the system to evolve organically, making it easier to introduce new capabilities and adapt to broader integration scenarios over time.
-The project structure is intentionally kept flexible: the core runtime and plugin modules are isolated from each other, and each plugin can be developed, versioned, and published independently. This allows users to depend only on the components they need while keeping integrations clean and maintainable.
+- `ISyncSource` — reads data from upstream systems
 
+- `ISyncTransformer` — transforms or enriches data
 
-## 🧩 Architecture Overview
+- `ISyncSink` — writes data to downstream targets
 
-### Concurrent and Parallel Pipelines in AkkaSync
-![AkkaSync Diagram](./assets/akkasync-outside.png)
+- `IHistoryStore` — records execution state and history
 
-### Actors & Plugins in AkkaSync
-![AkkaSync Actor & Plugin](./assets/akkasync-actor-plugin.png)
+Plugins are dynamically discovered and loaded via a file-based loader, allowing hot updates without requiring host application changes.
 
-## 📘 Architecture Components
+### Actor-Driven Execution Model
 
-### **1. PipelineManagerActor**
-Manages global orchestration:
+Each pipeline is coordinated by a dedicated PipelineActor, while worker actors perform the actual data processing. This design provides:
 
-- Loads pipeline definitions from configuration  
-- Builds and validates dependency DAG  
-- Starts pipeline execution  
-- Supervises PipelineActor lifecycle  
+- Controlled concurrency
 
-➡️ *See: [PipelineManagerActor](./docs/pipeline-manager.md)*
+- Fault isolation and recovery
 
-### **2. PipelineActor**
-Owns execution of a single pipeline:
+- Progress reporting
 
-- Starts sync steps in correct order  
-- Spawns and supervises SyncWorkerActor  
-- Handles backoff, retries, and failures  
-- Reports progress to the manager  
+- Scalable execution patterns
 
-➡️ *See: [PipelineActor](./docs/pipeline.md)*
+The actor model ensures predictable behavior under load while keeping pipeline logic decoupled from execution mechanics.
 
-### **3. SyncWorkerActor**
-Handles actual business execution:
+### Convention-Based Plugin Loader
 
-- Invokes data source and sink plugins  
-- Performs sync logic  
-- Reports cursor & progress  
-- Isolated, restartable, testable  
+A PluginLoader scans the plugins directory and loads assemblies following the naming convention:
 
-➡️ *See: [SyncWorkerActor](./docs/worker.md)*
+```
+AkkaSync.Plugins.*.dll
+```
 
----
+This convention simplifies extension and deployment while maintaining a clear boundary between the host and plugins.
 
-### **4. Plugins**
-Plugins enable extensibility:
+## MVP (Minimal Viable Product)
+The AkkaSync MVP is designed to let interested users quickly validate the core runtime, plugin model, and end-to-end pipeline flow with minimal setup. It provides a compact, runnable environment that demonstrates how AkkaSync operates in practice.
+![akkasync-dashboard](./assets/akkasync-demo-dashboard.png)
+### Purpose
 
-- **Source plugins**: CSV, SQL, API...  
-- **Sink plugins**: Sqlite, SqlServer, ElasticSearch  
-- **Transform plugins**: Clean, map, enrich  
+- Provide a fast, hands-on way to evaluate AkkaSync
 
-Each plugin runs inside a worker, making the system highly modular.
+- Demonstrate the actor runtime, plugin loading, and pipeline execution
 
-➡️ *See: [Plugins](./docs/plugins.md)*
+- Show a complete source → transform → sink workflow
 
-## Development Log
+### What It Contains
 
-Curious about what’s been built, what’s in progress, or what’s coming next? Check out our [Development Log](./docs/DEVELOPMENT_LOG.md) to see the current roadmap, planned features, and ongoing work. This helps contributors and users stay up-to-date with AkkaSync’s progress.
+- **Core runtime** - actor-based scheduling(cron), pipeline orchestration, and worker execution
+
+- **Plugin system** - dynamic provider loading via convention-based discovery
+
+- **Runnable example pipelines** - CSV → SQLite flow with history persistence
+
+- **Plugins folder convention** - drop AkkaSync.Plugins.*.dll into the runtime folder to load providers
+
+- **Lightweight dashboard** - SignalR-based hub for observing pipeline status
+
+- **Packaging layout** - simple structure suitable for local or container deployment
+
+### How to Obtain
+
+You can download the MVP from the project releases:
+
+👉 GitHub Releases:
+https://github.com/oninebx/AkkaSync/releases
+
+> Usage: For detailed instructions on running the MVP, please refer to the README included in the GitHub release
