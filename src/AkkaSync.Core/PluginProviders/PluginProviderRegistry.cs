@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Frozen;
+using System.Collections.ObjectModel;
 using AkkaSync.Abstractions;
 
 namespace AkkaSync.Core.PluginProviders;
@@ -14,6 +16,9 @@ public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : cl
 
   public int Count => _providers.Count;
 
+  public IReadOnlyDictionary<string, IReadOnlySet<string>> FileEntries => _providers.GroupBy(kv => kv.Value.GetType().Assembly.Location)
+      .ToDictionary(g => g.Key, g => (IReadOnlySet<string>)new HashSet<string>(g.Select(kv => kv.Key)));
+
   public bool AddProvider(IPluginProvider<T> provider) => _providers.TryAdd(provider.Key, provider);
 
   public IPluginProvider<T>? GetProvider(string key)
@@ -21,4 +26,6 @@ public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : cl
     _ = _providers.TryGetValue(key, out var provider);
     return provider;
   }
+
+  public bool RemoveProvider(string key) => _providers.Remove(key);
 }

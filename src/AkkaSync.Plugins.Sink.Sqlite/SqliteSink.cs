@@ -31,6 +31,7 @@ namespace AkkaSync.Plugins.Sink.Sqlite
     {
       _connectionString = connectionString;
       _logger = logger;
+      _logger.LogError("SqliteSink initialized with connection string: {ConnectionString}", _connectionString);
     }
     public async Task WriteAsync(IEnumerable<TransformContext> contextBatch, CancellationToken cancellationToken)
     {

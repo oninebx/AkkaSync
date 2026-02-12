@@ -88,6 +88,7 @@ public class PipelineRegistryActor : ReceiveActor
       else
       {
         _logger.Warning($"Failed to create pipeline {msg.Name}. Source, Transformer or Sink provider not found.");
+        _schedulerActor.Tell(new PipelineSkipped(new PipelineId(runId, msg.Name), $"Source, Transformer or Sink provider not found for pipeline {msg.Name}."));
         return;
       }
     }

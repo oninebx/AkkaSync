@@ -33,6 +33,11 @@ public static class AkkaSyncExtension
     services.AddSingleton<IPluginProviderRegistry<ISyncSink>, PluginProviderRegistry<ISyncSink>>();
     services.AddSingleton<IPluginProviderRegistry<IHistoryStore>, PluginProviderRegistry<IHistoryStore>>();
 
+    services.AddSingleton<IPluginProviderRegistryAdapter, PluginProviderRegistryAdapter<ISyncSource>>();
+    services.AddSingleton<IPluginProviderRegistryAdapter, PluginProviderRegistryAdapter<ISyncTransformer>>();
+    services.AddSingleton<IPluginProviderRegistryAdapter, PluginProviderRegistryAdapter<ISyncSink>>();
+    services.AddSingleton<IPluginProviderRegistryAdapter, PluginProviderRegistryAdapter<IHistoryStore>>();
+
     services.AddSingleton(provider =>
     {
       var bootstrap = BootstrapSetup.Create();

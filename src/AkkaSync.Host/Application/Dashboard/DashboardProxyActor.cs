@@ -36,7 +36,7 @@ public class DashboardProxyActor : ReceiveActor
         if(reducerRegistry.TryReduce(current, @event, out var next) 
           && !ReferenceEquals(current, next))
         {
-          _logger.Error("event {0} is emitted.", @event);
+          _logger.Info("event {0} is emitted.", @event);
           store.Update(next);
           var payload = DashboardEventMapper.TryMap(next, @event);
           if(payload is not null)

@@ -1,7 +1,9 @@
 ﻿using AkkaSync.Abstractions;
+using AkkaSync.Core.PluginProviders;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -9,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace AkkaSync.Infrastructure
 {
-  public record PluginLoadResult(Type InterfaceType, object ProviderInstance);
+  public record PluginLoadResult(Type InterfaceType, object ProviderInstance, PluginLoadContext LoadContext);
   public static class PluginLoader
   {
     private static readonly Type[] SupportedPluginInterfaces = new[]
@@ -20,13 +22,15 @@ namespace AkkaSync.Infrastructure
         typeof(IPluginProvider<IHistoryStore>)
     };
 
-    public static IEnumerable<PluginLoadResult> LoadFromFile(string filePath, IServiceProvider serviceProvider)
+    public static (IEnumerable<PluginLoadResult> LoadResult, PluginLoadContext? LoadContext) LoadFromFile(string filePath, IServiceProvider serviceProvider)
     {
       var results = new List<PluginLoadResult>();
+      PluginLoadContext context = null!;
 
       try
       {
-        var assembly = Assembly.LoadFrom(filePath);
+        context = new PluginLoadContext(filePath);
+        var assembly = context.LoadPlugin();
 
         var pluginTypes = assembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface &&
@@ -43,7 +47,7 @@ namespace AkkaSync.Infrastructure
             var instance = ActivatorUtilities.CreateInstance(serviceProvider, type);
             if (instance != null)
             {
-              results.Add(new PluginLoadResult(iface, instance));
+              results.Add(new PluginLoadResult(iface, instance, context));
               Console.WriteLine("Loaded plugin {0} implementing {1}", type.Name, iface.Name);
             }
           }
@@ -61,7 +65,22 @@ namespace AkkaSync.Infrastructure
         Console.WriteLine($"Failed to load plugin from {filePath}: {ex.Message}");
       }
 
-      return results;
+      return (results, context);
     }
+
+    //public static void UnloadForFile(string filePath)
+    //{
+    //  if (_pluginContexts.TryGetValue(filePath, out var context))
+    //  {
+    //    context.Unload();
+
+    //    GC.Collect();
+    //    GC.WaitForPendingFinalizers();
+    //    GC.Collect();
+
+    //    _pluginContexts.Remove(filePath);
+    //    Console.WriteLine($"Unloaded plugin from {filePath}");
+    //  }
+    //}
   }
 }
