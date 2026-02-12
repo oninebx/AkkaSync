@@ -1,6 +1,7 @@
 {
-  "ReleaseVersion": "assets-0.1.0-mvp.1",
-  "AkkaSyncVersion": "v0.1.0",
+  "ReleaseVersion": "assets-0.2.0-mvp.2",
+  "AkkaSyncVersion": "v0.2.0",
   "Demo": "Csv2Sqlite",
+  "PluginFolder": "TestPlugins",
   "ExamplesRoot": "../../../../../examples/AkkaSync.Examples"
 }

@@ -8,6 +8,7 @@ public record PublishConfig(
   string ReleaseVersion,
   string AkkaSyncVersion,
   string Demo,
+  string PluginFolder,
   string ExamplesRoot
 );
 public static class PublishHelper

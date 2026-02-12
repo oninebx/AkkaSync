@@ -90,6 +90,8 @@ You should see the **AkkaSync Dashboard** running with demo pipelines and data.
 
 - Real-time status visible in the dashboard
 
+- Hot-pluggable plugins: move/replace DLLs between plugins/present/ (active) and plugins/legacy/ (legacy) to trigger runtime reloads.
+
 This demo runs in **demo** mode, using bundled configuration and test data.
 
 ## 🛑 Stop the Demo
