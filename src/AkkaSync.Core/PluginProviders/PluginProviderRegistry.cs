@@ -16,7 +16,7 @@ public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : cl
 
   public int Count => _providers.Count;
 
-  public IReadOnlyDictionary<string, IReadOnlySet<string>> FileEntries => _providers.GroupBy(kv => kv.Value.GetType().Assembly.Location)
+  public IReadOnlyDictionary<string, IReadOnlySet<string>> FileEntries => _providers.GroupBy(kv => kv.Value.GetType().Assembly.GetName().Name)
       .ToDictionary(g => g.Key, g => (IReadOnlySet<string>)new HashSet<string>(g.Select(kv => kv.Key)));
 
   public bool AddProvider(IPluginProvider<T> provider) => _providers.TryAdd(provider.Key, provider);

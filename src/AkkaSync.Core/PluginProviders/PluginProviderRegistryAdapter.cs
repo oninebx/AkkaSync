@@ -24,7 +24,8 @@ namespace AkkaSync.Core.PluginProviders
 
     public bool RemoveByFile(string filePath)
     {
-      if(!_registry.FileEntries.TryGetValue(filePath, out var keys) || keys is null)
+      var fileName = Path.GetFileNameWithoutExtension(filePath);
+      if (!_registry.FileEntries.TryGetValue(fileName, out var keys) || keys is null)
       {
         return false;
       }
