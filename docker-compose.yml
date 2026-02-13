@@ -10,14 +10,17 @@ services:
       dockerfile: src/AkkaSync.Host/Dockerfile
     image: akkasync-host
     container_name: akkasync-host
+    working_dir: /app
     ports:
       - "5000:5000"
     environment:
       - ASPNETCORE_URLS=http://+:5000
       - PLUGIN_FOLDER=/app/plugins
     volumes:
-      - ./data:/app/data
-      - ./data/pipelines:/app/pipelines
+      - ./mvp/data:/app/data
+      - ./mvp/pipelines:/app/pipelines
+      - ./mvp/plugins:/app/plugins
+      - ./mvp/plugins-swap:/app/plugins-swap
     restart: unless-stopped
 
   dashboard:

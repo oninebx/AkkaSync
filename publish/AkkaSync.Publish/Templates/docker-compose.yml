@@ -10,7 +10,8 @@ services:
     volumes:
       - ./config:/app/config:ro
       - ./data:/app/data
-      - ./plugins/present:/app/plugins
+      - ./plugins:/app/plugins
+      - ./plugins-swap:/app/plugins-swap 
     ports:
       - "5000:5000"
 

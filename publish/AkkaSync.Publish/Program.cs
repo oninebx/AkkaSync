@@ -21,8 +21,8 @@ PublishHelper.CopyDirectory(Path.Combine(demoRoot, "input"), Path.Combine(releas
 PublishHelper.CopyDirectory(Path.Combine(demoRoot, "output"), Path.Combine(releaseRoot, "data", config.Demo, "output"));
 
 var pluginRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, config.ExamplesRoot, config.PluginFolder));
-PublishHelper.CopyDirectory(Path.Combine(pluginRoot, "present"), Path.Combine(releaseRoot, "plugins", "present"));
-PublishHelper.CopyDirectory(Path.Combine(pluginRoot, "legacy"), Path.Combine(releaseRoot, "plugins", "legacy"));
+PublishHelper.CopyDirectory(Path.Combine(pluginRoot, "present"), Path.Combine(releaseRoot, "plugins"));
+PublishHelper.CopyDirectory(Path.Combine(pluginRoot, "legacy"), Path.Combine(releaseRoot, "plugins-swap"));
 
 
 

@@ -29,6 +29,8 @@ namespace AkkaSync.Infrastructure
       {
         NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
       };
+      _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", Path.GetFullPath(options.PluginFolder));
+
       _shadowFolder = Path.GetFullPath(options.ShadowFolder);
       _pluginContexts = options.PluginContexts;
       options.PluginContexts = null!;
