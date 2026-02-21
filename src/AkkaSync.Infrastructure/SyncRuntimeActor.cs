@@ -1,6 +1,7 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
+using AkkaSync.Abstractions;
 using AkkaSync.Core.Actors;
 using AkkaSync.Core.Domain.Shared;
 
@@ -18,6 +19,7 @@ public class SyncRuntimeActor : ReceiveActor
   {
     _hooks = hooks;
     _props = props;
+
     Receive<Terminated>(t =>
     {
       _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
@@ -35,7 +37,7 @@ public class SyncRuntimeActor : ReceiveActor
       }
     );
 
-    var pipelineManagerActor = Context.ActorOf(Props.Create<PipelineManagerActor>(_props.Where(kv => kv.Key.StartsWith("pipeline")).ToDictionary()).WithSupervisorStrategy(strategy), "pipeline-manager");
+    var pipelineManagerActor = Context.ActorOf(_props["pipeline-manager"].WithSupervisorStrategy(strategy), "pipeline-manager");
     var pluginManagerActor = Context.ActorOf(_props["plugin-manager"].WithSupervisorStrategy(strategy), "plugin-manager");
     
 
@@ -55,7 +57,6 @@ public class SyncRuntimeActor : ReceiveActor
     {
       throw new InvalidOperationException("DashboardProxy actor is not initialized.");
     }
-
     dashboardActor.Tell(new SharedProtocol.RegisterPeer(pipelineManagerActor));
   }
 }

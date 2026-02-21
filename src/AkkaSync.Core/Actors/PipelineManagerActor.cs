@@ -3,8 +3,11 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Schedules;
+using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
+using AkkaSync.Core.Runtime.PipelineManager;
+using AkkaSync.Core.Runtime.PipelineRegistry;
 
 namespace AkkaSync.Core.Actors;
 
@@ -12,13 +15,29 @@ public class PipelineManagerActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _schedulerActor;
+  private IActorRef? _registryActor;
   private IDictionary<string, Props> _props;
   private IReadOnlyList<PipelineInfo> _pipelines = [];
   private IReadOnlyDictionary<string, string> _schedules = new Dictionary<string, string>();
-  public PipelineManagerActor(IDictionary<string, Props> props)
+  private readonly IPipelineStorage _pipelineStorage;
+  private bool _registryReady;
+  private bool _schedulerReady;
+  public PipelineManagerActor(IDictionary<string, Props> props, IPipelineStorage pipelineStorage)
   {
     _props = props;
-    Receive<PeerRegistered>(msg => HandlePeerRegistered(msg));
+    _pipelineStorage = pipelineStorage;
+
+    ReceiveAsync<SharedProtocol.Start>(_ => HandleStartAsync());
+    Receive<RegistryInitialized>(_ => {
+      _logger.Info("PipelineRegistryActor is ready at {0}.", DateTimeOffset.UtcNow);
+      _registryReady = true;
+      CheckReady();
+    });
+    Receive<SchedulerInitialized>(_ => {
+      _logger.Info("PipelineSchedulerActor is ready at {0}.", DateTimeOffset.UtcNow);
+      _schedulerReady = true;
+      CheckReady();
+    });
   }
 
   override protected void PreStart()
@@ -32,40 +51,40 @@ public class PipelineManagerActor : ReceiveActor
       }
     );
     _schedulerActor = Context.ActorOf(_props["pipeline-scheduler"].WithSupervisorStrategy(strategy), "pipeline-scheduler");
-    var registryActor = Context.ActorOf(_props["pipeline-registry"].WithSupervisorStrategy(strategy), "pipeline-registry");
-    _schedulerActor.Tell(new SharedProtocol.RegisterPeer(registryActor));
-    registryActor.Tell(new SharedProtocol.RegisterPeer(_schedulerActor));
+    _registryActor = Context.ActorOf(_props["pipeline-registry"].WithSupervisorStrategy(strategy), "pipeline-registry");
+
+    Self.Tell(new SharedProtocol.Start());
   }
 
-  private void HandlePeerRegistered(PeerRegistered msg)
+  private void CheckReady()
   {
-     _logger.Info("{0} actor is ready at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      if(msg.Payload is IReadOnlyList<PipelineInfo> list)
-      {
-        _pipelines = list;
-      }
-      
-      if(msg.Payload is IReadOnlyDictionary<string, string> dict)
-      {
-        _schedules = dict;
-      }
-
-      if(_pipelines.Count == 0)
-      {
-        _logger.Warning("No pipelines are registered in the system.");
-        return;
-      }
-      if(_schedules.Count == 0)
-      {
-        _logger.Warning("No schedules are registered in the system.");
-        return;
-      }
+    if(_registryReady && _schedulerReady)
+    {
       Context.System.EventStream.Publish(new SyncEngineReady(_pipelines, _schedules));
-      _schedulerActor.Tell(new PipelineSchedulerProtocol.Start());
+      _schedulerActor!.Tell(new SharedProtocol.Start());
+    }
   }
 
   protected override void PostStop()
   {
     Context.System.EventStream.Publish(new SyncEngineStopped());
+  }
+
+  private async Task HandleStartAsync()
+  {
+    _logger.Info("PipelineManagerActor started at {0}", DateTimeOffset.UtcNow);
+    var (pipelineOptions, scheduleOptions) = await _pipelineStorage.LoadSpecificationsAsync();
+    var pipelineSpecs = pipelineOptions.Pipelines?.Where(p => p.Value.IsActive).ToDictionary(p => p.Key, p => p.Value);
+    if(pipelineSpecs?.Any() != true)
+    {
+      _logger.Warning("No pipeline specs found in storage.");
+      return;
+    }
+    var enabledSchedules = scheduleOptions.Schedules?.Where(s => s.Value.Enabled).Select(s => s.Value).ToList();
+
+    _pipelines = pipelineSpecs.Select(s => new PipelineInfo(s.Key)).ToList().AsReadOnly();
+    _schedules = enabledSchedules?.ToDictionary(s => s.Pipeline, s => s.Cron) ?? [];
+    _registryActor.Tell(new RegistryProtocol.Initialize(_schedulerActor!, pipelineOptions));
+    _schedulerActor.Tell(new SchedulerProtocol.Initialize(_registryActor!, scheduleOptions));
   }
 }

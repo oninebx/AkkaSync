@@ -7,60 +7,51 @@ using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Schedules;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
-using AkkaSync.Core.Runtime.PipelineManager;
+using AkkaSync.Core.Runtime.PipelineRegistry;
 using NCrontab;
 
 namespace AkkaSync.Core.Actors;
 
 public class PipelineSchedulerActor : ReceiveActor
 {
-  private readonly IReadOnlyDictionary<string, ScheduleSpec> _schedules;
+  private IReadOnlyDictionary<string, ScheduleSpec>? _schedules;
   private readonly Dictionary<string, ICancelable> _jobs = [];
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _pipelineRegistry;
-  public PipelineSchedulerActor(ScheduleOptions options)
+  public PipelineSchedulerActor()
   {
-    var enabledSchedules = options.Schedules?.Where(kv => kv.Value.Enabled).Select(kv => kv.Value).ToList()?? [];
-    var duplicated = enabledSchedules.GroupBy(s => s.Pipeline).FirstOrDefault(g => g.Count() > 1);
-    if (duplicated != null)
+    Receive<SchedulerProtocol.Initialize>(msg =>
     {
-      throw new InvalidOperationException($"Multiple enabled schedules found for pipeline '{duplicated.Key}'.");
-    }
-
-    _schedules = enabledSchedules.ToDictionary(s => s.Pipeline, s => s);
-
-    Receive<PipelineSchedulerProtocol.Start>(_ =>
-    {
-      foreach(var schedule in _schedules)
+      _pipelineRegistry = msg.RegistryActor;
+      var enabledSchedules = msg.Options.Schedules?.Where(kv => kv.Value.Enabled).Select(kv => kv.Value).ToList()?? [];
+      var duplicated = enabledSchedules.GroupBy(s => s.Pipeline).FirstOrDefault(g => g.Count() > 1);
+      if (duplicated != null)
       {
-        var nextUtc = ScheduleNextRun(schedule.Value);
-        Context.System.EventStream.Publish(new PipelineScheduled(schedule.Value.Pipeline, nextUtc));
+        Context.System.EventStream.Publish(new DuplicateScheduleDetected(duplicated.Key));
       }
+      var distinctEnabledSchedules = enabledSchedules.GroupBy(s => s.Pipeline).Select(g => g.First()).ToList();
+      _schedules = enabledSchedules.ToDictionary(s => s.Pipeline, s => s);
+      _logger.Info("{0} actor initialized at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
+      Context.Parent.Tell(new SchedulerInitialized());
     });
 
-    Receive<PipelineSchedulerProtocol.Trigger>(msg =>
+    Receive<SharedProtocol.Start>(_ => HandleStart());
+
+    Receive<SchedulerProtocol.Trigger>(msg =>
     {
       _logger.Info($"Pipeline triggered: { msg.Name }");
-      _pipelineRegistry.Tell(new PipelineManagerProtocol.CreatePipeline(msg.Name));
-      var spec = _schedules.FirstOrDefault(s => s.Key.Contains(msg.Name)).Value;
+      _pipelineRegistry.Tell(new RegistryProtocol.CreatePipeline(msg.Name));
+      var spec = _schedules!.FirstOrDefault(s => s.Key.Contains(msg.Name)).Value;
       Context.System.EventStream.Publish(new PipelineTriggered(msg.Name));
     });
 
     Receive<PipelineCompleted>(msg => HandlePipeline(msg.PipelineId));
-
     Receive<PipelineSkipped>(msg => HandlePipeline(msg.PipelineId));
-
-    Receive<SharedProtocol.RegisterPeer>(msg => {
-      _pipelineRegistry = msg.PeerRef;
-      _logger.Info("{0} actor is ready at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      var schedulesToPublish = _schedules.ToDictionary(s => s.Key, s => s.Value.Cron).AsReadOnly();
-      Context.Parent.Tell(new PeerRegistered(Self.Path.Name, schedulesToPublish));
-    });
   }
 
   private void HandlePipeline(PipelineId id)
   {
-    var spec = _schedules[id.Name];
+    var spec = _schedules![id.Name];
     var nextUtc = ScheduleNextRun(spec);
     Context.System.EventStream.Publish(new PipelineScheduled(id.Name, nextUtc));
   }
@@ -74,7 +65,7 @@ public class PipelineSchedulerActor : ReceiveActor
     var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
       delay,
       Self,
-      new PipelineSchedulerProtocol.Trigger(spec.Pipeline),
+      new SchedulerProtocol.Trigger(spec.Pipeline),
       Self
     );
 
@@ -86,5 +77,28 @@ public class PipelineSchedulerActor : ReceiveActor
     _logger.Info("{0} will run at {1}. Please wait for {2}.", spec.Pipeline, nextUtc, delay);
 
     return nextUtc;
+  }
+
+  private void HandleStart()
+  {
+    if(_schedules == null)
+    {
+      _logger.Warning("PipelineSchedulerActor received Start message before initialization. Ignoring.");
+      return;
+    }
+    foreach(var schedule in _schedules)
+    {
+      var nextUtc = ScheduleNextRun(schedule.Value);
+      Context.System.EventStream.Publish(new PipelineScheduled(schedule.Value.Pipeline, nextUtc));
+    }
+  }
+
+  protected override void PostStop()
+  {
+    foreach(var job in _jobs.Values)
+    {
+      job.Cancel();
+    }
+    _logger.Info("{0} actor stopped at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
   }
 }

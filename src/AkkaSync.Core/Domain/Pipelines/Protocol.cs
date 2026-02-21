@@ -7,5 +7,4 @@ namespace AkkaSync.Core.Domain.Pipelines;
 public static class PipelineProtocol
 {
   public sealed record Create(RunId RunId, string Name);
-  public sealed record Start();
 }

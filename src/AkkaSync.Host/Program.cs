@@ -1,12 +1,7 @@
-using System.Diagnostics;
-using AkkaSync.Abstractions.Models;
 using AkkaSync.Host;
 using AkkaSync.Host.Application.Dashboard;
-using AkkaSync.Host.Infrastructure;
-using AkkaSync.Host.Infrastructure.DependencyInjection;
 using AkkaSync.Host.Infrastructure.Extensions;
 using AkkaSync.Host.Web;
-using AkkaSync.Infrastructure;
 using AkkaSync.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,15 +20,12 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSignalR();
 
-builder.Services.AddAkkaSync(sync =>
-{
-  sync.UsePlugins("plugins");
-  sync.AddActorHook<DashboardProxyActor>("dashboard-proxy");
-  sync.AddPlugins();
-});
+builder.Services.AddAkkaSync(builder.Configuration, sync => sync
+  .AddActorHook<DashboardProxyActor>("dashboard-proxy")
+  .AddPipelines()
+  .AddPlugins());
 
 builder.Services.AddDashboard();
-builder.Services.AddExamples(builder.Configuration);
 
 builder.Services.AddHostedService<Worker>();
 
