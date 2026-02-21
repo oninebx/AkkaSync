@@ -6,6 +6,7 @@ using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
+using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Core.Notifications;
@@ -43,7 +44,7 @@ namespace AkkaSync.Core.Actors
       _historyStore = historyProvider?.Create(spec.HistoryStoreProvider).FirstOrDefault();
       _id = id;
 
-      ReceiveAsync<PipelineProtocol.Start>(msg => StartAsync(msg));
+      ReceiveAsync<SharedProtocol.Start>(msg => StartAsync(msg));
       ReceiveAsync<WorkerProtocol.Create>(msg => CreateWorkerAsync(msg));
 
       ReceiveAsync<WorkerStarted>(msg => HandleStartedWorkerAsync(msg));
@@ -58,7 +59,7 @@ namespace AkkaSync.Core.Actors
       _cancellationTokenSource.Dispose();
     }
 
-    private async Task StartAsync(PipelineProtocol.Start _)
+    private async Task StartAsync(SharedProtocol.Start _)
     {
       bool workerCreated = false;
       foreach (var source in _sources)
@@ -100,7 +101,7 @@ namespace AkkaSync.Core.Actors
 
       var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sink, _batchSize, msg.Cursor, _cancellationToken)), workerId.ToString());
       
-      worker.Tell(new WorkerProtocol.Start());
+      worker.Tell(new SharedProtocol.Start());
     }
 
     private async Task FinalizeWorker(WorkerCompleted msg)

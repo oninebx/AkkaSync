@@ -5,10 +5,10 @@ using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
-using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
 using AkkaSync.Core.Runtime.PipelineManager;
+using AkkaSync.Core.Runtime.PipelineRegistry;
 
 namespace AkkaSync.Core.Actors;
 
@@ -18,23 +18,27 @@ public class PipelineRegistryActor : ReceiveActor
   private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
   private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
-  private readonly IReadOnlyDictionary<string, PipelineSpec> _pipelineSpecs;
+  private IDictionary<string, PipelineSpec>? _pipelineSpecs;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _schedulerActor;
   public PipelineRegistryActor(
     IPluginProviderRegistry<ISyncSource> sourceRegistry, 
     IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
     IPluginProviderRegistry<ISyncSink> sinkRegistry,
-    IPluginProviderRegistry<IHistoryStore> storeRegistry,
-    PipelineOptions options)
+    IPluginProviderRegistry<IHistoryStore> storeRegistry)  
   {
     _sourceRegistry = sourceRegistry;
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
     _storeRegistry = storeRegistry;
-    _pipelineSpecs = options.Pipelines!;
-
-    Receive<PipelineManagerProtocol.CreatePipeline>(msg => CreatePipeline(msg));
+    
+    Receive<RegistryProtocol.Initialize>(msg => {
+      _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
+      _schedulerActor = msg.SchedulerActor;
+      _pipelineSpecs = msg.Options.Pipelines;
+      Context.Parent.Tell(new RegistryInitialized());
+    });
+    Receive<RegistryProtocol.CreatePipeline>(msg => CreatePipeline(msg));
 
     Receive<PipelineSkipped>(msg => {
       _logger.Info($"Pipeline {msg.PipelineId} skipped (no workers created).");
@@ -46,18 +50,11 @@ public class PipelineRegistryActor : ReceiveActor
       _schedulerActor.Tell(msg);
       Context.System.EventStream.Publish(new PipelineCompleteReported(msg.PipelineId));
     });
-
-    Receive<SharedProtocol.RegisterPeer>(msg => {
-      _schedulerActor = msg.PeerRef;
-      _logger.Info("{0} actor is ready at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      var pipelines = _pipelineSpecs.Select(s => new PipelineInfo(s.Key)).ToList().AsReadOnly();
-      Context.Parent.Tell(new PeerRegistered(Self.Path.Name, pipelines));
-    });
   }
 
-  private void CreatePipeline(PipelineManagerProtocol.CreatePipeline msg)
+  private void CreatePipeline(RegistryProtocol.CreatePipeline msg)
   {
-    if(_pipelineSpecs.TryGetValue(msg.Name, out var spec) is false)
+    if(_pipelineSpecs == null || !_pipelineSpecs.TryGetValue(msg.Name, out var spec))
     {
       _logger.Warning($"Pipeline spec with name {msg.Name} not found.");
 
@@ -83,7 +80,7 @@ public class PipelineRegistryActor : ReceiveActor
       {
         var pipelineId = new PipelineId(runId, msg.Name);
         var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, pipelineId, spec)), pipelineId.ToString());
-        pipelineActor.Tell(new PipelineProtocol.Start());
+        pipelineActor.Tell(new SharedProtocol.Start());
       }
       else
       {

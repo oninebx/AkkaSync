@@ -3,6 +3,7 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
 
@@ -35,7 +36,7 @@ public class SyncWorkerActor : ReceiveActor
     _batchSize = batchSize;
     _cursor = cursor;
 
-    ReceiveAsync<WorkerProtocol.Start>(_ => StartAsync());
+    ReceiveAsync<SharedProtocol.Start>(_ => StartAsync());
   }
 
   private async Task StartAsync()

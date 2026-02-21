@@ -10,6 +10,7 @@ namespace AkkaSync.Infrastructure
   {
     private readonly IEnumerable<IPluginProviderRegistryAdapter> _registryAdapters;
     private readonly IServiceProvider _serviceProvider;
+    private readonly IPluginStorage _pluginStorage;
     private readonly FileSystemWatcher _watcher;
     private readonly string _shadowFolder;
     private readonly Dictionary<string, ICancelable> _reloadTimers = [];
@@ -20,10 +21,12 @@ namespace AkkaSync.Infrastructure
     private readonly ILoggingAdapter _logger = Context.GetLogger();
     public PluginManagerActor(
       IServiceProvider serviceProvider,
+      IPluginStorage pluginStorage,
       AkkaSyncOptions options,
       IEnumerable<IPluginProviderRegistryAdapter> registryAdapters)
     {
       _serviceProvider = serviceProvider;
+      _pluginStorage = pluginStorage;
       _registryAdapters = registryAdapters;
       _watcher = new FileSystemWatcher(Path.GetFullPath(options.PluginFolder), "AkkaSync.Plugins.*.dll")
       {
@@ -35,6 +38,7 @@ namespace AkkaSync.Infrastructure
       _pluginContexts = options.PluginContexts;
       options.PluginContexts = null!;
 
+      Receive<Protocol.CheckAndUpdatePlugins>(msg => DoCheckAndUpdate(msg.Required));
       Receive<Protocol.LoadPlugin>(msg => DoLoadPlugin(msg.Path));
       Receive<Protocol.UnloadPlugin>(msg => DoUnloadPlugin(msg.Path));
       Receive<Protocol.ReloadPlugin>(msg => 
@@ -51,7 +55,6 @@ namespace AkkaSync.Infrastructure
 
       Receive<Protocol.ReloadPluginInternal>(msg => DoReloadPlugin(msg.Path));
       Receive<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
-      
     }
 
     protected override void PreStart()
@@ -71,6 +74,12 @@ namespace AkkaSync.Infrastructure
     {
       _watcher.Dispose();
       base.PostStop();
+    }
+
+    private void DoCheckAndUpdate(IEnumerable<string> required)
+    {
+      _logger.Info("Received CheckAndUpdatePlugins message with required plugins: {0}", string.Join(", ", required));
+      _pluginStorage.EnsureAsync(required);
     }
 
     private void DoLoadPlugin(string path)

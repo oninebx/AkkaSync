@@ -8,6 +8,7 @@ namespace AkkaSync.Infrastructure
 {
   public static class Protocol
   {
+    public sealed record CheckAndUpdatePlugins(IEnumerable<string> Required);
     public sealed record LoadPlugin(string Path);
     public sealed record UnloadPlugin(string Path);
     public sealed record ReloadPlugin(string Path);

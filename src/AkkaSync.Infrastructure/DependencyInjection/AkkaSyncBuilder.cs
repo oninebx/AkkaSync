@@ -2,33 +2,57 @@
 using AkkaSync.Abstractions;
 using AkkaSync.Core.PluginProviders;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using System.Reflection;
+using AkkaSync.Infrastructure.PipelineStorages;
+using AkkaSync.Infrastructure.PluginStorages;
 
 namespace AkkaSync.Infrastructure.DependencyInjection
 {
   public sealed class AkkaSyncBuilder
   {
     internal AkkaSyncOptions Options { get; } = new ();
-    internal IServiceCollection Services { get; }
-    public AkkaSyncBuilder(IServiceCollection services) 
+    private IServiceCollection _services { get; }
+    private StorageOptions _pipelineStorageOptions { get; }
+    private StorageOptions _pluginStorageOptions { get; }
+    public AkkaSyncBuilder(IServiceCollection services, IConfiguration configuration) 
     { 
-      Services = services;
+      _services = services;
+      _pluginStorageOptions = configuration.GetSection("PluginStorage").Get<StorageOptions>() ?? new StorageOptions("Local", "plugins");
+      _pipelineStorageOptions = configuration.GetSection("PipelineStorage").Get<StorageOptions>() ?? new StorageOptions("Local", "pipelines");
     }
 
-    public AkkaSyncBuilder UsePlugins(string folder, string shadowFolder = "shadow")
+    public AkkaSyncBuilder AddPipelines()
     {
-      Options.PluginFolder = folder;
-      Options.ShadowFolder = shadowFolder;
-      if (Directory.Exists(shadowFolder))
+      _services.AddSingleton<IPipelineStorage>(sp =>
       {
-        Directory.Delete(shadowFolder, true);
-      }
-      Directory.CreateDirectory(shadowFolder);
-      var pluginFiles = Directory.GetFiles(folder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
-      foreach ( var pluginFile in pluginFiles) {
-        var destFile = Path.Combine(shadowFolder, Path.GetFileName(pluginFile));
-        File.Copy(pluginFile, destFile, true);
-      }
+          var options = _pipelineStorageOptions;
+
+          return options.Type switch
+          {
+              "Local" => ActivatorUtilities.CreateInstance<LocalPipelineStorage>(sp, options.Uri),
+              _ => throw new NotSupportedException($"Pipeline storage type {options.Type} is not supported.")
+          };
+      });
+      return this;
+    }
+
+    public AkkaSyncBuilder AddPlugins()
+    {
+      // build plugin storage
+      IPluginStorage pluginStorage = _pluginStorageOptions.Type switch
+      {
+        "Local" => new LocalPluginStorage(_pluginStorageOptions.Uri),
+        _ => throw new NotSupportedException($"Plugin storage type {_pluginStorageOptions.Type} is not supported.")
+      };
+      _services.AddSingleton(pluginStorage);
+
+      var shadowFolder = "shadow"; //  local plugin shadow copy folder for loading to avoid file lock
+      var pluginFolder = "plugins"; // local plugin cache folder
+      Options.PluginFolder = pluginFolder;
+      Options.ShadowFolder = shadowFolder;
+      PrepareShadowFolder(pluginFolder, shadowFolder);
+      LoadPlugins(shadowFolder);
       return this;
     }
     public AkkaSyncBuilder AddActorHook<TActor>(string name) where TActor: ActorBase
@@ -36,35 +60,42 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       Options.HookActors.Add(name, typeof(TActor));
       return this;
     }
-    public AkkaSyncBuilder AddPlugins()
+
+    private static void PrepareShadowFolder(string pluginFolder, string shadowFolder)
+    {
+      
+      if (Directory.Exists(shadowFolder))
+      {
+        Directory.Delete(shadowFolder, true);
+      }
+      Directory.CreateDirectory(shadowFolder);
+      var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
+      foreach ( var pluginFile in pluginFiles) {
+        var destFile = Path.Combine(shadowFolder, Path.GetFileName(pluginFile));
+        File.Copy(pluginFile, destFile, true);
+      }
+    }
+
+    private AkkaSyncBuilder LoadPlugins(string shadowFolder)
     {
       try
       {
-        var pluginFolder = Path.GetFullPath(Options.ShadowFolder);
+        var pluginFolder = Path.GetFullPath(shadowFolder);
         var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
         foreach (var file in pluginFiles)
         {
           try
           {
-            var context = new PluginLoadContext(file);
-            var assembly = context.LoadPlugin();
-            Options.PluginContexts[file] = context;
+            var (context, types) = PluginLoader.LoadPluginTypes(file);
 
-            var pluginTypes = assembly.GetTypes()
-                .Where(t => !t.IsAbstract && !t.IsInterface &&
-                  (typeof(IPluginProvider<ISyncSource>).IsAssignableFrom(t)
-                  || typeof(IPluginProvider<ISyncTransformer>).IsAssignableFrom(t)
-                  || typeof(IPluginProvider<ISyncSink>).IsAssignableFrom(t)
-                  || typeof(IPluginProvider<IHistoryStore>).IsAssignableFrom(t)));
-
-            foreach (var type in pluginTypes)
+            foreach (var type in types)
             {
               var interfaces = type.GetInterfaces()
                                   .Where(i => i.IsGenericType
                                   && i.GetGenericTypeDefinition() == typeof(IPluginProvider<>));
               foreach (var iface in interfaces)
               {
-                Services.AddSingleton(iface, type);
+                _services.AddSingleton(iface, type);
                 Console.WriteLine("Load plugin {0} successfully.", type.Name);
               }
             }

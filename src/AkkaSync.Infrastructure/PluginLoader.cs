@@ -14,13 +14,36 @@ namespace AkkaSync.Infrastructure
   public record PluginLoadResult(Type InterfaceType, object ProviderInstance, PluginLoadContext LoadContext);
   public static class PluginLoader
   {
-    private static readonly Type[] SupportedPluginInterfaces = new[]
-    {
+    private static readonly Type[] SupportedPluginInterfaces =
+    [
         typeof(IPluginProvider<ISyncSource>),
         typeof(IPluginProvider<ISyncTransformer>),
         typeof(IPluginProvider<ISyncSink>),
         typeof(IPluginProvider<IHistoryStore>)
-    };
+    ];
+
+    public static (PluginLoadContext Context, IEnumerable<Type> Types) LoadPluginTypes(string filePath)
+    {
+      PluginLoadContext context = null!;
+
+      try
+      {
+        context = new PluginLoadContext(filePath);
+        var assembly = context.LoadPlugin();
+
+        var pluginTypes = assembly.GetTypes()
+            .Where(t => !t.IsAbstract && !t.IsInterface &&
+                        SupportedPluginInterfaces.Any(iface => iface.IsAssignableFrom(t)))
+            .ToArray();
+
+        return (context, pluginTypes);
+      }
+      catch
+      {
+        context?.Unload();
+        throw;
+      }
+    }
 
     public static (IEnumerable<PluginLoadResult> LoadResult, PluginLoadContext? LoadContext) LoadFromFile(string filePath, IServiceProvider serviceProvider)
     {
@@ -67,20 +90,5 @@ namespace AkkaSync.Infrastructure
 
       return (results, context);
     }
-
-    //public static void UnloadForFile(string filePath)
-    //{
-    //  if (_pluginContexts.TryGetValue(filePath, out var context))
-    //  {
-    //    context.Unload();
-
-    //    GC.Collect();
-    //    GC.WaitForPendingFinalizers();
-    //    GC.Collect();
-
-    //    _pluginContexts.Remove(filePath);
-    //    Console.WriteLine($"Unloaded plugin from {filePath}");
-    //  }
-    //}
   }
 }
