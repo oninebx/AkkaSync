@@ -28,13 +28,13 @@ namespace AkkaSync.Infrastructure
       _serviceProvider = serviceProvider;
       _pluginStorage = pluginStorage;
       _registryAdapters = registryAdapters;
-      _watcher = new FileSystemWatcher(Path.GetFullPath(options.PluginFolder), "AkkaSync.Plugins.*.dll")
+      _watcher = new FileSystemWatcher(options.PluginFolder, "AkkaSync.Plugins.*.dll")
       {
         NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
       };
-      _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", Path.GetFullPath(options.PluginFolder));
+      _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", options.PluginFolder);
 
-      _shadowFolder = Path.GetFullPath(options.ShadowFolder);
+      _shadowFolder = options.ShadowFolder;
       _pluginContexts = options.PluginContexts;
       options.PluginContexts = null!;
 

@@ -11,12 +11,12 @@ namespace AkkaSync.Infrastructure.DependencyInjection
 {
   public sealed class AkkaSyncBuilder
   {
-    internal AkkaSyncOptions Options { get; } = new ();
+    internal AkkaSyncOptions Options { get; } = new();
     private IServiceCollection _services { get; }
     private StorageOptions _pipelineStorageOptions { get; }
     private StorageOptions _pluginStorageOptions { get; }
-    public AkkaSyncBuilder(IServiceCollection services, IConfiguration configuration) 
-    { 
+    public AkkaSyncBuilder(IServiceCollection services, IConfiguration configuration)
+    {
       _services = services;
       _pluginStorageOptions = configuration.GetSection("PluginStorage").Get<StorageOptions>() ?? new StorageOptions("Local", "plugins");
       _pipelineStorageOptions = configuration.GetSection("PipelineStorage").Get<StorageOptions>() ?? new StorageOptions("Local", "pipelines");
@@ -26,13 +26,13 @@ namespace AkkaSync.Infrastructure.DependencyInjection
     {
       _services.AddSingleton<IPipelineStorage>(sp =>
       {
-          var options = _pipelineStorageOptions;
+        var options = _pipelineStorageOptions;
 
-          return options.Type switch
-          {
-              "Local" => ActivatorUtilities.CreateInstance<LocalPipelineStorage>(sp, options.Uri),
-              _ => throw new NotSupportedException($"Pipeline storage type {options.Type} is not supported.")
-          };
+        return options.Type switch
+        {
+          "Local" => ActivatorUtilities.CreateInstance<LocalPipelineStorage>(sp, Path.Combine(AppContext.BaseDirectory, options.Uri)),
+          _ => throw new NotSupportedException($"Pipeline storage type {options.Type} is not supported.")
+        };
       });
       return this;
     }
@@ -47,15 +47,15 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       };
       _services.AddSingleton(pluginStorage);
 
-      var shadowFolder = "shadow"; //  local plugin shadow copy folder for loading to avoid file lock
-      var pluginFolder = "plugins"; // local plugin cache folder
+      var shadowFolder = Path.Combine(AppContext.BaseDirectory, "shadow"); //  local plugin shadow copy folder for loading to avoid file lock
+      var pluginFolder = Path.Combine(AppContext.BaseDirectory, "plugins"); // local plugin cache folder
       Options.PluginFolder = pluginFolder;
       Options.ShadowFolder = shadowFolder;
       PrepareShadowFolder(pluginFolder, shadowFolder);
       LoadPlugins(shadowFolder);
       return this;
     }
-    public AkkaSyncBuilder AddActorHook<TActor>(string name) where TActor: ActorBase
+    public AkkaSyncBuilder AddActorHook<TActor>(string name) where TActor : ActorBase
     {
       Options.HookActors.Add(name, typeof(TActor));
       return this;
@@ -63,14 +63,14 @@ namespace AkkaSync.Infrastructure.DependencyInjection
 
     private static void PrepareShadowFolder(string pluginFolder, string shadowFolder)
     {
-      
       if (Directory.Exists(shadowFolder))
       {
         Directory.Delete(shadowFolder, true);
       }
       Directory.CreateDirectory(shadowFolder);
       var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
-      foreach ( var pluginFile in pluginFiles) {
+      foreach (var pluginFile in pluginFiles)
+      {
         var destFile = Path.Combine(shadowFolder, Path.GetFileName(pluginFile));
         File.Copy(pluginFile, destFile, true);
       }
@@ -80,8 +80,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
     {
       try
       {
-        var pluginFolder = Path.GetFullPath(shadowFolder);
-        var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
+        var pluginFiles = Directory.GetFiles(shadowFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
         foreach (var file in pluginFiles)
         {
           try
@@ -115,6 +114,6 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       }
       return this;
     }
-      
+
   }
 }
