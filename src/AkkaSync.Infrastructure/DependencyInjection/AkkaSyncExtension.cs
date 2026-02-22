@@ -7,12 +7,14 @@ using Akka.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using AkkaSync.Core.Actors;
 using Microsoft.Extensions.Configuration;
+using Akka.Configuration;
+using Akka.Actor.Setup;
 
 namespace AkkaSync.Infrastructure.DependencyInjection;
 
 public static class AkkaSyncExtension
 {
-  public static IServiceCollection AddAkkaSync(this IServiceCollection services, IConfiguration configuration, Action<AkkaSyncBuilder> configure)
+  public static IServiceCollection AddAkkaSync(this IServiceCollection services, IConfiguration configuration, Action<AkkaSyncBuilder> syncConfigure, Config? akkaConfig = null)
   {
     ISyncEnvironment env;
     if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
@@ -26,7 +28,7 @@ public static class AkkaSyncExtension
     services.AddSingleton(env);
 
     var builder = new AkkaSyncBuilder(services, configuration);
-    configure(builder);
+    syncConfigure(builder);
     services.AddSingleton(builder.Options);
 
     services.AddSingleton<IPluginProviderRegistry<ISyncSource>, PluginProviderRegistry<ISyncSource>>();
@@ -41,7 +43,7 @@ public static class AkkaSyncExtension
 
     services.AddSingleton(provider =>
     {
-      var bootstrap = BootstrapSetup.Create();
+      var bootstrap = BootstrapSetup.Create().WithConfig(akkaConfig);
       var di = DependencyResolverSetup.Create(provider);
       var system = ActorSystem.Create("AkkaSyncSystem", bootstrap.And(di));
       var resolver = DependencyResolver.For(system);

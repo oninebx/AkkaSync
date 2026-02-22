@@ -11,7 +11,7 @@ public class TableTransformerProvider : IPluginProvider<ISyncTransformer>
 
   public IEnumerable<ISyncTransformer> Create(PluginSpec context, CancellationToken cancellationToken = default)
   {
-    var configFile = context.Parameters.Get<string>("transformers");
+    var configFile = Path.Combine(AppContext.BaseDirectory, context.Parameters.Get<string>("transformers"));
     if (!File.Exists(configFile))
     {
       throw new FileNotFoundException($"TableTransformerProvider config file not found: {configFile}");

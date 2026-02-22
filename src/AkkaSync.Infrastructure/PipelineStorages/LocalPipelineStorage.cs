@@ -37,7 +37,7 @@ public class LocalPipelineStorage : IPipelineStorage
     var converterOptions = new JsonSerializerOptions
     {
       PropertyNameCaseInsensitive = true,
-      Converters = { new NumberToStringConverter(),  }
+      Converters = { new NumberToStringConverter() }
     };
     foreach (var file in selectedFiles)
     {
@@ -90,3 +90,4 @@ public class NumberToStringConverter : JsonConverter<string>
         writer.WriteStringValue(value);
     }
 }
+
