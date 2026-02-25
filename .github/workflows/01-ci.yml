@@ -1,0 +1,86 @@
+# ---------------------------------------------------------------
+# Continuous Integration workflow for the AkkaSync repository
+#
+# This workflow performs the following tasks:
+#   1. Restores .NET dependencies
+#   2. Builds the project
+#   3. Runs placeholder tests
+#   4. Optionally checks code formatting
+#
+# Core / Infrastructure / Host are run in separate matrix jobs.
+# Plugins are automatically discovered if their project name starts with "AkkaSync.Plugins".
+#
+# Triggered on:
+#   - Pull requests
+#   - Pushes to the main branch
+# ---------------------------------------------------------------
+
+name: CI - AkkaSync 
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  
+jobs:
+  build-core-infra-host:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project:
+          - AkkaSync.Core
+          - AkkaSync.Infrastructure
+          - AkkaSync.Host
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Restore dependencies
+        run: dotnet restore src/${{ matrix.project }}/${{ matrix.project }}.csproj
+
+      - name: Build project
+        run: dotnet build src/${{ matrix.project }}/${{ matrix.project }}.csproj -c Release --no-restore
+
+      - name: Run tests (placeholder)
+        run: |
+          echo "No tests implemented yet for ${{ matrix.project }}. Placeholder for future tests."
+
+      - name: Optional code format check
+        run: |
+          echo "Code format check placeholder."
+      
+  build-plugins:
+    runs-on: ubuntu-latest
+    needs: build-core-infra-host
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      # 自动查找所有以 AkkaSync.Plugins 开头的 csproj
+      - name: Find all plugin projects
+        id: find_plugins
+        run: |
+          echo "PLUGIN_PROJECTS=$(find src -name 'AkkaSync.Plugins*.csproj' -printf '%p ')" >> $GITHUB_OUTPUT
+
+      - name: Build and test plugins
+        run: |
+          for proj in ${{ steps.find_plugins.outputs.PLUGIN_PROJECTS }}
+          do
+            echo "Building $proj"
+            dotnet restore "$proj"
+            dotnet build "$proj" -c Release --no-restore
+            echo "Running placeholder tests for $proj"
+            # dotnet test "$proj" -c Release --no-build
+          done
