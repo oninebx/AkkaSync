@@ -6,6 +6,7 @@ export interface Column<T = string> {
   header: string;
   render?: (item: T) => React.ReactNode;
   className?: string;
+  defaultValue?: React.ReactNode;
 }
 
 interface TableProps<T> {
@@ -31,7 +32,7 @@ function DisplayTable<T>({columns, data, className}: TableProps<T>){
             <tr key={rowIndex} className="border-b last:border-none">
               {columns.map((column) => (
                 <td key={String(column.key)} className={cn('py-2 px-4', column.className)}>
-                  {column.render ? column.render(item) : item[column.key] as React.ReactNode}
+                  {column.render ? column.render(item) : (item[column.key] ?? column.defaultValue) as React.ReactNode}
                 </td>
               ))}
             </tr>
