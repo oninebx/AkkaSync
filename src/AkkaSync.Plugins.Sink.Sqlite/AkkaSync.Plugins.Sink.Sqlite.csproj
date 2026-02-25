@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <PluginOutputDir>../AkkaSync.Host/plugins</PluginOutputDir>
+    <PluginOutputDir>../AkkaSync.Host/runtime/plugins</PluginOutputDir>
   </PropertyGroup>
 
   <Target Name="CopyPluginToHost" AfterTargets="Build">

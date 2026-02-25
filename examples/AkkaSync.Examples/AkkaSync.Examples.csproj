@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <HostPipelinesDir>..\..\src\AkkaSync.Host\pipelines</HostPipelinesDir>
-    <DataDir>..\..\src\AkkaSync.Host\data</DataDir>
+    <HostPipelinesDir>..\..\src\AkkaSync.Host\runtime\pipelines</HostPipelinesDir>
+    <DataDir>..\..\src\AkkaSync.Host\runtime\data</DataDir>
   </PropertyGroup>
 
   <Target Name="CopyPipelineConfigsToHost" AfterTargets="Build">

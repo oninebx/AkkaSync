@@ -1,9 +1,7 @@
 using System;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
-using AkkaSync.Core.Runtime.PipelineManager;
 
 namespace AkkaSync.Host.Application.Syncing;
 

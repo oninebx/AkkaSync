@@ -28,12 +28,12 @@
 
 	<ItemGroup>
 		<!-- Data files -->
-		<Content Include="data\**\*">
+		<Content Include="runtime\data\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 
 		<!-- Plugin DLLs -->
-		<Content Include="plugins\**\*.dll">
+		<Content Include="runtime\plugins\**\*.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 

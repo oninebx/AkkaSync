@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="PipelineStorages/" />
-    <Folder Include="PluginStorages/" />
   </ItemGroup>
 
 </Project>

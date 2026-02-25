@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 using AkkaSync.Abstractions;
-using AkkaSync.Host.Application.Store;
+using AkkaSync.Host.Application.Dashboard;
 
 namespace AkkaSync.Host.Application.Syncing;
 

@@ -5,7 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using AkkaSync.Infrastructure.PipelineStorages;
-using AkkaSync.Infrastructure.PluginStorages;
+using AkkaSync.Infrastructure.Plugins.Loader;
+using AkkaSync.Infrastructure.Plugins.Storage;
 
 namespace AkkaSync.Infrastructure.DependencyInjection
 {
@@ -47,8 +48,11 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       };
       _services.AddSingleton(pluginStorage);
 
-      var shadowFolder = Path.Combine(AppContext.BaseDirectory, "shadow"); //  local plugin shadow copy folder for loading to avoid file lock
-      var pluginFolder = Path.Combine(AppContext.BaseDirectory, "plugins"); // local plugin cache folder
+      var pluginFolder = Path.Combine(AppContext.BaseDirectory, _pluginStorageOptions.Uri); // local plugin cache folder
+      var normalizedPath = Path.TrimEndingDirectorySeparator(_pluginStorageOptions.Uri);
+      var parent = Path.GetDirectoryName(normalizedPath) ?? string.Empty;
+      var shadowFolder = Path.Combine(AppContext.BaseDirectory, parent,"shadow"); //  local plugin shadow copy folder for loading to avoid file lock
+     
       Options.PluginFolder = pluginFolder;
       Options.ShadowFolder = shadowFolder;
       PrepareShadowFolder(pluginFolder, shadowFolder);
@@ -98,6 +102,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
                 Console.WriteLine("Load plugin {0} successfully.", type.Name);
               }
             }
+            Options.PluginContexts[file] = context;
           }
           catch (ReflectionTypeLoadException rex)
           {

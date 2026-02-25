@@ -7,8 +7,8 @@ using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
-using AkkaSync.Core.Runtime.PipelineManager;
-using AkkaSync.Core.Runtime.PipelineRegistry;
+using AkkaSync.Core.Runtime;
+using AkkaSync.Core.Runtime.Event;
 
 namespace AkkaSync.Core.Actors;
 
