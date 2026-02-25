@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------
+# Release workflow for AkkaSync.Core
+#
+# Triggered by tags:
+#   core-v*
+#
+# Responsibilities:
+#   1. Restore dependencies
+#   2. Pack NuGet package (pack will automatically build)
+#   3. Print release metadata (placeholder for real publishing)
+#
+# NOTE:
+#   - This workflow does NOT publish to NuGet yet.
+#   - Replace the placeholder step with `dotnet nuget push`
+#     when ready for real package publishing.
+# ---------------------------------------------------------------
+
+  name: Release - Core
+
+  on:
+    push:
+      tags:
+        - 'core-v*'
+
+  jobs:
+    release-core:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        
+        - name: Setup .NET
+          uses: actions/setup-dotnet@v4
+          with:
+            dotnet-version: '8.0.x'
+        
+        - name: Restore dependencies
+          run: dotnet restore src/AkkaSync.Core/AkkaSync.Core.csproj
+
+        - name: Pack Nuget package
+          run: |
+            dotnet pack src/AkkaSync.Core/AkkaSync.Core.csproj \
+              -c Release \
+              -o ./artifacts \
+              /p: ContinuousIntegrationBuild=true
+        
+        - name: Release metadata (placeholder)
+          run: |
+            echo "======================================"
+            echo " CORE RELEASE PLACEHOLDER"
+            echo " Tag: $GITHUB_REF"
+            echo " Commit: $GITHUB_SHA"
+            echo " Artifacts generated in ./artifacts"
+            echo " NuGet publishing is currently disabled."
+            echo "======================================"
+        
+        
+
