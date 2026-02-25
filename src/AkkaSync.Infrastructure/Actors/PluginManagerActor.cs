@@ -1,12 +1,12 @@
 ﻿using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.PluginProviders;
+using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
 using AkkaSync.Infrastructure.DependencyInjection;
 using AkkaSync.Infrastructure.Messaging;
 using AkkaSync.Infrastructure.Messaging.Models;
-using AkkaSync.Infrastructure.Plugins.Loader;
-using System.Text.Json;
+using AkkaSync.Infrastructure.SyncPlugins.Loader;
+using AkkaSync.Infrastructure.SyncPlugins.Storage;
 
 namespace AkkaSync.Infrastructure.Actors
 {

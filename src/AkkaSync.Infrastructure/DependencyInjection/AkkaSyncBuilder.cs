@@ -1,12 +1,11 @@
 ﻿using Akka.Actor;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.PluginProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using AkkaSync.Infrastructure.PipelineStorages;
-using AkkaSync.Infrastructure.Plugins.Loader;
-using AkkaSync.Infrastructure.Plugins.Storage;
+using AkkaSync.Infrastructure.SyncPlugins.Storage;
+using AkkaSync.Infrastructure.SyncPlugins.Loader;
 
 namespace AkkaSync.Infrastructure.DependencyInjection
 {
