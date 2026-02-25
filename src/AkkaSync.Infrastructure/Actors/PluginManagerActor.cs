@@ -3,8 +3,12 @@ using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.PluginProviders;
 using AkkaSync.Infrastructure.DependencyInjection;
+using AkkaSync.Infrastructure.Messaging;
+using AkkaSync.Infrastructure.Messaging.Models;
+using AkkaSync.Infrastructure.Plugins.Loader;
+using System.Text.Json;
 
-namespace AkkaSync.Infrastructure
+namespace AkkaSync.Infrastructure.Actors
 {
   public class PluginManagerActor : ReceiveActor
   {
@@ -62,6 +66,12 @@ namespace AkkaSync.Infrastructure
       var stats = _registryAdapters.Select(adapter => (Name: adapter.GetType().GetGenericArguments().FirstOrDefault()?.Name ?? "Unknown", adapter.Count)).ToList();
       var message = string.Join(", ", stats.Select(s => $"{s.Count} {s.Name} plugin(s)"));
       _logger.Info("There are {0} being managed.", message);
+      var plugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginInfo(d.Name, d.Version)));
+      if (plugins is not null && plugins.Any())
+      {
+        Context.System.EventStream.Publish(new PluginManagerInitialized(plugins.ToHashSet() ?? []));
+      }
+      
 
       var eventSelf = Self;
       _watcher.Created += (s, e) => eventSelf.Tell(new Protocol.LoadPlugin(e.FullPath));
@@ -91,8 +101,14 @@ namespace AkkaSync.Infrastructure
         var adapter = _registryAdapters.FirstOrDefault(r => r.CanHandle(provider.InterfaceType));
         if (adapter != null)
         {
-          adapter.AddProvider(provider.ProviderInstance);
-          _logger.Info("PluginProvider {0} is added to registry.", provider.InterfaceType.Name);
+          var descriptor = adapter.AddProvider(provider.ProviderInstance);
+          if(descriptor is not null)
+          {
+            _logger.Info("PluginProvider {0} is added to registry.", provider.InterfaceType.Name);
+
+            Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Version));
+          }
+          
         }
       }
       _pluginContexts[shadowPath] = context!;
@@ -103,9 +119,14 @@ namespace AkkaSync.Infrastructure
       var shadowPath = GetShadowPath(path);
       foreach (var adapter in _registryAdapters)
       {
-        if (adapter.RemoveByFile(shadowPath))
+        var descriptors = adapter.RemoveByFile(shadowPath);
+        if (descriptors != null && descriptors.Any())
         {
-          _logger.Info("PluginProvider(s) in file {0} is removed from registry.", shadowPath);
+          _logger.Info("{0} PluginProvider(s) in file {1} is removed from registry.", descriptors.Count(), shadowPath);
+          foreach (var descriptor in descriptors)
+          {
+            Context.System.EventStream.Publish(new PluginRemoved(descriptor.Name));
+          }
         }
       }
       if (_pluginContexts.TryGetValue(shadowPath, out var context))
@@ -185,7 +206,7 @@ namespace AkkaSync.Infrastructure
       );
     }
 
-    private bool TryDelete(string path)
+    private static bool TryDelete(string path)
     {
       try
       {
@@ -195,7 +216,7 @@ namespace AkkaSync.Infrastructure
         }
         return true;
       }
-      catch(Exception ex)
+      catch (Exception)
       {
         return false;
       }

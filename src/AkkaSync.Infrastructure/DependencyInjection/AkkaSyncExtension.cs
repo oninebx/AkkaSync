@@ -9,6 +9,7 @@ using AkkaSync.Core.Actors;
 using Microsoft.Extensions.Configuration;
 using Akka.Configuration;
 using Akka.Actor.Setup;
+using AkkaSync.Infrastructure.Actors;
 
 namespace AkkaSync.Infrastructure.DependencyInjection;
 

@@ -1,5 +1,5 @@
 using System;
-using AkkaSync.Host.Application.Store;
+using AkkaSync.Host.Application.Dashboard;
 
 namespace AkkaSync.Host.Application.Scheduling;
 

@@ -111,7 +111,7 @@ namespace AkkaSync.Core.Actors
         await _historyStore.MarkCompletedAsync(msg.WorkerId.SourceId, msg.Etag);
       }
       Context.System.EventStream.Publish(new WorkerCompleteReported(msg.WorkerId));
-      FinalizePipeline(msg.WorkerId, msg);
+      FinalizePipeline(msg.WorkerId);
     }
 
     private async Task HandleStartedWorkerAsync(WorkerStarted msg)
@@ -142,11 +142,11 @@ namespace AkkaSync.Core.Actors
       {
         await _historyStore.MarkFailedAsync(msg.WorkerId.SourceId, msg.Reason, _cancellationToken);
       }
-      FinalizePipeline(msg.WorkerId, msg);
+      FinalizePipeline(msg.WorkerId);
       Context.System.EventStream.Publish(new WorkerFailureReported(msg.WorkerId, msg.Reason));
     }
 
-    private void FinalizePipeline(WorkerId workerId, ISyncEvent msg)
+    private void FinalizePipeline(WorkerId workerId)
     {
       _runWorkers.Remove(workerId);
       if (_runWorkers.Count == 0)

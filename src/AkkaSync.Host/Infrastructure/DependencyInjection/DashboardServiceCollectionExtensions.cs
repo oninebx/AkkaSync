@@ -1,12 +1,13 @@
 using System;
-using AkkaSync.Core.Application.Diagnosis;
+using AkkaSync.Host.Application.Diagnosing;
 using AkkaSync.Host.Application.Dashboard;
-using AkkaSync.Host.Application.Diagnosis;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Application.Query.Handlers;
 using AkkaSync.Host.Application.Scheduling;
+using AkkaSync.Host.Application.Swapping;
 using AkkaSync.Host.Application.Syncing;
+using AkkaSync.Host.Infrastructure.Messaging;
 using AkkaSync.Host.Infrastructure.SignalR;
 using AkkaSync.Host.Infrastructure.Stores;
 
@@ -26,6 +27,7 @@ public static class DashboardServiceExtension
       .Add<SyncState>(SyncStateReducer.Reduce)
       .Add<PipelineSchedules>(ScheduleStateReducer.Reduce)
       .Add<DiagnosisJournal>(DiagnosisReducer.Reduce)
+      .Add<RuntimePluginSet>(PluginStateReducer.Reduce)
       .Build());
 
     services.AddSingleton<IDashboardClientRegistry, DashboardClientRegistry>();

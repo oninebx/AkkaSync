@@ -7,16 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Runtime\PipelineManager\**" />
+    <EmbeddedResource Remove="Runtime\PipelineManager\**" />
+    <None Remove="Runtime\PipelineManager\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Akka" Version="1.5.55" />
     <PackageReference Include="NCrontab" Version="3.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Runtime/PipelineManager/" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Core.PluginProviders
 {
@@ -12,9 +13,17 @@ namespace AkkaSync.Core.PluginProviders
 
     public int Count => _registry.Count;
 
-    public void AddProvider(object provider)
+    public IEnumerable<PluginDescriptor> Descriptors => _registry.ToDescriptors();
+
+    public PluginDescriptor? AddProvider(object provider)
     {
-      _registry.AddProvider((IPluginProvider<T>)provider);
+      var typedProvider = (IPluginProvider<T>)provider;
+
+      if (_registry.AddProvider(typedProvider))
+      {
+        return new PluginDescriptor(typedProvider.Key, typedProvider.Version.ToString());
+      }
+      return null;
     }
 
     public bool CanHandle(Type pluginType)
@@ -22,18 +31,21 @@ namespace AkkaSync.Core.PluginProviders
       return typeof(IPluginProvider<T>).IsAssignableFrom(pluginType);
     }
 
-    public bool RemoveByFile(string filePath)
+    public IReadOnlySet<PluginDescriptor>? RemoveByFile(string filePath)
     {
+      var result = new HashSet<PluginDescriptor>();
       var fileName = Path.GetFileNameWithoutExtension(filePath);
-      if (!_registry.FileEntries.TryGetValue(fileName, out var keys) || keys is null)
+      if (_registry.FileEntries.TryGetValue(fileName, out var keys) && keys is not null)
       {
-        return false;
+        foreach (var key in keys)
+        {
+          if (_registry.TryRemoveProvider(key, out var descriptor))
+          {
+            result.Add(descriptor);
+          }
+        }
       }
-      foreach (var key in keys)
-      {
-        _registry.RemoveProvider(key);
-      }
-      return true;
+      return result;
     }
   }
 }

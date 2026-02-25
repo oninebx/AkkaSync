@@ -1,13 +1,14 @@
 using System;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Application.Diagnosis;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
 using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Scheduling;
-using AkkaSync.Host.Application.Store;
 using AkkaSync.Host.Application.Syncing;
+using AkkaSync.Host.Application.Diagnosing;
+using AkkaSync.Host.Application.Swapping;
+using AkkaSync.Infrastructure.Messaging;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
@@ -21,6 +22,7 @@ public static class DashboardEventMapper
       SyncState syncState => FromSyncState(syncState, @event),
       PipelineSchedules schedules => FromPipelineSchedules(schedules, @event),
       DiagnosisJournal journal => FromDiagnosisJournal(journal, @event),
+      RuntimePluginSet pluginSet => FromComposingPlugins(pluginSet, @event),
       _ => throw new NotImplementedException(nameof(value))
     };
   }
@@ -52,6 +54,15 @@ public static class DashboardEventMapper
     or PipelineSkipReported
     or PipelineCompleteReported => new DashboardEvent("diagnosis.records.added", journal.Records.LastOrDefault()!),
     DashboardInitialized => new DashboardEvent("diagnosis.records.initialized", journal),
+    _ => null
+  };
+
+  private static DashboardEvent? FromComposingPlugins(RuntimePluginSet pluginSet, INotificationEvent? @event) => @event switch 
+  {
+    PluginAdded => new DashboardEvent("pluginhub.entries.added", pluginSet.Entries.LastOrDefault()!),
+    PluginRemoved e => new DashboardEvent("pluginhub.entries.removed", e.Name),
+    PluginUpdated e => new DashboardEvent("pluginhub.entries.updated", new { e.Name, e.Version }),
+    DashboardInitialized => new DashboardEvent("pluginhub.entries.initialized", pluginSet),
     _ => null
   };
 }

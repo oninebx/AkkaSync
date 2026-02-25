@@ -12,20 +12,12 @@ public class DashboardProxyActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _pipelineManager;
-  // private readonly IDashboardStore _store;
-  // private readonly IEventEnvelopeFactory _factory;
-  // private readonly IEventEnvelopePublisher _publisher;
-  // private readonly EventReducerRegistry _reducerRegistry;
   public DashboardProxyActor(
     IDashboardStore store,
     EventReducerRegistry reducerRegistry,
     IEventEnvelopeFactory factory,
     IEventEnvelopePublisher publisher)
   {
-    // _store = store;
-    // _reducerRegistry = reducerRegistry;
-    // _factory = factory;
-    // _publisher = publisher;
 
     ReceiveAsync<INotificationEvent>(async @event =>
     {

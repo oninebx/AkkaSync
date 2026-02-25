@@ -1,7 +1,6 @@
 using System;
-using AkkaSync.Core.Application.Diagnosis;
+using AkkaSync.Host.Application.Diagnosing;
 using AkkaSync.Host.Application.Scheduling;
-using AkkaSync.Host.Application.Store;
 using AkkaSync.Host.Application.Syncing;
 
 namespace AkkaSync.Host.Application.Dashboard;
