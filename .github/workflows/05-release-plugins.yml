@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------
+# Release workflow for AkkaSync plugins
+#
+# Triggered by tags:
+#   plugin-*-v*
+#
+# Example:
+#   plugin-source-file-v0.1.0
+#   plugin-sink-sqlite-v0.1.0
+#
+# Responsibilities:
+#   1. Parse plugin project name and version from tag
+#   2. Publish entire plugin project (all classes) to a folder
+#   3. Zip the published folder
+#   4. Upload zip to GitHub Release
+# ---------------------------------------------------------------
+
+name: Release - Plugin
+
+on:
+  push:
+    tags:
+      - 'plugin-*-v*'
+
+jobs:
+  release-plugin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Parse plugin tag
+        id: parse
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          # Remove 'plugin-' prefix and extract project name
+          NAME=$(echo $TAG | sed -E 's/plugin-(.*)-v.*/\1/')
+          # Capitalize first letter of each segment (source-file -> Source.File)
+          NAME_CAPITALIZED=$(echo $NAME | sed -E 's/(^|[-])([a-z])/\U\2/g' | tr '-' '.')
+          VERSION=$(echo $TAG | sed -E 's/.*-v(.*)/\1/')
+
+          echo "PLUGIN_PROJECT=$NAME_CAPITALIZED" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Set paths
+        run: |
+          echo "PROJECT_PATH=src/AkkaSync.Plugins.${PLUGIN_PROJECT}/AkkaSync.Plugins.${PLUGIN_PROJECT}.csproj" >> $GITHUB_ENV
+          echo "PUBLISH_DIR=./publish/${PLUGIN_PROJECT}" >> $GITHUB_ENV
+          echo "ZIP_NAME=AkkaSync.Plugins.${PLUGIN_PROJECT}-${VERSION}.zip" >> $GITHUB_ENV
+
+      - name: Restore dependencies
+        run: dotnet restore $PROJECT_PATH
+
+      - name: Publish plugin project
+        run: |
+          dotnet publish $PROJECT_PATH \
+            -c Release \
+            -o $PUBLISH_DIR \
+            /p:ContinuousIntegrationBuild=true
+
+      - name: Zip plugin
+        id: zip
+        run: |
+          cd publish
+          zip -r ../$ZIP_NAME ${PLUGIN_PROJECT}
+          echo "::set-output name=zip_name::$ZIP_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.zip_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

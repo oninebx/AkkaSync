@@ -1,0 +1,108 @@
+# ---------------------------------------------------------------
+# Release workflow for AkkaSync.Host
+#
+# Triggered by tags:
+#   host-v*
+#
+# Responsibilities:
+#   1. Restore dependencies
+#   2. Publish runtime output
+#   3. Print release metadata (placeholder for artifact upload)
+#
+# NOTE:
+#   - This workflow does NOT upload artifacts yet.
+#   - Replace the placeholder step with artifact upload
+#     or Docker publishing when ready.
+# ---------------------------------------------------------------
+
+name: Release - Host
+
+on:
+  push:
+    tags:
+      - 'host-v*'
+
+env:
+  PROJECT_PATH: src/AkkaSync.Host/AkkaSync.Host.csproj
+  PUBLISH_DIR: ./publish
+  
+jobs:
+  release-host:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Restore dependencies
+        run: dotnet restore $PROJECT_PATH
+
+      - name: Publish Host runtime
+        run: |
+          dotnet publish $PROJECT_PATH \
+            -c Release \
+            -o $PUBLISH_DIR \
+            /p:ContinuousIntegrationBuild=true
+
+      - name: Release metadata (placeholder)
+        run: |
+          echo "======================================"
+          echo " HOST RELEASE PLACEHOLDER"
+          echo " Tag: $GITHUB_REF"
+          echo " Commit: $GITHUB_SHA"
+          echo " Publish directory: $PUBLISH_DIR"
+          echo " Artifact upload is currently disabled."
+          echo "======================================"
+      
+# ---------------------------------------------------------------
+# Optional Extensions (remove comments to enable)
+# ---------------------------------------------------------------
+
+# --- Upload runtime as workflow artifact ---
+#
+# - name: Upload runtime artifact
+#   uses: actions/upload-artifact@v4
+#   with:
+#     name: host-runtime
+#     path: ./publish
+
+
+# --- Create GitHub Release and attach runtime ---
+#
+# - name: Create GitHub Release
+#   uses: softprops/action-gh-release@v2
+#   with:
+#     files: ./publish/**
+
+
+# --- Build and push Docker image ---
+#
+# - name: Build Docker image
+#   run: docker build -t akkasync/host:${{ github.ref_name }} .
+#
+# - name: Push Docker image
+#   run: docker push akkasync/host:${{ github.ref_name }}
+
+
+# --- Multi-platform publish example ---
+#
+# - name: Publish for linux-x64
+#   run: |
+#     dotnet publish $PROJECT_PATH \
+#       -c Release \
+#       -r linux-x64 \
+#       --self-contained true \
+#       -o ./publish/linux-x64
+#
+# - name: Publish for win-x64
+#   run: |
+#     dotnet publish $PROJECT_PATH \
+#       -c Release \
+#       -r win-x64 \
+#       --self-contained true \
+#       -o ./publish/win-x64
+
