@@ -1,0 +1,59 @@
+# ---------------------------------------------------------------
+# Release workflow for AkkaSync.Infrastructure
+#
+# Triggered by tags:
+#   infra-v*
+#
+# Responsibilities:
+#   1. Restore dependencies
+#   2. Pack NuGet package (pack automatically builds)
+#   3. Print release metadata (placeholder for publishing)
+#
+# NOTE:
+#   - This workflow does NOT publish to NuGet yet.
+#   - Replace the placeholder step with `dotnet nuget push`
+#     when ready for real publishing.
+#   - Infrastructure depends on a released Core version.
+# ---------------------------------------------------------------
+
+name: Release - Infrastructure
+
+on:
+  push:
+    tags:
+      - 'infra-v*'
+
+env:
+  PROJECT_PATH: src/AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj
+
+jobs:
+  release-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Pack NuGet package
+        run: |
+          dotnet pack $PROJECT_PATH \
+            -c Release \
+            -o ./artifacts \
+            /p:ContinuousIngegrationBuild=true
+
+      - name: Release metadata (placeholder)
+        run: |
+          echo "======================================"
+          echo " INFRASTRUCTURE RELEASE PLACEHOLDER"
+          echo " Tag: $GITHUB_REF"
+          echo " Commit: $GITHUB_SHA"
+          echo " Artifacts generated in ./artifacts"
+          echo " NuGet publishing is currently disabled."
+          echo "======================================"
+      
+#     - name: Publish to NuGet
+#       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json

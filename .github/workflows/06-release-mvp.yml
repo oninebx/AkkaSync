@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------
+# Build and package AkkaSync MVP (Core + Infra + Host)
+#
+# Triggered by tags:
+#   mvp-v*
+#
+# Responsibilities:
+#   1. Restore and build Core and Infrastructure
+#   2. Publish Host runtime
+#   3. Zip the MVP package
+#   4. Upload zip to GitHub Release
+# ---------------------------------------------------------------
+
+name: Release - MVP
+
+on:
+  push:
+    tags:
+      - 'mvp-v*'
+
+jobs:
+  release-mvp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Parse tag
+        id: parse
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=$(echo $TAG | sed -E 's/mvp-v(.*)/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Build Core
+        run: dotnet build src/AkkaSync.Core/AkkaSync.Core.csproj -c Release
+
+      - name: Build Infrastructure
+        run: dotnet build src/AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj -c Release
+
+      - name: Publish Host
+        run: |
+          dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
+            -c Release \
+            -o ./publish/mvp \
+            /p:ContinuousIntegrationBuild=true
+
+      - name: Zip MVP
+        run: |
+          ZIP_NAME=AkkaSync.MVP-${VERSION}.zip
+          cd publish
+          zip -r ../$ZIP_NAME mvp
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ github.workspace }}/$ZIP_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
