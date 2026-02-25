@@ -1,6 +1,5 @@
 'use client';
 
-import Card from "@/components/Card";
 import HostCard from "./components/HostCard/HostCard";
 import RecentEventsCard from "./components/RecentEventsCard";
 import { KpiBanner } from "./components/KpiBanner";
@@ -33,17 +32,17 @@ export default function HomePage() {
 
   const { queryInvoke } = useSignalRInvoke<PingResponse>();
   
-  const handleClick = async () => {
-    try{
-      const data = await queryInvoke('QueryTest', { Value: 'ping' }, true);
-      console.log(data);
-    }catch(err){
-      console.log(err);
-    }
-  }
-  const handleReset = () => {
+  // const handleClick = async () => {
+  //   try{
+  //     const data = await queryInvoke('QueryTest', { Value: 'ping' }, true);
+  //     console.log(data);
+  //   }catch(err){
+  //     console.log(err);
+  //   }
+  // }
+  // const handleReset = () => {
     
-  }
+  // }
   return (
     <>
       <div className="min-h-screen px-4 py-6">
