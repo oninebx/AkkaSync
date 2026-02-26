@@ -11,6 +11,6 @@ envelopeHandlerMap.set('pluginhub.entries.added', (event, dispatch) => {
 });
 
 envelopeHandlerMap.set('pluginhub.entries.removed', (event, dispatch) => {
-  dispatch(pluginHubActions.unloadPlugin(event.payload as PluginEntry));
+  dispatch(pluginHubActions.unloadPlugin(String(event.payload)));
 });
 
