@@ -71,11 +71,14 @@ namespace AkkaSync.Infrastructure.DependencyInjection
         Directory.Delete(shadowFolder, true);
       }
       Directory.CreateDirectory(shadowFolder);
-      var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
-      foreach (var pluginFile in pluginFiles)
+      if (Directory.Exists(pluginFolder))
       {
-        var destFile = Path.Combine(shadowFolder, Path.GetFileName(pluginFile));
-        File.Copy(pluginFile, destFile, true);
+        var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
+        foreach (var pluginFile in pluginFiles)
+        {
+          var destFile = Path.Combine(shadowFolder, Path.GetFileName(pluginFile));
+          File.Copy(pluginFile, destFile, true);
+        }
       }
     }
 
