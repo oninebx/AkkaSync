@@ -25,39 +25,64 @@ jobs:
   release-mvp:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        include:
+          - runtime: win-x64
+            self_contained: true
+          - runtime: linux-x64
+            self_contained: true
+          - runtime: linux-arm64
+            self_contained: true
+          - runtime: osx-x64
+            self_contained: true
+          - runtime: portable
+            self_contained: false
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Parse tag
-        id: parse
+      - name: Parse version
+        id: version
         run: |
           TAG=${GITHUB_REF#refs/tags/}
           VERSION=$(echo $TAG | sed -E 's/mvp-v(.*)/\1/')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      
-      - name: Build Core
-        run: dotnet build src/AkkaSync.Core/AkkaSync.Core.csproj -c Release
 
-      - name: Build Infrastructure
-        run: dotnet build src/AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj -c Release
-
-      - name: Publish Host
+      - name: Publish ${{ matrix.runtime }}
         run: |
-          dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
-            -c Release \
-            -o ./publish/mvp \
-            /p:ContinuousIntegrationBuild=true
+          if [ "${{ matrix.runtime }}" = "portable" ]; then
+            dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
+              -c Release \
+              --self-contained false \
+              -o ./publish/portable
+          else
+            dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
+              -c Release \
+              -r ${{ matrix.runtime }} \
+              --self-contained true \
+              -p:PublishSingleFile=true \
+              -p:PublishTrimmed=false \
+              -o ./publish/${{ matrix.runtime }}
+          fi
 
       - name: Zip MVP
         id: zip
         run: |
-          ZIP_NAME=AkkaSync.MVP-${VERSION}.zip
+          if [ "${{ matrix.runtime }}" = "portable" ]; then
+            ZIP_NAME="AkkaSync.MVP-${VERSION}.zip"
+            FOLDER="portable"
+          else
+            ZIP_NAME="AkkaSync.MVP-${VERSION}-${{ matrix.runtime }}.zip"
+            FOLDER="${{ matrix.runtime }}"
+          fi
+
           cd publish
-          zip -r ../$ZIP_NAME mvp
-          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
+          zip -r ../$ZIP_NAME $FOLDER
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT  
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
