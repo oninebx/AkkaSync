@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------
+# Build and package AkkaSync MVP (Core + Infra + Host)
+#
+# Triggered by tags:
+#   mvp-v*
+#
+# Responsibilities:
+#   1. Restore and build Core and Infrastructure
+#   2. Publish Host runtime
+#   3. Zip the MVP package
+#   4. Upload zip to GitHub Release
+# ---------------------------------------------------------------
+
+name: Release - MVP
+
+on:
+  push:
+    tags:
+      - 'disabled'
+#      - 'mvp-v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release-mvp:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - runtime: win-x64
+            self_contained: true
+          - runtime: linux-x64
+            self_contained: true
+          - runtime: linux-arm64
+            self_contained: true
+          - runtime: osx-x64
+            self_contained: true
+          - runtime: portable
+            self_contained: false
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Parse version
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=$(echo $TAG | sed -E 's/mvp-v(.*)/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Publish ${{ matrix.runtime }}
+        run: |
+          if [ "${{ matrix.runtime }}" = "portable" ]; then
+            dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
+              -c Release \
+              --self-contained false \
+              -o ./publish/portable
+          else
+            dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
+              -c Release \
+              -r ${{ matrix.runtime }} \
+              --self-contained true \
+              -p:PublishSingleFile=true \
+              -p:PublishTrimmed=false \
+              -o ./publish/${{ matrix.runtime }}
+          fi
+
+      - name: Zip MVP
+        id: zip
+        run: |
+          if [ "${{ matrix.runtime }}" = "portable" ]; then
+            ZIP_NAME="AkkaSync.MVP-${VERSION}.zip"
+            FOLDER="portable"
+          else
+            ZIP_NAME="AkkaSync.MVP-${VERSION}-${{ matrix.runtime }}.zip"
+            FOLDER="${{ matrix.runtime }}"
+          fi
+
+          cd publish
+          zip -r ../$ZIP_NAME $FOLDER
+          echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT  
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.zip_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

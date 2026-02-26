@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Dashboard for real-time monitoring and management of multiple ETL pipelines.",
 };
 
-const SIGNALR_HUB_URL = process.env.NEXT_PUBLIC_SIGNALR_HUB_URL || 'http://localhost:5000/hub/dashboard';
+// const SIGNALR_HUB_URL = process.env.NEXT_PUBLIC_SIGNALR_HUB_URL || 'http://localhost:5000/hub/dashboard';
 
 export default function RootLayout({
   children,
@@ -24,7 +24,7 @@ export default function RootLayout({
         <Sidebar />
         <div className="flex-1 p-6 max-w-6xl mx-auto">
           <ReduxProvider>
-            <SignalRProvider url={SIGNALR_HUB_URL} autoReconnect>
+            <SignalRProvider url='hub/dashboard' autoReconnect>
               {children}
             </SignalRProvider>
             
