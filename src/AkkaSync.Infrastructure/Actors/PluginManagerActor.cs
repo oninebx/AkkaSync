@@ -32,12 +32,7 @@ namespace AkkaSync.Infrastructure.Actors
       _serviceProvider = serviceProvider;
       _pluginStorage = pluginStorage;
       _registryAdapters = registryAdapters;
-      _watcher = new FileSystemWatcher(options.PluginFolder, "AkkaSync.Plugins.*.dll")
-      {
-        NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
-      };
-      _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", options.PluginFolder);
-
+      _watcher = EnsureWatcherCreated(options.PluginFolder);
       _shadowFolder = options.ShadowFolder;
       _pluginContexts = options.PluginContexts;
       options.PluginContexts = null!;
@@ -84,6 +79,20 @@ namespace AkkaSync.Infrastructure.Actors
     {
       _watcher.Dispose();
       base.PostStop();
+    }
+
+    private FileSystemWatcher EnsureWatcherCreated(string folder)
+    {
+      if (!Directory.Exists(folder))
+      {
+        Directory.CreateDirectory(folder);
+      }
+      var watcher = new FileSystemWatcher(folder, "AkkaSync.Plugins.*.dll")
+      {
+        NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+      };
+      _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", folder);
+      return watcher;
     }
 
     private void DoCheckAndUpdate(IEnumerable<string> required)
