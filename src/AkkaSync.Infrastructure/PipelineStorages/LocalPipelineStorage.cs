@@ -20,20 +20,22 @@ public class LocalPipelineStorage : IPipelineStorage
 
   public async Task<(PipelineOptions, ScheduleOptions)> LoadSpecificationsAsync(CancellationToken cancellationToken = default)
   {
+    var pipelines = new Dictionary<string, PipelineSpec>();
+    var schedules = new Dictionary<string, ScheduleSpec>();
     if (!Directory.Exists(_pipelineDirectory))
     {
-      throw new DirectoryNotFoundException($"Directory not found: {_pipelineDirectory}");
+      _logger.LogWarning("Directory not found: {Directory}", _pipelineDirectory);
+      return (new PipelineOptions { Pipelines = pipelines }, new ScheduleOptions { Schedules = schedules });
     }
     var pipelineFiles = Directory.GetFiles(_pipelineDirectory, "pipeline_*.json", SearchOption.AllDirectories);
-    
  
     if (pipelineFiles.Length == 0)
     {
-      throw new FileNotFoundException($"No pipeline files found in directory: {_pipelineDirectory}");
+      _logger.LogWarning("No pipeline files found in directory: {Directory}", _pipelineDirectory);
+      return (new PipelineOptions { Pipelines = pipelines }, new ScheduleOptions { Schedules = schedules });
     }
     var selectedFiles = pipelineFiles.ToList();
-    var pipelines = new Dictionary<string, PipelineSpec>();
-    var schedules = new Dictionary<string, ScheduleSpec>();
+    
     var converterOptions = new JsonSerializerOptions
     {
       PropertyNameCaseInsensitive = true,
