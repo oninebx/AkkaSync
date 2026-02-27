@@ -67,9 +67,10 @@ jobs:
           cd dashboard
           npm install
           npm run build
-          npm run export
           mkdir -p ../publish/release/dashboard
           cp -r out/* ../publish/release/dashboard/
+        env:
+          MVP_BUILD: true
 
       - name: Add run scripts
         run: |

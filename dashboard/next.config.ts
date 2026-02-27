@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === 'development';
+const isMvp = process.env.MVP_BUILD === 'true';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  output: isMvp ? 'export' : 'standalone',
   async rewrites() {
     if(!isDev){
       return [];
