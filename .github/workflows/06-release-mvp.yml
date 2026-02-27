@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-              pwsh -Command 'dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o ./release/AkkaSync.Host'
+            pwsh -Command 'dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o ./release/AkkaSync.Host'
           else
               dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
                 -c Release \
