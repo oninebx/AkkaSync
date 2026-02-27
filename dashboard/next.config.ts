@@ -5,6 +5,9 @@ const isMvp = process.env.MVP_BUILD === 'true';
 
 const nextConfig: NextConfig = {
   output: isMvp ? 'export' : 'standalone',
+  images: {
+    unoptimized: isMvp,
+  },
   async rewrites() {
     if(!isDev){
       return [];

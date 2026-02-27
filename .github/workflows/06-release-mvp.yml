@@ -51,7 +51,7 @@ jobs:
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-              pwsh -Command 'dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o ./publish/AkkaSync.Host'
+              pwsh -Command 'dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -o ./release/AkkaSync.Host'
           else
               dotnet publish src/AkkaSync.Host/AkkaSync.Host.csproj \
                 -c Release \
@@ -59,7 +59,7 @@ jobs:
                 --self-contained ${{ matrix.self_contained }} \
                 -p:PublishSingleFile=true \
                 -p:PublishTrimmed=false \
-                -o ./publish/AkkaSync.Host
+                -o ./release/AkkaSync.Host
           fi
 
       - name: Build Dashboard
@@ -67,26 +67,63 @@ jobs:
           cd dashboard
           npm install
           npm run build
-          mkdir -p ../publish/release/dashboard
-          cp -r out/* ../publish/release/dashboard/
+          mkdir -p ../release/dashboard
+          cp -r out/* ../release/dashboard/
         env:
           MVP_BUILD: true
 
       - name: Add run scripts
+        shell: bash
         run: |
-          if [ "${{ matrix.runtime }}" = "win-x64" ]; then
-              echo "AkkaSync.Host\\AkkaSync.Host.exe" > publish/release/run.bat
+          mkdir -p release
+
+          if [[ "${{ matrix.runtime }}" == "win-x64" ]]; then
+            # Windows batch script
+            cat << 'EOF' > release/run.bat
+          @echo off
+          cd /d %~dp0
+          start "" AkkaSync.Host\AkkaSync.Host.exe
+          timeout /t 2 /nobreak >nul
+          start "" "http://localhost:5000"
+          pause
+          EOF
+
+          elif [[ "${{ matrix.runtime }}" == osx-* ]]; then
+            # macOS command script
+            cat << 'EOF' > release/run.command
+          #!/bin/bash
+          cd "$(dirname "$0")"
+          ./AkkaSync.Host/AkkaSync.Host &
+          sleep 2
+          open "http://localhost:5000"
+          wait
+          EOF
+            chmod +x release/run.command
+
           else
-              echo "dotnet AkkaSync.Host/AkkaSync.Host.dll" > publish/release/run.sh
-              chmod +x publish/release/run.sh
+            # Linux shell script
+            cat << 'EOF' > release/run.sh
+          #!/usr/bin/env bash
+          cd "$(dirname "$0")"
+          ./AkkaSync.Host/AkkaSync.Host &
+          sleep 2
+          xdg-open "http://localhost:5000"
+          wait
+          EOF
+            chmod +x release/run.sh
           fi
-        
+
       - name: Zip MVP
+        shell: bash
         id: zip
         run: |
           ZIP_NAME="AkkaSync.MVP-${VERSION}-${{ matrix.runtime }}.zip"
-          cd publish
-          zip -r ../$ZIP_NAME *
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+              pwsh -Command "Compress-Archive -Path release\* -DestinationPath $ZIP_NAME -Force"
+          else
+              cd release
+              zip -r ../$ZIP_NAME *
+          fi
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release

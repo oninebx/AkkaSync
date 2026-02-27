@@ -37,11 +37,24 @@ builder.Services.AddHostedService<Worker>();
 var app = builder.Build();
 
 app.MapHub<DashboardHub>("/hub/dashboard");
-app.UseStaticFiles(new StaticFileOptions
+
+if (!app.Environment.IsDevelopment())
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(AppContext.BaseDirectory, "dashboard")),
-    RequestPath = ""
-});
+  var baseDir = AppContext.BaseDirectory;
+  var releaseDir = Path.GetFullPath(Path.Combine(baseDir, ".."));
+  var dashboardPath = Path.Combine(releaseDir, "dashboard");
+
+    app.UseDefaultFiles();
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(dashboardPath),
+        RequestPath = ""
+    });
+
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(dashboardPath)
+    });
+}
 
 app.Run();
