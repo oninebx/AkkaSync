@@ -1,0 +1,60 @@
+# -----------------------------------------------------------------------------
+# GitHub Actions Workflow: Publish AkkaSync.Abstractions to NuGet
+#
+# Purpose:
+#   This workflow automatically builds, packs, and publishes the
+#   AkkaSync.Abstractions project to nuget.org whenever a Git tag
+#   following the pattern 'abstractions-v*.*.*' is pushed.
+#
+# Workflow Summary:
+#   1. Triggered by Git tags like 'abstractions-v1.0.0'.
+#   2. Checks out the repository.
+#   3. Sets up the .NET SDK.
+#   4. Restores NuGet dependencies.
+#   5. Builds the project in Release configuration.
+#   6. Packs the project into a NuGet package.
+#   7. Pushes the package to nuget.org using the API key stored
+#      in the GitHub secret NUGET_API_KEY.
+#
+# Notes:
+#   - The Git tag name is used as the NuGet package version.
+#   - Only the AkkaSync.Abstractions package is published by this workflow.
+#   - Future packages (Core, Infrastructure) should have separate workflows
+#     or tags to avoid conflicts.
+# -----------------------------------------------------------------------------
+
+name: Release - Abstractions
+
+on:
+  push:
+    tags:
+      - 'abstractions-v*.*.*'
+
+env:
+  PROJECT_PATH: src/AkkaSync.Abstractions/AkkaSync.Abstractions.csproj
+
+jobs:
+  release-abstraction:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore $PROJECT_PATH
+
+      - name: Pack Nuget package
+        run: |
+          dotnet pack $PROJECT_PATH \
+            -c Release \
+            -o ./artifacts \
+            /p: ContinuousIntegrationBuild=true
+
+      - name: Publish to NuGet
+        run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json

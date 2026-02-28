@@ -4,6 +4,25 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+		<!-- NuGet Package message -->
+		<PackageId>AkkaSync.Abstractions</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Ryan Xu</Authors>
+		<Company>AkkaSync Project</Company>
+		<Product>AkkaSync</Product>
+		<Description>Provides core abstraction interfaces and contracts for the AkkaSync framework, enabling modular pipeline and actor-based synchronization patterns.</Description>
+		<PackageTags>AkkaSync;Abstraction;Actor;Pipeline;Synchronization;CSharp</PackageTags>
+		<RepositoryUrl>https://github.com/oninebx/AkkaSync</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/oninebx/AkkaSync</PackageProjectUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes>Initial release of AkkaSync.Abstraction, including core interfaces and contracts for modular pipelines and actor-based synchronization.</PackageReleaseNotes>
+
+		<!-- Optional: generate symbol package and include source code for easier debugging -->
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<IncludeSource>true</IncludeSource>
   </PropertyGroup>
 
 </Project>
