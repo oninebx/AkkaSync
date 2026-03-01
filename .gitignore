@@ -43,9 +43,7 @@ wwwroot/lib/
 *.log
 
 # AkkaSync Generated Folders
-plugins
-data
-pipelines
+runtime
 releases
 !TestPlugins/
 !TestPlugins/**/*.dll
