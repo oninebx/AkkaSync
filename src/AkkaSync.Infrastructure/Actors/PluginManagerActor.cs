@@ -7,6 +7,7 @@ using AkkaSync.Infrastructure.Messaging;
 using AkkaSync.Infrastructure.Messaging.Models;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
+using System.IO.Compression;
 
 namespace AkkaSync.Infrastructure.Actors
 {
@@ -17,7 +18,6 @@ namespace AkkaSync.Infrastructure.Actors
     private readonly IPluginStorage _pluginStorage;
     private readonly FileSystemWatcher _watcher;
     private readonly string _shadowFolder;
-    private readonly Dictionary<string, ICancelable> _reloadTimers = [];
     private readonly Dictionary<string, PluginLoadContext> _pluginContexts;
     private readonly List<string> _pendingCleanup = [];
     private ICancelable? _cleanupSchedule;
@@ -38,21 +38,9 @@ namespace AkkaSync.Infrastructure.Actors
       options.PluginContexts = null!;
 
       Receive<Protocol.CheckAndUpdatePlugins>(msg => DoCheckAndUpdate(msg.Required));
-      Receive<Protocol.LoadPlugin>(msg => DoLoadPlugin(msg.Path));
+      ReceiveAsync<Protocol.LoadPlugin>(msg => DoLoadPlugin(msg.Path));
       Receive<Protocol.UnloadPlugin>(msg => DoUnloadPlugin(msg.Path));
-      Receive<Protocol.ReloadPlugin>(msg => 
-      {
-        if(_reloadTimers.TryGetValue(msg.Path, out var existing))
-        {
-          existing.Cancel();
-        }
-        var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
-          TimeSpan.FromMilliseconds(500), Self, new Protocol.ReloadPluginInternal(msg.Path), Self);
 
-        _reloadTimers[msg.Path] = cancelable;
-      });
-
-      Receive<Protocol.ReloadPluginInternal>(msg => DoReloadPlugin(msg.Path));
       Receive<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
     }
 
@@ -66,12 +54,10 @@ namespace AkkaSync.Infrastructure.Actors
       {
         Context.System.EventStream.Publish(new PluginManagerInitialized(plugins.ToHashSet() ?? []));
       }
-      
 
       var eventSelf = Self;
       _watcher.Created += (s, e) => eventSelf.Tell(new Protocol.LoadPlugin(e.FullPath));
       _watcher.Deleted += (s, e) => eventSelf.Tell(new Protocol.UnloadPlugin(e.FullPath));
-      _watcher.Changed += (s, e) => eventSelf.Tell(new Protocol.ReloadPlugin(e.FullPath));
       _watcher.EnableRaisingEvents = true;
     }
 
@@ -87,7 +73,7 @@ namespace AkkaSync.Infrastructure.Actors
       {
         Directory.CreateDirectory(folder);
       }
-      var watcher = new FileSystemWatcher(folder, "AkkaSync.Plugins.*.dll")
+      var watcher = new FileSystemWatcher(folder, "AkkaSync.Plugins.*.zip")
       {
         NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
       };
@@ -101,9 +87,10 @@ namespace AkkaSync.Infrastructure.Actors
       _pluginStorage.EnsureAsync(required);
     }
 
-    private void DoLoadPlugin(string path)
+    private async Task DoLoadPlugin(string path)
     {
-      var shadowPath = ShadowCopy(path);
+      await PluginLoader.EnsurePluginZipFileCreated(path);
+      var shadowPath = ExtractToShadow(path);
       var (providers, context) = PluginLoader.LoadFromFile(shadowPath, _serviceProvider);
       foreach (var provider in providers)
       {
@@ -120,12 +107,16 @@ namespace AkkaSync.Infrastructure.Actors
           
         }
       }
-      _pluginContexts[shadowPath] = context!;
+      if(context is not null)
+      {
+        _pluginContexts[Path.GetDirectoryName(shadowPath)!] = context;
+      }
+      
     }
 
     private bool DoUnloadPlugin(string path)
     {
-      var shadowPath = GetShadowPath(path);
+      var shadowPath = Path.Combine(_shadowFolder, Path.GetFileNameWithoutExtension(path));
       foreach (var adapter in _registryAdapters)
       {
         var descriptors = adapter.RemoveByFile(shadowPath);
@@ -160,17 +151,6 @@ namespace AkkaSync.Infrastructure.Actors
       return true;
     }
 
-    private void DoReloadPlugin(string path)
-    {
-      var shadowPath = GetShadowPath(path);
-      _reloadTimers.Remove(shadowPath);
-      if (DoUnloadPlugin(shadowPath))
-      {
-        DoLoadPlugin(path);
-      }
-      
-    }
-
     private void DoCleanup() 
     {
       foreach(var path in _pendingCleanup.ToList())
@@ -179,7 +159,6 @@ namespace AkkaSync.Infrastructure.Actors
         { 
           _pendingCleanup.Remove(path); 
           _logger.Info("Pending cleanup for {0} is successful.", path); 
-          DoLoadPlugin(path);
         }
       }
 
@@ -190,14 +169,14 @@ namespace AkkaSync.Infrastructure.Actors
       }
     }
 
-    private string ShadowCopy(string path)
+    private string ExtractToShadow(string path)
     {
-      var shadowPath = GetShadowPath(path);
-      File.Copy(path, shadowPath);
-      return shadowPath;
+      ZipFile.ExtractToDirectory(path, Path.Combine(_shadowFolder, Path.GetFileNameWithoutExtension(path)));
+      var dllPath = GetShadowMainDllPath(Path.GetFileName(path));
+      return dllPath;
     }
 
-    private string GetShadowPath(string path) => Path.Combine(_shadowFolder, Path.GetFileName(path));
+    private string GetShadowMainDllPath(string path) => Path.Combine(_shadowFolder, Path.GetFileNameWithoutExtension(path), Path.ChangeExtension(path, ".dll"));
 
     private void StartCleanupSchedule()
     {
@@ -219,9 +198,9 @@ namespace AkkaSync.Infrastructure.Actors
     {
       try
       {
-        if (File.Exists(path))
+        if (Directory.Exists(path))
         {
-          File.Delete(path);
+          Directory.Delete(path, true);
         }
         return true;
       }

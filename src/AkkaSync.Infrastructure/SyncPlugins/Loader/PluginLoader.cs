@@ -20,6 +20,20 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
         typeof(IPluginProvider<IHistoryStore>)
     ];
 
+    
+    public static async Task EnsurePluginZipFileCreated(string path)
+    {
+      try
+      {
+        await WaitForFileStableAsync(path);
+        await WaitForFileUnlockAsync(path);
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine("Create plugin zip file failed in {0}: {1}", path, ex);
+      }
+    }
+
     public static (PluginLoadContext Context, IEnumerable<Type> Types) LoadPluginTypes(string filePath)
     {
       PluginLoadContext context = null!;
@@ -87,6 +101,49 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
       }
 
       return (results, context);
+    }
+
+    private static async Task WaitForFileStableAsync(string path)
+    {
+      long lastSize = -1;
+
+      while (true)
+      {
+        if (!File.Exists(path))
+        {
+          await Task.Delay(500);
+          continue;
+        }
+
+        long currentSize = new FileInfo(path).Length;
+
+        if (currentSize == lastSize && currentSize > 0)
+          break;
+
+        lastSize = currentSize;
+        await Task.Delay(1000);
+      }
+    }
+
+    private static async Task WaitForFileUnlockAsync(string path)
+    {
+      while (true)
+      {
+        try
+        {
+          using var stream = new FileStream(
+              path,
+              FileMode.Open,
+              FileAccess.Read,
+              FileShare.None);
+
+          break;
+        }
+        catch
+        {
+          await Task.Delay(500);
+        }
+      }
     }
   }
 }

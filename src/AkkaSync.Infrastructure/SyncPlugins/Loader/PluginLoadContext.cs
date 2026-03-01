@@ -11,25 +11,34 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PluginProviders
   public class PluginLoadContext : AssemblyLoadContext
   {
     private readonly string _pluginPath;
-    private readonly AssemblyDependencyResolver _resolver;
+    //private readonly AssemblyDependencyResolver _resolver;
     public PluginLoadContext(string pluginPath): base(isCollectible: true)
     {
       _pluginPath = pluginPath;
-      _resolver = new AssemblyDependencyResolver(pluginPath);
+      //_resolver = new AssemblyDependencyResolver(pluginPath);
     }
     protected override Assembly Load(AssemblyName assemblyName)
     {
-      
-      var path = _resolver.ResolveAssemblyToPath(assemblyName);
 
-      if (path is not null && File.Exists(path))
+      //var path = _resolver.ResolveAssemblyToPath(assemblyName);
+
+      //if (path is not null && File.Exists(path))
+      //{
+      //return LoadFromStream(path);
+      //return LoadFromAssemblyPath(path);
+      //}
+      //return null!;
+
+      string candidate = Path.Combine(Path.GetDirectoryName(_pluginPath)!, assemblyName.Name + ".dll");
+      if (File.Exists(candidate))
       {
-        return LoadFromStream(path);
+        return LoadFromAssemblyPath(candidate);
       }
       return null!;
     }
 
-    public Assembly LoadPlugin() => LoadFromStream(_pluginPath);
+    //public Assembly LoadPlugin() => LoadFromStream(_pluginPath);
+    public Assembly LoadPlugin() => LoadFromAssemblyPath(_pluginPath);
 
     private Assembly LoadFromStream(string path)
     {

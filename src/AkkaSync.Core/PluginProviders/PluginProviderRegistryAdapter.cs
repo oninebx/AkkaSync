@@ -34,7 +34,7 @@ namespace AkkaSync.Core.PluginProviders
     public IReadOnlySet<PluginDescriptor>? RemoveByFile(string filePath)
     {
       var result = new HashSet<PluginDescriptor>();
-      var fileName = Path.GetFileNameWithoutExtension(filePath);
+      var fileName = Path.GetFileName(filePath);
       if (_registry.FileEntries.TryGetValue(fileName, out var keys) && keys is not null)
       {
         foreach (var key in keys)

@@ -6,6 +6,7 @@ using System.Reflection;
 using AkkaSync.Infrastructure.PipelineStorages;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
+using System.IO.Compression;
 
 namespace AkkaSync.Infrastructure.DependencyInjection
 {
@@ -51,7 +52,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       var normalizedPath = Path.TrimEndingDirectorySeparator(_pluginStorageOptions.Uri);
       var parent = Path.GetDirectoryName(normalizedPath) ?? string.Empty;
       var shadowFolder = Path.Combine(AppContext.BaseDirectory, parent,"shadow"); //  local plugin shadow copy folder for loading to avoid file lock
-     
+
       Options.PluginFolder = pluginFolder;
       Options.ShadowFolder = shadowFolder;
       PrepareShadowFolder(pluginFolder, shadowFolder);
@@ -73,20 +74,22 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       Directory.CreateDirectory(shadowFolder);
       if (Directory.Exists(pluginFolder))
       {
-        var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
+        var pluginFiles = Directory.GetFiles(pluginFolder, "AkkaSync.Plugins*.zip", SearchOption.TopDirectoryOnly);
         foreach (var pluginFile in pluginFiles)
         {
-          var destFile = Path.Combine(shadowFolder, Path.GetFileName(pluginFile));
-          File.Copy(pluginFile, destFile, true);
+          if(pluginFile is not null)
+          {
+            ZipFile.ExtractToDirectory(pluginFile, shadowFolder);
+          }
         }
       }
     }
 
-    private AkkaSyncBuilder LoadPlugins(string shadowFolder)
+    private AkkaSyncBuilder LoadPlugins(string folder)
     {
       try
       {
-        var pluginFiles = Directory.GetFiles(shadowFolder, "AkkaSync.Plugins*.dll", SearchOption.TopDirectoryOnly);
+        var pluginFiles = Directory.GetFiles(folder, "AkkaSync.Plugins*.dll", SearchOption.AllDirectories);
         foreach (var file in pluginFiles)
         {
           try
