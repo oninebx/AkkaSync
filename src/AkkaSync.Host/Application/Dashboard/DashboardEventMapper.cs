@@ -3,18 +3,18 @@ using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
-using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Syncing;
 using AkkaSync.Host.Application.Diagnosing;
 using AkkaSync.Host.Application.Swapping;
-using AkkaSync.Infrastructure.Messaging;
+using AkkaSync.Infrastructure.Messaging.Contract.Swap;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
-public static class DashboardEventMapper
+public class DashboardEventMapper: IEventNotificationMapper
 {
-  public static DashboardEvent? TryMap(IStoreValue value, INotificationEvent? @event = null)
+  public EventNotification? TryMap(IStoreValue value, INotificationEvent? @event = null)
   {
 
     return value switch
@@ -27,24 +27,24 @@ public static class DashboardEventMapper
     };
   }
 
-  private static DashboardEvent? FromSyncState(SyncState state, INotificationEvent? @event) => @event switch
+  private EventNotification? FromSyncState(SyncState state, INotificationEvent? @event) => @event switch
   {
-    PipelineStartReported e => new DashboardEvent("syncing.pipeline.started", new { Id = e.PipelineId.Name, StartedAt = @event.OccurredAt }),
-    PipelineCompleteReported e => new DashboardEvent("syncing.pipeline.completed", new { Id = e.PipelineId.Name, FinishAt = @event.OccurredAt }),
-    DashboardInitialized => new DashboardEvent("syncing.state.initialized", state),
+    PipelineStartReported e => new EventNotification("syncing.pipeline.started", new { Id = e.PipelineId.Name, StartedAt = @event.OccurredAt }),
+    PipelineCompleteReported e => new EventNotification("syncing.pipeline.completed", new { Id = e.PipelineId.Name, FinishAt = @event.OccurredAt }),
+    DashboardInitialized => new EventNotification("syncing.state.initialized", state),
     _ => null
   };
 
-  private static DashboardEvent? FromPipelineSchedules(PipelineSchedules schedules, INotificationEvent? @event) => @event switch
+  private EventNotification? FromPipelineSchedules(PipelineSchedules schedules, INotificationEvent? @event) => @event switch
   {
-    SyncEngineReady e => new DashboardEvent("scheduler.specs.initialized", e.Schedules),
-    PipelineScheduled e => new DashboardEvent("scheduler.jobs.added", schedules.Jobs.FirstOrDefault(j => j.Name == e.Name)!),
-    PipelineTriggered e => new DashboardEvent("scheduler.jobs.removed", e.Name),
-    DashboardInitialized => new DashboardEvent("scheduler.none", schedules),
+    SyncEngineReady e => new EventNotification("scheduler.specs.initialized", e.Schedules),
+    PipelineScheduled e => new EventNotification("scheduler.jobs.added", schedules.Jobs.FirstOrDefault(j => j.Name == e.Name)!),
+    PipelineTriggered e => new EventNotification("scheduler.jobs.removed", e.Name),
+    DashboardInitialized => new EventNotification("scheduler.none", schedules),
     _ => null
   };
 
-  private static DashboardEvent? FromDiagnosisJournal(DiagnosisJournal journal, INotificationEvent? @event) => @event switch
+  private EventNotification? FromDiagnosisJournal(DiagnosisJournal journal, INotificationEvent? @event) => @event switch
   {
     WorkerFailureReported
     or WorkerStartReported
@@ -52,17 +52,17 @@ public static class DashboardEventMapper
     or WorkerNonCreationReported
     or PipelineStartReported
     or PipelineSkipReported
-    or PipelineCompleteReported => new DashboardEvent("diagnosis.records.added", journal.Records.LastOrDefault()!),
-    DashboardInitialized => new DashboardEvent("diagnosis.records.initialized", journal),
+    or PipelineCompleteReported => new EventNotification("diagnosis.records.added", journal.Records.LastOrDefault()!),
+    DashboardInitialized => new EventNotification("diagnosis.records.initialized", journal),
     _ => null
   };
 
-  private static DashboardEvent? FromComposingPlugins(RuntimePluginSet pluginSet, INotificationEvent? @event) => @event switch 
+  private EventNotification? FromComposingPlugins(RuntimePluginSet pluginSet, INotificationEvent? @event) => @event switch 
   {
-    PluginAdded => new DashboardEvent("pluginhub.entries.added", pluginSet.Entries.LastOrDefault()!),
-    PluginRemoved e => new DashboardEvent("pluginhub.entries.removed", e.Name),
-    PluginUpdated e => new DashboardEvent("pluginhub.entries.updated", new { e.Name, e.Version }),
-    DashboardInitialized => new DashboardEvent("pluginhub.entries.initialized", pluginSet),
+    PluginAdded => new EventNotification("pluginhub.entries.added", pluginSet.Entries.LastOrDefault()!),
+    PluginRemoved e => new EventNotification("pluginhub.entries.removed", e.Name),
+    PluginUpdated e => new EventNotification("pluginhub.entries.updated", new { e.Name, e.Version }),
+    DashboardInitialized => new EventNotification("pluginhub.entries.initialized", pluginSet),
     _ => null
   };
 }

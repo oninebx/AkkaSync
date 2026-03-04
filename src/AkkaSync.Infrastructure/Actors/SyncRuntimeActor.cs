@@ -1,9 +1,9 @@
-using System;
 using Akka.Actor;
+using Akka.DependencyInjection;
 using Akka.Event;
-using AkkaSync.Abstractions;
 using AkkaSync.Core.Actors;
-using AkkaSync.Core.Domain.Shared;
+using AkkaSync.Core.Common;
+using AkkaSync.Host.Application.Query;
 
 namespace AkkaSync.Infrastructure.Actors;
 
@@ -11,22 +11,10 @@ public record ActorHook(Props Props, string Name);
 
 public class SyncRuntimeActor : ReceiveActor
 {
-  private readonly IEnumerable<ActorHook> _hooks;
-  private readonly IDictionary<string, Props> _props;
   private ILoggingAdapter _logger = Context.GetLogger();
   
-  public SyncRuntimeActor(IEnumerable<ActorHook> hooks, IDictionary<string, Props> props)
-  {
-    _hooks = hooks;
-    _props = props;
 
-    Receive<Terminated>(t =>
-    {
-      _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
-    });
-  }
-
-  protected override void PreStart()
+  public SyncRuntimeActor(ISyncActorRegistry registry)
   {
     var strategy = new OneForOneStrategy(
       maxNrOfRetries: 3,
@@ -37,26 +25,37 @@ public class SyncRuntimeActor : ReceiveActor
       }
     );
 
-    var pipelineManagerActor = Context.ActorOf(_props["pipeline-manager"].WithSupervisorStrategy(strategy), "pipeline-manager");
-    var pluginManagerActor = Context.ActorOf(_props["plugin-manager"].WithSupervisorStrategy(strategy), "plugin-manager");
+    var resolver = DependencyResolver.For(Context.System);
+    var gatewayProps = resolver.Props<SyncGatewayActor>().WithSupervisorStrategy(strategy);
+    var gateway = Context.ActorOf(gatewayProps, "sync-gateway");
+    registry.Register<SyncGatewayActor>(gateway);
     
+    var pipelineManagerActor = Context.ActorOf(resolver.Props<PipelineManagerActor>(new Dictionary<string, Props>
+          {
+            { "pipeline-registry", resolver.Props<PipelineRegistryActor>() },
+            { "pipeline-scheduler", resolver.Props<PipelineSchedulerActor>() },
+          }).WithSupervisorStrategy(strategy), "pipeline-manager");
+    registry.Register<PipelineManagerActor>(pipelineManagerActor);
 
-    IActorRef? dashboardActor = null;
-    foreach(var hook in _hooks)
+    var pluginManagerActor = Context.ActorOf(resolver.Props<PluginManagerActor>().WithSupervisorStrategy(strategy), "plugin-manager");
+    registry.Register<PluginManagerActor>(pluginManagerActor);
+
+    Receive<IRequestQuery>(msg =>
     {
-      var actorRef = Context.ActorOf(hook.Props.WithSupervisorStrategy(strategy), hook.Name);
-      Context.Watch(actorRef);
-      switch(hook.Name) {
-        case "dashboard-proxy":
-          dashboardActor = actorRef;
-          break;
+      if(!gateway.IsNobody())
+      {
+        gateway.Forward(msg);
       }
-    }
-  
-    if (dashboardActor == null)
+      else
+      {
+        _logger.Warning("SyncGatewayActor is invalid.");
+      }
+      
+    });
+
+    Receive<Terminated>(t =>
     {
-      throw new InvalidOperationException("DashboardProxy actor is not initialized.");
-    }
-    dashboardActor.Tell(new SharedProtocol.RegisterPeer(pipelineManagerActor));
+      _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
+    });
   }
 }

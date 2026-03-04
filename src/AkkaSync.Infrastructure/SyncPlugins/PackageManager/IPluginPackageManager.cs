@@ -1,0 +1,14 @@
+﻿using AkkaSync.Infrastructure.Messaging.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
+{
+  public interface IPluginPackageManager
+  {
+    Task<IReadOnlySet<PluginVersion>> CheckVersions();
+  }
+}

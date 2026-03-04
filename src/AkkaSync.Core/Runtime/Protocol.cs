@@ -7,7 +7,7 @@ namespace AkkaSync.Core.Runtime;
 
 public static class RegistryProtocol
 {
-  public sealed record Initialize(IActorRef SchedulerActor, PipelineOptions Options);
+  public sealed record Initialize(PipelineOptions Options);
   public sealed record CreatePipeline(string Name);
 }
 

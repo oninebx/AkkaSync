@@ -26,7 +26,6 @@ if (!builder.Environment.IsDevelopment())
 builder.Services.AddSignalR();
 
 builder.Services.AddAkkaSync(builder.Configuration, sync => sync
-  .AddActorHook<DashboardProxyActor>("dashboard-proxy")
   .AddPipelines()
   .AddPlugins(), akkaConfig);
 

@@ -1,5 +1,5 @@
 ﻿using AkkaSync.Abstractions;
-using AkkaSync.Infrastructure.Messaging;
+using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 
 namespace AkkaSync.Host.Application.Swapping
 {

@@ -1,15 +1,17 @@
-using System;
 using Akka.Actor;
+using Akka.Configuration;
+using Akka.DependencyInjection;
+using Akka.Hosting;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.PluginProviders;
-using Akka.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
-using AkkaSync.Core.Actors;
-using Microsoft.Extensions.Configuration;
-using Akka.Configuration;
-using Akka.Actor.Setup;
+using AkkaSync.Host.Infrastructure.Messaging;
 using AkkaSync.Infrastructure.Actors;
+using AkkaSync.Infrastructure.Common;
+using AkkaSync.Infrastructure.Messaging.Publish;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace AkkaSync.Infrastructure.DependencyInjection;
 
@@ -17,6 +19,8 @@ public static class AkkaSyncExtension
 {
   public static IServiceCollection AddAkkaSync(this IServiceCollection services, IConfiguration configuration, Action<AkkaSyncBuilder> syncConfigure, Config? akkaConfig = null)
   {
+    services.AddSingleton<ISyncActorRegistry, SyncActorRegistry>();
+
     ISyncEnvironment env;
     if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
     {
@@ -42,33 +46,18 @@ public static class AkkaSyncExtension
     services.AddSingleton<IPluginProviderRegistryAdapter, PluginProviderRegistryAdapter<ISyncSink>>();
     services.AddSingleton<IPluginProviderRegistryAdapter, PluginProviderRegistryAdapter<IHistoryStore>>();
 
-    services.AddSingleton(provider =>
+    services.AddSingleton<IEventIdGenerator, GuidEventIdGenerator>();
+    services.AddSingleton<ISequenceGenerator, InMemorySequenceGenerator>();
+    services.AddSingleton<IEventEnvelopeFactory, EventEnvelopeFactory>();
+
+    services.AddAkka("AkkaSyncSystem", (builder, sp) =>
     {
-      var bootstrap = BootstrapSetup.Create().WithConfig(akkaConfig);
-      var di = DependencyResolverSetup.Create(provider);
-      var system = ActorSystem.Create("AkkaSyncSystem", bootstrap.And(di));
-      var resolver = DependencyResolver.For(system);
-
-      var actorHooks = builder.Options.HookActors.Select(kv => new ActorHook(resolver.Props(kv.Value), kv.Key)).ToList();
-
-      var actorsProps = new Dictionary<string, Props>
+      builder.WithActors((system, registry) =>
       {
-        { "pipeline-manager", resolver.Props<PipelineManagerActor>(new Dictionary<string, Props>
-          {
-            { "pipeline-registry", resolver.Props<PipelineRegistryActor>() },
-            { "pipeline-scheduler", resolver.Props<PipelineSchedulerActor>() },
-          })
-        },
-        
-        { "plugin-manager", resolver.Props<PluginManagerActor>() }
-      };
-
-      system.ActorOf(resolver.Props<SyncRuntimeActor>(actorHooks, actorsProps), "sync-runtime");
-
-      return system;
+        var props = DependencyResolver.For(system).Props<SyncRuntimeActor>();
+        system.ActorOf(props, "sync-runtime");
+      });
     });
-
-
     return services;
   }
 }

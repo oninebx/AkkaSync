@@ -1,5 +1,5 @@
 using System;
-using AkkaSync.Host.Application.Messaging;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Infrastructure.SignalR;
 

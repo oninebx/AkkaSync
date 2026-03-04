@@ -2,12 +2,13 @@
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
-using AkkaSync.Infrastructure.DependencyInjection;
-using AkkaSync.Infrastructure.Messaging;
 using AkkaSync.Infrastructure.Messaging.Models;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
+using Akka.DependencyInjection;
+using AkkaSync.Infrastructure.Options;
+using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 
 namespace AkkaSync.Infrastructure.Actors
 {
@@ -21,6 +22,7 @@ namespace AkkaSync.Infrastructure.Actors
     private readonly Dictionary<string, PluginLoadContext> _pluginContexts;
     private readonly List<string> _pendingCleanup = [];
     private ICancelable? _cleanupSchedule;
+    private IActorRef? _updateActor;
 
     private readonly ILoggingAdapter _logger = Context.GetLogger();
     public PluginManagerActor(
@@ -46,6 +48,10 @@ namespace AkkaSync.Infrastructure.Actors
 
     protected override void PreStart()
     {
+      
+      var resolver = DependencyResolver.For(Context.System);
+      _updateActor = Context.ActorOf(resolver.Props<PluginUpdateActor>(), "plugin-update");
+
       var stats = _registryAdapters.Select(adapter => (Name: adapter.GetType().GetGenericArguments().FirstOrDefault()?.Name ?? "Unknown", adapter.Count)).ToList();
       var message = string.Join(", ", stats.Select(s => $"{s.Count} {s.Name} plugin(s)"));
       _logger.Info("There are {0} being managed.", message);

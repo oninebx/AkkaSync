@@ -1,7 +1,5 @@
-using AkkaSync.Host.Application.Messaging;
 using System;
-
-namespace AkkaSync.Host.Infrastructure.Messaging;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 public class GuidEventIdGenerator : IEventIdGenerator
 {

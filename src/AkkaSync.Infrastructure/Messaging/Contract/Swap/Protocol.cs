@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AkkaSync.Infrastructure.Messaging
+namespace AkkaSync.Infrastructure.Messaging.Contract.Swap
 {
   public static class Protocol
   {

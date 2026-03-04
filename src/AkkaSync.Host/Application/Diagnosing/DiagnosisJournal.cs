@@ -2,6 +2,7 @@ using System;
 using System.Collections.Immutable;
 using AkkaSync.Abstractions;
 using AkkaSync.Host.Application.Dashboard;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Application.Diagnosing;
 

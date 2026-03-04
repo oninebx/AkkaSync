@@ -1,7 +1,6 @@
 using System;
-using System.Collections.Concurrent;
-using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Web;
+using AkkaSync.Infrastructure.Messaging.Publish;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AkkaSync.Host.Infrastructure.SignalR;

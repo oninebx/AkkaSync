@@ -2,6 +2,7 @@ using System;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Schedules;
@@ -17,12 +18,13 @@ public class PipelineSchedulerActor : ReceiveActor
   private IReadOnlyDictionary<string, ScheduleSpec>? _schedules;
   private readonly Dictionary<string, ICancelable> _jobs = [];
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  private IActorRef? _pipelineRegistry;
-  public PipelineSchedulerActor()
+  private IActorRef _pipelineRegistry;
+  public PipelineSchedulerActor(ISyncActorRegistry actorRegistry)
   {
+    _pipelineRegistry = actorRegistry.Get<PipelineRegistryActor>();
+
     Receive<SchedulerProtocol.Initialize>(msg =>
     {
-      _pipelineRegistry = msg.RegistryActor;
       var enabledSchedules = msg.Options.Schedules?.Where(kv => kv.Value.Enabled).Select(kv => kv.Value).ToList()?? [];
       var duplicated = enabledSchedules.GroupBy(s => s.Pipeline).FirstOrDefault(g => g.Count() > 1);
       if (duplicated != null)

@@ -1,9 +1,9 @@
 using System;
 using AkkaSync.Host.Application.Diagnosing;
-using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Syncing;
 using AkkaSync.Host.Application.Swapping;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 

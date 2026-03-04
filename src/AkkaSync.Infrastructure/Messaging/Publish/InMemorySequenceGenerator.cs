@@ -1,7 +1,6 @@
-using AkkaSync.Host.Application.Messaging;
 using System;
 
-namespace AkkaSync.Host.Infrastructure.Messaging;
+namespace AkkaSync.Infrastructure.Messaging.Publish;
 
 public class InMemorySequenceGenerator : ISequenceGenerator
 {

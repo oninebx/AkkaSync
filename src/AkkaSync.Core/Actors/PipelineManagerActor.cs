@@ -2,6 +2,7 @@ using System;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
+using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Schedules;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
@@ -14,18 +15,35 @@ namespace AkkaSync.Core.Actors;
 public class PipelineManagerActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  private IActorRef? _schedulerActor;
-  private IActorRef? _registryActor;
+  private IActorRef _schedulerActor;
+  private IActorRef _registryActor;
   private IDictionary<string, Props> _props;
   private IReadOnlyList<PipelineInfo> _pipelines = [];
   private IReadOnlyDictionary<string, string> _schedules = new Dictionary<string, string>();
   private readonly IPipelineStorage _pipelineStorage;
   private bool _registryReady;
   private bool _schedulerReady;
-  public PipelineManagerActor(IDictionary<string, Props> props, IPipelineStorage pipelineStorage)
+  private readonly ISyncActorRegistry _actorRegistry;
+  public PipelineManagerActor(ISyncActorRegistry actorRegistry, IDictionary<string, Props> props, IPipelineStorage pipelineStorage)
   {
+    _actorRegistry = actorRegistry;
     _props = props;
     _pipelineStorage = pipelineStorage;
+
+    var strategy = new OneForOneStrategy(
+       maxNrOfRetries: 3,
+       withinTimeRange: TimeSpan.FromSeconds(10),
+       localOnlyDecider: ex =>
+       {
+         return Directive.Restart;
+       }
+     );
+
+    _schedulerActor = Context.ActorOf(_props["pipeline-scheduler"].WithSupervisorStrategy(strategy), "pipeline-scheduler");
+    _actorRegistry.Register<PipelineSchedulerActor>(_schedulerActor);
+
+    _registryActor = Context.ActorOf(_props["pipeline-registry"].WithSupervisorStrategy(strategy), "pipeline-registry");
+    _actorRegistry.Register<PipelineRegistryActor>(_registryActor);
 
     ReceiveAsync<SharedProtocol.Start>(_ => HandleStartAsync());
     Receive<RegistryInitialized>(_ => {
@@ -42,17 +60,6 @@ public class PipelineManagerActor : ReceiveActor
 
   override protected void PreStart()
   {
-    var strategy = new OneForOneStrategy(
-      maxNrOfRetries: 3,
-      withinTimeRange: TimeSpan.FromSeconds(10),
-      localOnlyDecider: ex =>
-      {
-        return Directive.Restart;
-      }
-    );
-    _schedulerActor = Context.ActorOf(_props["pipeline-scheduler"].WithSupervisorStrategy(strategy), "pipeline-scheduler");
-    _registryActor = Context.ActorOf(_props["pipeline-registry"].WithSupervisorStrategy(strategy), "pipeline-registry");
-
     Self.Tell(new SharedProtocol.Start());
   }
 
@@ -84,7 +91,7 @@ public class PipelineManagerActor : ReceiveActor
 
     _pipelines = pipelineSpecs.Select(s => new PipelineInfo(s.Key)).ToList().AsReadOnly();
     _schedules = enabledSchedules?.ToDictionary(s => s.Pipeline, s => s.Cron) ?? [];
-    _registryActor.Tell(new RegistryProtocol.Initialize(_schedulerActor!, pipelineOptions));
-    _schedulerActor.Tell(new SchedulerProtocol.Initialize(_registryActor!, scheduleOptions));
+    _registryActor.Tell(new RegistryProtocol.Initialize(pipelineOptions));
+    _schedulerActor.Tell(new SchedulerProtocol.Initialize(scheduleOptions));
   }
 }

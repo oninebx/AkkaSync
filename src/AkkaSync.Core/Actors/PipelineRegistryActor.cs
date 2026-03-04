@@ -3,6 +3,7 @@ using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Shared;
@@ -22,6 +23,7 @@ public class PipelineRegistryActor : ReceiveActor
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _schedulerActor;
   public PipelineRegistryActor(
+    ISyncActorRegistry actorRegistry,
     IPluginProviderRegistry<ISyncSource> sourceRegistry, 
     IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
     IPluginProviderRegistry<ISyncSink> sinkRegistry,
@@ -31,10 +33,10 @@ public class PipelineRegistryActor : ReceiveActor
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
     _storeRegistry = storeRegistry;
+    _schedulerActor = actorRegistry.Get<PipelineSchedulerActor>();
     
     Receive<RegistryProtocol.Initialize>(msg => {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      _schedulerActor = msg.SchedulerActor;
       _pipelineSpecs = msg.Options.Pipelines;
       Context.Parent.Tell(new RegistryInitialized());
     });

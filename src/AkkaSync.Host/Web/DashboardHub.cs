@@ -2,10 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Akka.Actor;
+using Akka.Hosting;
 using AkkaSync.Host.Application.Dashboard;
-using AkkaSync.Host.Application.Messaging;
 using AkkaSync.Host.Application.Query;
+using AkkaSync.Host.Application.Query.Mapper;
 using AkkaSync.Host.Infrastructure.SignalR;
+using AkkaSync.Infrastructure.Actors;
+using AkkaSync.Infrastructure.Messaging.Publish;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AkkaSync.Host.Web;
@@ -17,13 +20,20 @@ public class DashboardHub : Hub
   private readonly IEventEnvelopeFactory _factory;
   private readonly IDashboardQueryDispatcher _dispatcher;
   private readonly IDashboardStore _store;
+
+  private readonly IEventNotificationMapper _notificationMapper;
+  private readonly IRequestQueryMapper _mapper;
+  private readonly IActorRef _syncGateway;
   
   public DashboardHub(
+    IEventNotificationMapper notificationMapper,
     IDashboardClientRegistry registry, 
     IEventEnvelopePublisher envelopePublisher,
     IDashboardStore store,
     IEventEnvelopeFactory factory,
-    IDashboardQueryDispatcher dispatcher
+    IDashboardQueryDispatcher dispatcher,
+    IRequestQueryMapper mapper,
+    ActorRegistry actorRegistry
     )
   {
     _registry = registry;
@@ -31,21 +41,34 @@ public class DashboardHub : Hub
     _store = store;
     _factory = factory;
     _dispatcher = dispatcher;
+
+    _notificationMapper = notificationMapper;
+    _mapper = mapper;
+    _syncGateway = actorRegistry.Get<SyncGatewayActor>();
   }
 
-  public async Task<JsonElement?> Query(QueryEnvelope query)
+  public async Task<JsonElement?> Query(QueryEnvelope envelope)
   {
-    var resultJson = await _dispatcher.DispatchAsync(query);
-    
-    if(query.ReturnImmediately)
+    //var resultJson = await _dispatcher.DispatchAsync(query);
+
+    //if(query.ReturnImmediately)
+    //{
+    //  return resultJson;
+    //}
+
+    //var payload = new DashboardEvent("query.event.tested", resultJson);
+    //var envelope = _factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
+    //await _envelopePublisher.PublishAsync(envelope);
+
+    var query = _mapper.Map(envelope);
+    if(query != null)
     {
-      return resultJson;
+      _syncGateway.Tell(query);
+      return JsonSerializer.SerializeToElement(new { Message = "Handling query" });
     }
-    
-    var payload = new DashboardEvent("query.event.tested", resultJson);
-    var envelope = _factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
-    await _envelopePublisher.PublishAsync(envelope);
-    return null;
+
+
+    return JsonSerializer.SerializeToElement(new { Error = "Query is not supported."});
     
   }
 
@@ -55,7 +78,7 @@ public class DashboardHub : Hub
     _registry.RegisterClientAsync(Context.ConnectionId, lastSeenSeq);
     
     var eventsToSend = _store.GetEventsToReplay(lastSeenSeq)
-    .Select(value => DashboardEventMapper.TryMap(value, new DashboardInitialized()))
+    .Select(value => _notificationMapper.TryMap(value, new DashboardInitialized()))
     .Where(payload => payload is not null)
     .Select(payload => _factory.Create(payload!.TypeName, payload, DateTimeOffset.UtcNow));
 

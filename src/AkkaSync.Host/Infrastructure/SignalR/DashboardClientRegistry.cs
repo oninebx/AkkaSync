@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Concurrent;
-using AkkaSync.Host.Application.Messaging;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Infrastructure.SignalR;
 

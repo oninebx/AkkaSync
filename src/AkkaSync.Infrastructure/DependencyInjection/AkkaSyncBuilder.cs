@@ -7,6 +7,8 @@ using AkkaSync.Infrastructure.PipelineStorages;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
 using System.IO.Compression;
+using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
+using AkkaSync.Infrastructure.Options;
 
 namespace AkkaSync.Infrastructure.DependencyInjection
 {
@@ -19,8 +21,10 @@ namespace AkkaSync.Infrastructure.DependencyInjection
     public AkkaSyncBuilder(IServiceCollection services, IConfiguration configuration)
     {
       _services = services;
-      _pluginStorageOptions = configuration.GetSection("PluginStorage").Get<StorageOptions>() ?? new StorageOptions("Local", "plugins");
-      _pipelineStorageOptions = configuration.GetSection("PipelineStorage").Get<StorageOptions>() ?? new StorageOptions("Local", "pipelines");
+
+      _services.Configure<PluginOptions>(configuration.GetSection("Plugins"));
+      _pluginStorageOptions = configuration.GetSection("Plugins:Storage").Get<StorageOptions>() ?? new StorageOptions();
+      _pipelineStorageOptions = configuration.GetSection("PipelineStorage").Get<StorageOptions>() ?? new StorageOptions();
     }
 
     public AkkaSyncBuilder AddPipelines()
@@ -40,6 +44,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
 
     public AkkaSyncBuilder AddPlugins()
     {
+      
       // build plugin storage
       IPluginStorage pluginStorage = _pluginStorageOptions.Type switch
       {
@@ -47,6 +52,15 @@ namespace AkkaSync.Infrastructure.DependencyInjection
         _ => throw new NotSupportedException($"Plugin storage type {_pluginStorageOptions.Type} is not supported.")
       };
       _services.AddSingleton(pluginStorage);
+
+      // build plugin package manager
+      _services.AddHttpClient<IPluginHttpClient, PluginHttpClient>(client =>
+      {
+        client.Timeout = TimeSpan.FromSeconds(30);
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("AkkaSync-PluginClient/1.0");
+      });
+
+      _services.AddSingleton<IPluginPackageManager, GithubPackageManager>();
 
       var pluginFolder = Path.Combine(AppContext.BaseDirectory, _pluginStorageOptions.Uri); // local plugin cache folder
       var normalizedPath = Path.TrimEndingDirectorySeparator(_pluginStorageOptions.Uri);
@@ -59,11 +73,11 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       LoadPlugins(shadowFolder);
       return this;
     }
-    public AkkaSyncBuilder AddActorHook<TActor>(string name) where TActor : ActorBase
-    {
-      Options.HookActors.Add(name, typeof(TActor));
-      return this;
-    }
+    //public AkkaSyncBuilder AddActorHook<TActor>(string name) where TActor : ActorBase
+    //{
+    //  Options.HookActors.Add(name, typeof(TActor));
+    //  return this;
+    //}
 
     private static void PrepareShadowFolder(string pluginFolder, string shadowFolder)
     {
