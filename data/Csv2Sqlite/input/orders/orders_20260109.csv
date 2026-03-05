@@ -1,0 +1,10 @@
+customer_external_id,customer_first_name,customer_last_name,customer_email,customer_phone,customer_dob,customer_country,customer_is_active,order_external_id,order_date,order_status,order_shipping_address,order_country,order_is_priority,product_sku,product_name,product_price,order_item_quantity,audit_action,audit_notes
+CUST-000001,First1,Last1,user1@example.com,+64266810645,1970-05-10,NZ,1,ORD-00000001,2023-05-18,PAID,"#34 Queen St, Auckland",NZ,0,SKU-36220,Product-36220,266.46,1,ORDER_IMPORTED,Bulk CSV import
+CUST-000001,First1,Last1,user1@example.com,+64266810645,1970-05-10,NZ,1,ORD-00000001,2023-05-18,PAID,"#34 Queen St, Auckland",NZ,0,SKU-38062,Product-38062,127.29,2,ORDER_IMPORTED,Bulk CSV import
+CUST-000001,First1,Last1,user1@example.com,+64266810645,1970-05-10,NZ,1,ORD-00000001,2023-05-18,PAID,"#34 Queen St, Auckland",NZ,0,SKU-25280,Product-25280,170.12,2,ORDER_IMPORTED,Bulk CSV import
+CUST-000001,First1,Last1,user1@example.com,+64266810645,1970-05-10,NZ,1,ORD-00000002,2023-10-12,PAID,"#8 Queen St, Auckland",NZ,0,SKU-28860,Product-28860,208.74,1,ORDER_IMPORTED,Bulk CSV import
+CUST-000001,First1,Last1,user1@example.com,+64266810645,1970-05-10,NZ,1,ORD-00000002,2023-10-12,PAID,"#8 Queen St, Auckland",NZ,0,SKU-04506,Product-4506,362.58,4,ORDER_IMPORTED,Bulk CSV import
+CUST-000001,First1,Last1,user1@example.com,+64266810645,1970-05-10,NZ,1,ORD-00000002,2023-10-12,PAID,"#8 Queen St, Auckland",NZ,0,SKU-26998,Product-26998,32.07,3,ORDER_IMPORTED,Bulk CSV import
+CUST-000002,First2,Last2,user2@example.com,+64214776126,1999-06-08,NZ,1,ORD-00000003,2025-01-28,PAID,"#38 Queen St, Auckland",NZ,1,SKU-15410,Product-15410,301.58,4,ORDER_IMPORTED,Bulk CSV import
+CUST-000002,First2,Last2,user2@example.com,+64214776126,1999-06-08,NZ,1,ORD-00000003,2025-01-28,PAID,"#38 Queen St, Auckland",NZ,1,SKU-00198,Product-198,277.86,4,ORDER_IMPORTED,Bulk CSV import
+CUST-000002,First2,Last2,user2@example.com,+64214776126,1999-06-08,NZ,1,ORD-00000003,2025-01-28,PAID,"#38 Queen St, Auckland",NZ,1,SKU-37418,Product-37418,202.29,1,ORDER_IMPORTED,Bulk CSV import

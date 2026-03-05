@@ -8,7 +8,7 @@ namespace AkkaSync.Infrastructure.Messaging.Contract.Update
 {
   public static class Protocol
   {
-    public sealed record CheckVersions();
+    public sealed record CheckVersionsForUpdate();
     public sealed record DoCheck();
   }
 }

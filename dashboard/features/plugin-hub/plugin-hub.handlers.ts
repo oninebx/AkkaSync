@@ -1,6 +1,6 @@
 import { envelopeHandlerMap } from "@/shared/events/envelopeHandlerMap";
 import { pluginHubActions } from "./plugin-hub.slice";
-import { PluginEntry, PluginSet } from "./plugin-hub.types";
+import { PluginEntry, PluginPackageEntry, PluginSet } from "./plugin-hub.types";
 
 envelopeHandlerMap.set('pluginhub.entries.initialized',  (event, dispatch) => {
   dispatch(pluginHubActions.setPlugins(event.payload as PluginSet))
@@ -12,5 +12,9 @@ envelopeHandlerMap.set('pluginhub.entries.added', (event, dispatch) => {
 
 envelopeHandlerMap.set('pluginhub.entries.removed', (event, dispatch) => {
   dispatch(pluginHubActions.unloadPlugin(String(event.payload)));
+});
+
+envelopeHandlerMap.set('pluginhub.packages.checked', (event, dispatch) => {
+  dispatch(pluginHubActions.notifyPackages(event.payload as PluginPackageEntry[]))
 });
 

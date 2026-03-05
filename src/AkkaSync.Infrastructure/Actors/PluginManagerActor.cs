@@ -2,13 +2,16 @@
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
-using AkkaSync.Infrastructure.Messaging.Models;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
 using Akka.DependencyInjection;
 using AkkaSync.Infrastructure.Options;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
+using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
+using AkkaSync.Core.Common;
+using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
+using AkkaSync.Infrastructure.SyncPlugins.Models;
 
 namespace AkkaSync.Infrastructure.Actors
 {
@@ -22,7 +25,7 @@ namespace AkkaSync.Infrastructure.Actors
     private readonly Dictionary<string, PluginLoadContext> _pluginContexts;
     private readonly List<string> _pendingCleanup = [];
     private ICancelable? _cleanupSchedule;
-    private IActorRef? _updateActor;
+    private IActorRef _updateActor;
 
     private readonly ILoggingAdapter _logger = Context.GetLogger();
     public PluginManagerActor(
@@ -39,23 +42,23 @@ namespace AkkaSync.Infrastructure.Actors
       _pluginContexts = options.PluginContexts;
       options.PluginContexts = null!;
 
+      _updateActor = Context.ActorOf(DependencyResolver.For(Context.System).Props<PluginUpdateActor>(), "plugin-update");
+
       Receive<Protocol.CheckAndUpdatePlugins>(msg => DoCheckAndUpdate(msg.Required));
       ReceiveAsync<Protocol.LoadPlugin>(msg => DoLoadPlugin(msg.Path));
       Receive<Protocol.UnloadPlugin>(msg => DoUnloadPlugin(msg.Path));
-
       Receive<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
+
+      Receive<CheckVersions>(_ => DoCheckVersions());
     }
 
     protected override void PreStart()
     {
       
-      var resolver = DependencyResolver.For(Context.System);
-      _updateActor = Context.ActorOf(resolver.Props<PluginUpdateActor>(), "plugin-update");
-
       var stats = _registryAdapters.Select(adapter => (Name: adapter.GetType().GetGenericArguments().FirstOrDefault()?.Name ?? "Unknown", adapter.Count)).ToList();
       var message = string.Join(", ", stats.Select(s => $"{s.Count} {s.Name} plugin(s)"));
       _logger.Info("There are {0} being managed.", message);
-      var plugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginInfo(d.Name, d.Version)));
+      var plugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginCacheEntry(d.Name, d.Version)));
       if (plugins is not null && plugins.Any())
       {
         Context.System.EventStream.Publish(new PluginManagerInitialized(plugins.ToHashSet() ?? []));
@@ -117,7 +120,6 @@ namespace AkkaSync.Infrastructure.Actors
       {
         _pluginContexts[Path.GetDirectoryName(shadowPath)!] = context;
       }
-      
     }
 
     private bool DoUnloadPlugin(string path)
@@ -173,6 +175,11 @@ namespace AkkaSync.Infrastructure.Actors
         _cleanupSchedule?.Cancel();
         _cleanupSchedule = null;
       }
+    }
+
+    private void DoCheckVersions()
+    {
+      _updateActor.Tell(new CheckVersionsForUpdate());
     }
 
     private string ExtractToShadow(string path)

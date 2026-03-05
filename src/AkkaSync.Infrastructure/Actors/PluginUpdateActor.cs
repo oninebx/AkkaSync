@@ -1,5 +1,6 @@
 ﻿using Akka.Actor;
 using AkkaSync.Infrastructure.Messaging.Contract.Update;
+using AkkaSync.Infrastructure.Messaging.Models;
 using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace AkkaSync.Infrastructure.Actors
 
     private void Idle()
     {
-      Receive<CheckVersions>(_ =>
+      Receive<CheckVersionsForUpdate>(_ =>
       {
         Become(Checking);
         Self.Tell(new DoCheck());
@@ -38,10 +39,10 @@ namespace AkkaSync.Infrastructure.Actors
     {
       try
       {
-        var updates = await _pluginPackageManager.CheckVersions();
-        if (updates != null && updates.Count > 0)
+        var updates = await _pluginPackageManager.CheckoutVersions();
+        if (updates.Count > 0)
         {
-          Context.System.EventStream.Publish(new VersionsChecked(updates));
+          Context.System.EventStream.Publish(new PluginVersionsChecked(updates));
         }
       }
       finally

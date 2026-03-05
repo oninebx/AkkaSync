@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Immutable;
+using System.Text.Json;
 using AkkaSync.Abstractions;
+using AkkaSync.Infrastructure.SyncPlugins.Models;
 
 namespace AkkaSync.Infrastructure.SyncPlugins.Storage;
 
@@ -39,6 +42,21 @@ public class LocalPluginStorage : IPluginStorage
     }
 
     return Task.CompletedTask;
+  }
+
+  public IReadOnlySet<PluginPackageEntry> Diff(IReadOnlySet<PluginPackageRegistry> toCompare)
+  {
+    var localEntries = Directory.GetFiles(_pluginsDirectory, "registry.*.json")
+        .Select(file => JsonSerializer.Deserialize<PluginPackageRegistry>(File.ReadAllText(file)))
+        .Where(r => r is not null)
+        .SelectMany(r => r!.Plugins)
+        .ToHashSet();
+
+    return toCompare
+        .SelectMany(r => r.Plugins)
+        .Where(entry => !localEntries.Contains(entry))
+        .ToHashSet();
+
   }
 
   // public Task<string[]> ListPluginsAsync(CancellationToken cancellationToken = default)

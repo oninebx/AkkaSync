@@ -4,18 +4,9 @@ import { Column } from '@/components/DisplayTable/DisplayTable';
 import { CircleBadge } from '@/components/Badges';
 import PluginActionContainer from './PluginActionContainer';
 import { usePluginActions } from './usePluginActions';
+import { PluginListItem } from '@/features/plugin-hub/plugin-hub.types';
 
-export type PluginStatus = 'loaded' | 'unloaded' | 'error';
 
-export interface PluginListItem {
-  id: string;
-  name: string;
-  type: 'source' | 'transform' | 'sink' | 'store';
-  version?: string;
-  usedByCount?: number;
-  status: PluginStatus;
-  actions?: string[];
-}
 
 type Props = {
   data: PluginListItem[];

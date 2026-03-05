@@ -1,7 +1,10 @@
 'use client';
 import React from 'react';
-import PluginTable, { PluginListItem } from './components/PluginTable/PluginTable';
+import PluginTable from './components/PluginTable/PluginTable';
 import { RefreshCcw } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectPlugins } from '@/features/plugin-hub/plugin-hub.selectors';
+import { PluginListItem } from '@/features/plugin-hub/plugin-hub.types';
 
 const mockPlugins: PluginListItem[] = [
   { id: 'source.plugina', name: 'Plugin A', type: 'source', version: '1.0.0', usedByCount: 2, status: 'loaded' },
@@ -11,6 +14,10 @@ const mockPlugins: PluginListItem[] = [
 
 const PluginsPage = () => {
   const handleScan = () => {};
+
+  // const plugins = useSelector(selectPlugins);
+  // console.log(plugins);
+
   return (
     <div className='p-6 bg-gray-50 min-h-screen'>
       <div className='flex justify-between items-center mb-6'>

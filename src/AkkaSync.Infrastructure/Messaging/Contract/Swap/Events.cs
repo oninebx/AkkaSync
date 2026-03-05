@@ -1,5 +1,5 @@
 ﻿using AkkaSync.Abstractions;
-using AkkaSync.Infrastructure.Messaging.Models;
+using AkkaSync.Infrastructure.SyncPlugins.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +11,6 @@ namespace AkkaSync.Infrastructure.Messaging.Contract.Swap
   public sealed record PluginAdded(string Name, string Version): INotificationEvent;
   public sealed record PluginRemoved(string Name): INotificationEvent;
   public sealed record PluginUpdated(string Name, string Version): INotificationEvent;
-  public sealed record PluginManagerInitialized(IReadOnlySet<PluginInfo> Plugins): INotificationEvent;
+  public sealed record PluginManagerInitialized(IReadOnlySet<PluginCacheEntry> Plugins): INotificationEvent;
 
 }

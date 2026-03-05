@@ -2,7 +2,7 @@
 
 namespace AkkaSync.Host.Application.Swapping
 {
-  public sealed record PluginEntry(string Name, string Version, [property: JsonConverter(typeof(JsonStringEnumConverter))] PluginState State);
+  public sealed record PluginCacheInfo(string Name, string Version, [property: JsonConverter(typeof(JsonStringEnumConverter))] PluginState State);
 
   public enum PluginState
   {

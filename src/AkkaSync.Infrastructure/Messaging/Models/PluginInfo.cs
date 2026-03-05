@@ -8,6 +8,6 @@ namespace AkkaSync.Infrastructure.Messaging.Models
 {
   public sealed record PluginInfo(string Name, string Version)
   {
-    public static PluginInfo Empty = new("-", "-");
+    public static PluginInfo Empty => new("-", "-");
   }
 }

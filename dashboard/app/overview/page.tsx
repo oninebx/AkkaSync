@@ -32,14 +32,14 @@ export default function HomePage() {
 
   const { queryInvoke } = useSignalRInvoke<PingResponse>();
   
-  // const handleClick = async () => {
-  //   try{
-  //     const data = await queryInvoke('QueryTest', { Value: 'ping' }, true);
-  //     console.log(data);
-  //   }catch(err){
-  //     console.log(err);
-  //   }
-  // }
+  const handleClick = async () => {
+    try{
+      const data = await queryInvoke('CheckVersions', { Value: 'ping' }, true);
+      console.log(data);
+    }catch(err){
+      console.log(err);
+    }
+  }
   // const handleReset = () => {
     
   // }
@@ -57,6 +57,7 @@ export default function HomePage() {
             <RecentEventsCard events={events}/>
           </div>
           <PipelineTable data={pipelineData} />
+          <button onClick={handleClick}>Test</button>
         </div>
       </div>
     </>

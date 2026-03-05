@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using Akka.Actor;
 using Akka.Hosting;
+using AkkaSync.Core.Common;
 using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Application.Query.Mapper;
@@ -33,7 +34,7 @@ public class DashboardHub : Hub
     IEventEnvelopeFactory factory,
     IDashboardQueryDispatcher dispatcher,
     IRequestQueryMapper mapper,
-    ActorRegistry actorRegistry
+    ISyncActorRegistry actorRegistry
     )
   {
     _registry = registry;
@@ -47,7 +48,7 @@ public class DashboardHub : Hub
     _syncGateway = actorRegistry.Get<SyncGatewayActor>();
   }
 
-  public async Task<JsonElement?> Query(QueryEnvelope envelope)
+  public async Task<HubResponse> Query(QueryEnvelope envelope)
   {
     //var resultJson = await _dispatcher.DispatchAsync(query);
 
@@ -61,14 +62,15 @@ public class DashboardHub : Hub
     //await _envelopePublisher.PublishAsync(envelope);
 
     var query = _mapper.Map(envelope);
-    if(query != null)
+    if(query is null)
     {
-      _syncGateway.Tell(query);
-      return JsonSerializer.SerializeToElement(new { Message = "Handling query" });
+      return new HubResponse(false, $"{envelope.Method} is not supported.");
     }
 
+    _syncGateway.Tell(query);
+    return new HubResponse(true, $"{envelope.Method} is executing.");
 
-    return JsonSerializer.SerializeToElement(new { Error = "Query is not supported."});
+    
     
   }
 

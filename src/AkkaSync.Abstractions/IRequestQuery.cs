@@ -1,6 +1,5 @@
-﻿namespace AkkaSync.Host.Application.Query
+﻿namespace AkkaSync.Abstractions;
+public interface IRequestQuery
 {
-  public interface IRequestQuery
-  {
-  }
+  
 }

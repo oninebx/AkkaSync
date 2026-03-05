@@ -6,13 +6,15 @@ using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Infrastructure.Messaging.Publish;
 using System;
+using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
+using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
 
 namespace AkkaSync.Infrastructure.Actors;
 
 public class SyncGatewayActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  private IReadOnlyDictionary<Type, IActorRef>? _routes;
+  private IReadOnlyDictionary<Type, IActorRef> _routes;
 
   private IActorRef _pipelineManager;
   private IActorRef _pluginManager;
@@ -27,7 +29,7 @@ public class SyncGatewayActor : ReceiveActor
 
     _pipelineManager = actorRegistry.Get<PipelineManagerActor>();
     _pluginManager = actorRegistry.Get<PluginManagerActor>();
-    var _routes = BuildQueryRoutes(_pipelineManager, _pluginManager);
+    _routes = BuildQueryRoutes(_pipelineManager, _pluginManager);
 
     ReceiveAsync<INotificationEvent>(async @event =>
     {
@@ -55,11 +57,12 @@ public class SyncGatewayActor : ReceiveActor
       }
     });
 
+    Receive<IRequestQuery>(query => HandleQuery(query));
   }
   protected override void PreStart()
   {
     Context.System.EventStream.Subscribe(Self, typeof(INotificationEvent));
-    _logger.Info("DashboardProxyActor started.");
+    _logger.Info("SyncGatewayActor started.");
   }
 
   protected override void PostStop()
@@ -67,9 +70,25 @@ public class SyncGatewayActor : ReceiveActor
     Context.System.EventStream.Unsubscribe(Self, typeof(INotificationEvent));
   }
 
+  private void HandleQuery(IRequestQuery msg)
+  {
+    if(_routes.TryGetValue(msg.GetType(), out var target))
+    {
+      target.Forward(msg);
+    }
+    else
+    {
+      _logger.Warning("No route matches {0}", msg.GetType().Name);
+    }
+  }
+
   private IReadOnlyDictionary<Type, IActorRef> BuildQueryRoutes(IActorRef pipeline, IActorRef plugin)
   {
-    var routes = new Dictionary<Type, IActorRef>();
+    var routes = new Dictionary<Type, IActorRef>()
+    {
+      {typeof(CheckVersions), plugin}
+    };
+    
     return routes;
   }
 }

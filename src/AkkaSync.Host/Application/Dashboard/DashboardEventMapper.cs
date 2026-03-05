@@ -9,6 +9,7 @@ using AkkaSync.Host.Application.Diagnosing;
 using AkkaSync.Host.Application.Swapping;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 using AkkaSync.Infrastructure.Messaging.Publish;
+using AkkaSync.Infrastructure.Messaging.Contract.Update;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
@@ -22,7 +23,7 @@ public class DashboardEventMapper: IEventNotificationMapper
       SyncState syncState => FromSyncState(syncState, @event),
       PipelineSchedules schedules => FromPipelineSchedules(schedules, @event),
       DiagnosisJournal journal => FromDiagnosisJournal(journal, @event),
-      RuntimePluginSet pluginSet => FromComposingPlugins(pluginSet, @event),
+      RuntimePluginSet pluginSet => FromSwappingPlugins(pluginSet, @event),
       _ => throw new NotImplementedException(nameof(value))
     };
   }
@@ -57,12 +58,13 @@ public class DashboardEventMapper: IEventNotificationMapper
     _ => null
   };
 
-  private EventNotification? FromComposingPlugins(RuntimePluginSet pluginSet, INotificationEvent? @event) => @event switch 
+  private EventNotification? FromSwappingPlugins(RuntimePluginSet pluginSet, INotificationEvent? @event) => @event switch 
   {
     PluginAdded => new EventNotification("pluginhub.entries.added", pluginSet.Entries.LastOrDefault()!),
     PluginRemoved e => new EventNotification("pluginhub.entries.removed", e.Name),
     PluginUpdated e => new EventNotification("pluginhub.entries.updated", new { e.Name, e.Version }),
     DashboardInitialized => new EventNotification("pluginhub.entries.initialized", pluginSet),
+    PluginVersionsChecked e => new EventNotification("pluginhub.packages.checked", pluginSet.PackageEntries),
     _ => null
   };
 }

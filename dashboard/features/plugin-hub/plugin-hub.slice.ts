@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { PluginEntry, PluginSet } from "./plugin-hub.types";
+import { PluginEntry, PluginPackageEntry, PluginSet } from "./plugin-hub.types";
 
 interface PluginHubState {
   pluginSet: PluginSet
 }
 
 const initialState: PluginHubState = {
-  pluginSet: { entries: [] }
+  pluginSet: { entries: [], packages: [] }
 }
 
 export const pluginHubSlice = createSlice({
@@ -14,7 +14,8 @@ export const pluginHubSlice = createSlice({
   initialState,
   reducers: {
     setPlugins(state, action: PayloadAction<PluginSet>) {
-      state.pluginSet = action.payload;
+      state.pluginSet.entries = action.payload.entries;
+      state.pluginSet.packages = action.payload.packages;
     },
     loadPlugin(state, action: PayloadAction<PluginEntry>) {
       const entry = state.pluginSet.entries.find(e => e.name === action.payload.name);
@@ -29,8 +30,10 @@ export const pluginHubSlice = createSlice({
       if(entry){
         entry.version = '-';
         entry.state = 'Unloaded';
-        console.log(entry)
       }
+    },
+    notifyPackages(state, action: PayloadAction<PluginPackageEntry[]>) {
+      state.pluginSet.packages = action.payload
     }
   }
 });
