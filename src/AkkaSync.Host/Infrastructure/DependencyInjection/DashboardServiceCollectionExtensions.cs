@@ -11,6 +11,8 @@ using AkkaSync.Host.Infrastructure.SignalR;
 using AkkaSync.Host.Infrastructure.Stores;
 using AkkaSync.Host.Application.Query.Mapper;
 using AkkaSync.Infrastructure.Messaging.Publish;
+using AkkaSync.Host.Application.Pipeline;
+using AkkaSync.Host.Application.Dashboard.NotificationMappings;
 
 namespace AkkaSync.Host.Infrastructure.Extensions;
 
@@ -21,10 +23,15 @@ public static class DashboardServiceExtension
     services.AddSingleton<IEventNotificationMapper, DashboardEventMapper>();
 
     services.AddSingleton<IDashboardStore, InMemoryDashboardStore>();
-    services.AddSingleton(sp => 
+
+    services.AddSingleton<IEventNotificationMapping, PipelineStateMapping>();
+    services.AddSingleton<IEventNotificationMapping, ScheduleStateMapping>();
+
+    services.AddSingleton(sp =>
       new EventReducerRegistryBuilder()
+      .Add<PipelineState>(PipelineReducer.Reduce)
       .Add<SyncState>(SyncStateReducer.Reduce)
-      .Add<PipelineSchedules>(ScheduleStateReducer.Reduce)
+      .Add<ScheduleState>(ScheduleStateReducer.Reduce)
       .Add<DiagnosisJournal>(DiagnosisReducer.Reduce)
       .Add<RuntimePluginSet>(PluginStateReducer.Reduce)
       .Build());

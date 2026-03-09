@@ -15,7 +15,7 @@ export const pluginHubSlice = createSlice({
   reducers: {
     setPlugins(state, action: PayloadAction<PluginSet>) {
       state.pluginSet.entries = action.payload.entries;
-      state.pluginSet.packages = action.payload.packages;
+      state.pluginSet.packages = action.payload.packages ?? [];
     },
     loadPlugin(state, action: PayloadAction<PluginEntry>) {
       const entry = state.pluginSet.entries.find(e => e.name === action.payload.name);

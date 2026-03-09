@@ -42,10 +42,6 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Infrastructure\Messaging\" />
-	</ItemGroup>
 	
   <!-- ================= PostPublish Target ================= -->
 	<!--

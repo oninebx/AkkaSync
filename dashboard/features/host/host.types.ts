@@ -5,17 +5,9 @@ export enum HostStatus {
   Stopped
 }
 
-export interface PipelineSnapshot {
-  id: string,
-  schedule: string,
-  startedAt: string,
-  finishedAt: string
-}
-
 export interface HostSnapshot {
   status: HostStatus;
   startAt: string;
-  pipelines?: PipelineSnapshot[];
 }
 
 export type StatusType = Lowercase<keyof typeof HostStatus>;

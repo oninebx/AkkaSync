@@ -8,6 +8,8 @@ namespace AkkaSync.Abstractions.Models;
 
 public record PipelineSpec
 {
+  public string Name { get; set; } = string.Empty;
+  public string? Schedule { get; set; }
   public bool AutoStart { get; init; } = true;
   public bool IsActive { get; init; } = true;
   public required PluginSpec SourceProvider { get; init; }

@@ -5,7 +5,7 @@ interface PluginEntry {
 }
 
 interface PluginPackageEntry {
-  name: string;
+  id: string;
   version: string;
   downloadUrl: string;
 }

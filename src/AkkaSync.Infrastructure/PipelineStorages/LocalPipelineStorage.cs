@@ -1,9 +1,11 @@
+using Akka.Util;
+using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Domain.Pipelines;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using AkkaSync.Abstractions;
-using AkkaSync.Abstractions.Models;
-using Microsoft.Extensions.Logging;
 
 namespace AkkaSync.Infrastructure.PipelineStorages;
 
@@ -18,59 +20,58 @@ public class LocalPipelineStorage : IPipelineStorage
     _logger = logger;
   }
 
-  public async Task<(PipelineOptions, ScheduleOptions)> LoadSpecificationsAsync(CancellationToken cancellationToken = default)
+  public async Task<Dictionary<string, PipelineSpec>> LoadPipelineSpecificationsAsync(CancellationToken cancellationToken = default) => await LoadSpecificationAsync<PipelineOptions, PipelineSpec>("pipeline*.json", x => x.Pipelines, cancellationToken);
+  public async Task<Dictionary<string, ScheduleSpec>> LoadScheduleSpecificationsAsync(CancellationToken cancellationToken = default) => await LoadSpecificationAsync<ScheduleOptions, ScheduleSpec>("schedules*.json", x => x.Schedules, cancellationToken);
+
+  private async Task<Dictionary<string, TSpec>> LoadSpecificationAsync<TSpecHolder, TSpec>(string filePattern, Func<TSpecHolder, IDictionary<string, TSpec>?> selector, CancellationToken cancellationToken = default)
   {
-    var pipelines = new Dictionary<string, PipelineSpec>();
-    var schedules = new Dictionary<string, ScheduleSpec>();
+    var specs = new Dictionary<string, TSpec>();
     if (!Directory.Exists(_pipelineDirectory))
     {
       _logger.LogWarning("Directory not found: {Directory}", _pipelineDirectory);
-      return (new PipelineOptions { Pipelines = pipelines }, new ScheduleOptions { Schedules = schedules });
+      return specs;
     }
-    var pipelineFiles = Directory.GetFiles(_pipelineDirectory, "pipeline_*.json", SearchOption.AllDirectories);
- 
-    if (pipelineFiles.Length == 0)
+    var specFiles = Directory.GetFiles(_pipelineDirectory, filePattern, SearchOption.AllDirectories);
+
+    if (specFiles.Length == 0)
     {
       _logger.LogWarning("No pipeline files found in directory: {Directory}", _pipelineDirectory);
-      return (new PipelineOptions { Pipelines = pipelines }, new ScheduleOptions { Schedules = schedules });
+      return specs;
     }
-    var selectedFiles = pipelineFiles.ToList();
-    
+
     var converterOptions = new JsonSerializerOptions
     {
       PropertyNameCaseInsensitive = true,
       Converters = { new NumberToStringConverter() }
     };
-    foreach (var file in selectedFiles)
+
+    foreach (var file in specFiles)
     {
       var json = await File.ReadAllTextAsync(file, cancellationToken);
+
       using var doc = JsonDocument.Parse(json);
-      var syncOptions = doc.RootElement.GetProperty("AkkaSync").Deserialize<SyncOptions>(converterOptions);
+
+      var syncOptions = doc.Deserialize<TSpecHolder>(converterOptions);
+
       if (syncOptions is null)
       {
-        _logger.LogError("Failed to deserialize pipeline file: {0}", file);
+        _logger.LogError("Failed to deserialize pipeline file: {File}", file);
         continue;
       }
-      var filePipelines = syncOptions.Pipelines;
-      if (filePipelines is not null)
-      {
-        foreach (var kvp in filePipelines)
-        {
-          pipelines[kvp.Key] = kvp.Value;
-        }
-      }
 
-      var fileSchedules = syncOptions.Schedules;
-      if (fileSchedules is not null)
+      var dict = selector(syncOptions);
+      if(dict is null)
       {
-        foreach (var kvp in fileSchedules)
-        {
-          schedules[kvp.Key] = kvp.Value;
-        }
+        continue;
       }
-      
+      foreach (var kvp in dict)
+      {
+        specs[kvp.Key] = kvp.Value;
+      }
     }
-    return (new PipelineOptions { Pipelines = pipelines }, new ScheduleOptions { Schedules = schedules });
+
+    return specs;
+
   }
 }
 

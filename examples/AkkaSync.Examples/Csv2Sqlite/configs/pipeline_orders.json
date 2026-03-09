@@ -1,61 +1,33 @@
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.Hosting.Lifetime": "Information"
-    }
-  },
-  "AkkaSync": {
-    "Pipelines":{
-      "sync-orders": {
-        "Name": "sync-orders",
-        "SourceProvider": {
-          "Type": "FolderWatcherSourceProvider",
-          "Parameters": {
-            "folder": "Csv2Sqlite/input/orders",
-            "source": "csv"
-          }
-        },
-        "TransformerProvider": {
-          "Type": "TableTransformerProvider",
-          "Parameters": {
-            "transformers": "pipelines/plugin_transformers_order.json"
-          }
-        },
-        "SinkProvider": {
-          "Type": "SqliteSinkProvider",
-          "Parameters": {
-            "connectionString": "Data Source=Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
-            "batchSize": 50
-          }
-        },
-        "HistoryStoreProvider": {
-          "Type": "InMemoryHistoryStoreProvider",
-          "Parameters": {
-            "name": "demo"
-          }
+  "Pipelines": {
+    "sync-orders": {
+      "Schedule": "eveny-minute",
+      "Name": "sync-orders",
+      "SourceProvider": {
+        "Type": "FolderWatcherSourceProvider",
+        "Parameters": {
+          "folder": "Csv2Sqlite/input/orders",
+          "source": "csv"
         }
-      }
-    },
-    "Schedules":{
-      "sync-customer_daily": {
-        "pipeline": "sync-customer",
-        "cron": "* * * * *",
-        "enabled": false
       },
-      "sync-product_every-10-min": {
-        "pipeline": "sync-product",
-        "cron": "*/10 * * * *",
-        "enabled": false
+      "TransformerProvider": {
+        "Type": "TableTransformerProvider",
+        "Parameters": {
+          "transformers": "pipelines/plugin_transformers_order.json"
+        }
       },
-      "sync-order_every-1-min": {
-        "pipeline": "sync-orders",
-        "cron": "*/1 * * * *"
+      "SinkProvider": {
+        "Type": "SqliteSinkProvider",
+        "Parameters": {
+          "connectionString": "Data Source=Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+          "batchSize": 50
+        }
       },
-      "sync-order-item_weekly": {
-        "pipeline": "sync-order-item",
-        "cron": "0 1 * * 1",
-        "enabled": false
+      "HistoryStoreProvider": {
+        "Type": "InMemoryHistoryStoreProvider",
+        "Parameters": {
+          "name": "demo"
+        }
       }
     }
   }

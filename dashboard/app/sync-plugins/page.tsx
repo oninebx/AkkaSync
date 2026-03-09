@@ -5,6 +5,8 @@ import { RefreshCcw } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectPlugins } from '@/features/plugin-hub/plugin-hub.selectors';
 import { PluginListItem } from '@/features/plugin-hub/plugin-hub.types';
+import { useSignalRQuery } from '@/providers/SingalRProvider';
+import { QueryResponse } from '@/providers/SingalRProvider/types';
 
 const mockPlugins: PluginListItem[] = [
   { id: 'source.plugina', name: 'Plugin A', type: 'source', version: '1.0.0', usedByCount: 2, status: 'loaded' },
@@ -12,10 +14,28 @@ const mockPlugins: PluginListItem[] = [
   { id: 'sink.pluginc', name: 'Plugin C', type: 'sink', version: '1.2.0', usedByCount: 1, status: 'error' },
 ];
 
+/*
+const { queryInvoke } = useSignalRInvoke<PingResponse>();
+  
+  const handleClick = async () => {
+    try{
+      const data = await queryInvoke('CheckVersions', { Value: 'ping' }, true);
+      console.log(data);
+    }catch(err){
+      console.log(err);
+    }
+  }
+  // const handleReset = () => {
+    
+  // }
+*/
+
 const PluginsPage = () => {
   const handleScan = () => {};
 
-  // const plugins = useSelector(selectPlugins);
+  const { data } = useSignalRQuery<QueryResponse>('CheckVersions');
+  console.log(data);
+  const plugins = useSelector(selectPlugins);
   // console.log(plugins);
 
   return (
@@ -26,7 +46,7 @@ const PluginsPage = () => {
           <RefreshCcw size={16} />
         </button>
       </div>
-      <PluginTable data={mockPlugins} />
+      <PluginTable data={plugins} />
     </div>
   )
 }

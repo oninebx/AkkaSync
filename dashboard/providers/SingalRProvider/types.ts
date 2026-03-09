@@ -4,6 +4,12 @@ interface QueryEnvelope {
   returnImmediately: boolean;
 }
 
+interface QueryResponse {
+  success: boolean,
+  message: string
+}
+
 export type {
-  QueryEnvelope
+  QueryEnvelope,
+  QueryResponse
 }

@@ -2,11 +2,11 @@ using System;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Schedules;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
-using AkkaSync.Core.Notifications;
 using AkkaSync.Core.Runtime;
 using AkkaSync.Core.Runtime.Event;
 
@@ -18,8 +18,8 @@ public class PipelineManagerActor : ReceiveActor
   private IActorRef _schedulerActor;
   private IActorRef _registryActor;
   private IDictionary<string, Props> _props;
-  private IReadOnlyList<PipelineInfo> _pipelines = [];
-  private IReadOnlyDictionary<string, string> _schedules = new Dictionary<string, string>();
+  private IReadOnlyList<PipelineSpec> _pipelines = [];
+  private IReadOnlyDictionary<string, ScheduleSpec> _schedules = new Dictionary<string, ScheduleSpec>();
   private readonly IPipelineStorage _pipelineStorage;
   private bool _registryReady;
   private bool _schedulerReady;
@@ -80,18 +80,33 @@ public class PipelineManagerActor : ReceiveActor
   private async Task HandleStartAsync()
   {
     _logger.Info("PipelineManagerActor started at {0}", DateTimeOffset.UtcNow);
-    var (pipelineOptions, scheduleOptions) = await _pipelineStorage.LoadSpecificationsAsync();
-    var pipelineSpecs = pipelineOptions.Pipelines?.Where(p => p.Value.IsActive).ToDictionary(p => p.Key, p => p.Value);
-    if(pipelineSpecs?.Any() != true)
+    var pipelines  = await _pipelineStorage.LoadPipelineSpecificationsAsync();
+    var pipelineSpecs = pipelines.Where(p => p.Value.IsActive).ToDictionary(p => p.Key, p => p.Value);
+    if(pipelineSpecs.Count == 0)
     {
       _logger.Warning("No pipeline specs found in storage.");
       return;
     }
-    var enabledSchedules = scheduleOptions.Schedules?.Where(s => s.Value.Enabled).Select(s => s.Value).ToList();
+    
+    var schedules = await _pipelineStorage.LoadScheduleSpecificationsAsync();
+    var enabledSchedules = schedules.Where(s => s.Value.Enabled).ToDictionary(s => s.Key, s => s.Value);
+    if (enabledSchedules.Count == 0)
+    {
+      _logger.Warning("No schedules specs found in storage.");
+      return;
+    }
 
-    _pipelines = pipelineSpecs.Select(s => new PipelineInfo(s.Key)).ToList().AsReadOnly();
-    _schedules = enabledSchedules?.ToDictionary(s => s.Pipeline, s => s.Cron) ?? [];
-    _registryActor.Tell(new RegistryProtocol.Initialize(pipelineOptions));
-    _schedulerActor.Tell(new SchedulerProtocol.Initialize(scheduleOptions));
+    _pipelines = [.. pipelineSpecs!.Select(kvp => kvp.Value with { Name = kvp.Key })];
+    _schedules = enabledSchedules;
+
+    var scheduleCron = _schedules.ToDictionary(s => s.Key, s => s.Value.Cron);
+
+    var pipelineSchedules = _pipelines
+        .Where(p => p.Schedule != null && scheduleCron.ContainsKey(p.Schedule))
+        .ToDictionary(p => p.Name, p => scheduleCron[p.Schedule!]);
+
+    _registryActor.Tell(new RegistryProtocol.Initialize(pipelineSpecs));
+
+    _schedulerActor.Tell(new SchedulerProtocol.Initialize(pipelineSchedules));
   }
 }

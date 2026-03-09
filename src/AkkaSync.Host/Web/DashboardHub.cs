@@ -48,7 +48,7 @@ public class DashboardHub : Hub
     _syncGateway = actorRegistry.Get<SyncGatewayActor>();
   }
 
-  public async Task<HubResponse> Query(QueryEnvelope envelope)
+  public async Task<QueryResponse> Query(QueryEnvelope envelope)
   {
     //var resultJson = await _dispatcher.DispatchAsync(query);
 
@@ -64,14 +64,12 @@ public class DashboardHub : Hub
     var query = _mapper.Map(envelope);
     if(query is null)
     {
-      return new HubResponse(false, $"{envelope.Method} is not supported.");
+      return new QueryResponse(false, $"{envelope.Method} is not supported.");
     }
 
     _syncGateway.Tell(query);
-    return new HubResponse(true, $"{envelope.Method} is executing.");
+    return new QueryResponse(true, $"{envelope.Method} is executing.");
 
-    
-    
   }
 
   public override async Task OnConnectedAsync()

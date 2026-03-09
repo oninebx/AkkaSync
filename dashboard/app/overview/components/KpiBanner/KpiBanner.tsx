@@ -1,8 +1,9 @@
 import React from 'react';
-import KpiCard, { Kpi } from './KpiCard';
+import KpiCard from './KpiCard';
+import { KpiVM } from '@/app/overview/types';
 
 type Props = {
-  data: Kpi[];
+  data: KpiVM[];
 }
 
 const KpiBanner = ({ data }: Props) => {

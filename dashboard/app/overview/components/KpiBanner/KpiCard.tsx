@@ -1,14 +1,9 @@
 import Card from '@/components/Card'
+import { KpiVM } from '@/app/overview/types';
 
-export interface Kpi {
-  id: string;
-  title: string;
-  value: string;
-  color: string;
-}
 
 interface Props {
-  data: Kpi;
+  data: KpiVM;
 }
 
 const KpiCard = ({data: {id, title, value, color}}: Props) => {

@@ -37,7 +37,7 @@ public class PipelineRegistryActor : ReceiveActor
     
     Receive<RegistryProtocol.Initialize>(msg => {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
-      _pipelineSpecs = msg.Options.Pipelines;
+      _pipelineSpecs = msg.Pipelines;
       Context.Parent.Tell(new RegistryInitialized());
     });
     Receive<RegistryProtocol.CreatePipeline>(msg => CreatePipeline(msg));
@@ -56,14 +56,14 @@ public class PipelineRegistryActor : ReceiveActor
 
   private void CreatePipeline(RegistryProtocol.CreatePipeline msg)
   {
-    if(_pipelineSpecs == null || !_pipelineSpecs.TryGetValue(msg.Name, out var spec))
+    if(_pipelineSpecs == null || !_pipelineSpecs.TryGetValue(msg.Id, out var spec))
     {
-      _logger.Warning($"Pipeline spec with name {msg.Name} not found.");
+      _logger.Warning($"Pipeline spec with name {msg.Id} not found.");
 
       return;
     }
     var runId = RunId.New();
-    var actorName = $"{msg.Name}-${runId}";
+    var actorName = $"{msg.Id}-${runId}";
     if (Context.Child(actorName).IsNobody())
     {
       var source = spec.SourceProvider;
@@ -80,20 +80,20 @@ public class PipelineRegistryActor : ReceiveActor
       
       if(sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
       {
-        var pipelineId = new PipelineId(runId, msg.Name);
+        var pipelineId = new PipelineId(runId, msg.Id);
         var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, pipelineId, spec)), pipelineId.ToString());
         pipelineActor.Tell(new SharedProtocol.Start());
       }
       else
       {
-        _logger.Warning($"Failed to create pipeline {msg.Name}. Source, Transformer or Sink provider not found.");
-        _schedulerActor.Tell(new PipelineSkipped(new PipelineId(runId, msg.Name), $"Source, Transformer or Sink provider not found for pipeline {msg.Name}."));
+        _logger.Warning($"Failed to create pipeline {msg.Id}. Source, Transformer or Sink provider not found.");
+        _schedulerActor.Tell(new PipelineSkipped(new PipelineId(runId, msg.Id), $"Source, Transformer or Sink provider not found for pipeline {msg.Id}."));
         return;
       }
     }
     else
     {
-      _logger.Warning($"Pipeline with ID {msg.Name} already exists.");
+      _logger.Warning($"Pipeline with ID {msg.Id} already exists.");
     }
   }
 }

@@ -4,24 +4,27 @@ using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Syncing;
 using AkkaSync.Host.Application.Swapping;
 using AkkaSync.Infrastructure.Messaging.Publish;
+using AkkaSync.Host.Application.Pipeline;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 
 public class InMemoryDashboardStore : IDashboardStore
 {
+  private volatile PipelineState _pipelineState = PipelineState.Empty;
   private volatile SyncState _syncState = SyncState.Empty;
-  private volatile PipelineSchedules _schedules = PipelineSchedules.Empty;
+  private volatile ScheduleState _schedules = ScheduleState.Empty;
   private volatile DiagnosisJournal _journal = DiagnosisJournal.Empty;
   private volatile RuntimePluginSet _pluginSet = RuntimePluginSet.EMPTY;
 
-  public SyncState SyncState => _syncState;
-  public PipelineSchedules Schedules => _schedules;
-  public DiagnosisJournal Journal => _journal;
-  public RuntimePluginSet PluginSet => _pluginSet;
+  //public SyncState SyncState => _syncState;
+  //public PipelineSchedules Schedules => _schedules;
+  //public DiagnosisJournal Journal => _journal;
+  //public RuntimePluginSet PluginSet => _pluginSet;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
     return [
+      _pipelineState,
       _syncState,
       _schedules,
       _journal.ToShow(50),
@@ -33,10 +36,13 @@ public class InMemoryDashboardStore : IDashboardStore
   {
     switch (state)
     {
+      case PipelineState pipelineState:
+        _pipelineState = pipelineState;
+        break;
       case SyncState syncState:
         _syncState = syncState;
         break;
-      case PipelineSchedules schedules:
+      case ScheduleState schedules:
         _schedules = schedules;
         break;
       case DiagnosisJournal journal:

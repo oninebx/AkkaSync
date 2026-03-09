@@ -15,7 +15,7 @@ namespace AkkaSync.Core.Actors;
 
 public class PipelineSchedulerActor : ReceiveActor
 {
-  private IReadOnlyDictionary<string, ScheduleSpec>? _schedules;
+  private IReadOnlyDictionary<string, string>? _schedules;
   private readonly Dictionary<string, ICancelable> _jobs = [];
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef _pipelineRegistry;
@@ -25,14 +25,7 @@ public class PipelineSchedulerActor : ReceiveActor
 
     Receive<SchedulerProtocol.Initialize>(msg =>
     {
-      var enabledSchedules = msg.Options.Schedules?.Where(kv => kv.Value.Enabled).Select(kv => kv.Value).ToList()?? [];
-      var duplicated = enabledSchedules.GroupBy(s => s.Pipeline).FirstOrDefault(g => g.Count() > 1);
-      if (duplicated != null)
-      {
-        Context.System.EventStream.Publish(new DuplicateScheduleDetected(duplicated.Key));
-      }
-      var distinctEnabledSchedules = enabledSchedules.GroupBy(s => s.Pipeline).Select(g => g.First()).ToList();
-      _schedules = enabledSchedules.ToDictionary(s => s.Pipeline, s => s);
+      _schedules = msg.Schedules;
       _logger.Info("{0} actor initialized at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
       Context.Parent.Tell(new SchedulerInitialized());
     });
@@ -41,10 +34,10 @@ public class PipelineSchedulerActor : ReceiveActor
 
     Receive<SchedulerProtocol.Trigger>(msg =>
     {
-      _logger.Info($"Pipeline triggered: { msg.Name }");
-      _pipelineRegistry.Tell(new RegistryProtocol.CreatePipeline(msg.Name));
-      var spec = _schedules!.FirstOrDefault(s => s.Key.Contains(msg.Name)).Value;
-      Context.System.EventStream.Publish(new PipelineTriggered(msg.Name));
+      _logger.Info($"Pipeline triggered: { msg.Id }");
+      _pipelineRegistry.Tell(new RegistryProtocol.CreatePipeline(msg.Id));
+      var spec = _schedules!.FirstOrDefault(s => s.Key.Contains(msg.Id)).Value;
+      Context.System.EventStream.Publish(new PipelineTriggered(msg.Id));
     });
 
     Receive<PipelineCompleted>(msg => HandlePipeline(msg.PipelineId));
@@ -53,30 +46,30 @@ public class PipelineSchedulerActor : ReceiveActor
 
   private void HandlePipeline(PipelineId id)
   {
-    var spec = _schedules![id.Name];
-    var nextUtc = ScheduleNextRun(spec);
-    Context.System.EventStream.Publish(new PipelineScheduled(id.Name, nextUtc));
+    var spec = _schedules![id.Pid];
+    var nextUtc = ScheduleNextRun(id.Pid, spec);
+    Context.System.EventStream.Publish(new PipelineScheduled(id.Pid, nextUtc));
   }
 
-  private DateTime ScheduleNextRun(ScheduleSpec spec)
+  private DateTime ScheduleNextRun(string pipeline, string cron)
   {
-    var schedule = CrontabSchedule.Parse(spec.Cron);
+    var schedule = CrontabSchedule.Parse(cron);
     var nextUtc = schedule.GetNextOccurrence(DateTime.UtcNow);
     var delay = nextUtc - DateTime.UtcNow;
 
     var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
       delay,
       Self,
-      new SchedulerProtocol.Trigger(spec.Pipeline),
+      new SchedulerProtocol.Trigger(pipeline),
       Self
     );
 
-    if(_jobs.TryGetValue(spec.Pipeline, out var job))
+    if(_jobs.TryGetValue(pipeline, out var job))
     {
       job.Cancel();
     }
-    _jobs[spec.Pipeline] = cancelable;
-    _logger.Info("{0} will run at {1}. Please wait for {2}.", spec.Pipeline, nextUtc, delay);
+    _jobs[pipeline] = cancelable;
+    _logger.Info("{0} will run at {1}. Please wait for {2}.", pipeline, nextUtc, delay);
 
     return nextUtc;
   }
@@ -90,8 +83,8 @@ public class PipelineSchedulerActor : ReceiveActor
     }
     foreach(var schedule in _schedules)
     {
-      var nextUtc = ScheduleNextRun(schedule.Value);
-      Context.System.EventStream.Publish(new PipelineScheduled(schedule.Value.Pipeline, nextUtc));
+      var nextUtc = ScheduleNextRun(schedule.Key, schedule.Value);
+      Context.System.EventStream.Publish(new PipelineScheduled(schedule.Key, nextUtc));
     }
   }
 

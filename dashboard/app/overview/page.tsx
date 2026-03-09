@@ -6,43 +6,25 @@ import { KpiBanner } from "./components/KpiBanner";
 import { useSelector } from "react-redux";
 import { selectConnectionStatus } from "@/infrastructure/signalr/connection.selectors";
 import { HostStatus } from "@/features/host/host.types";
-import { useSignalRInvoke } from "@/providers/SingalRProvider";
 import PipelineTable from "./components/PipelineTable/PipelineTable";
-import { selectHostPipelines } from "@/features/host/host.selectors";
-import { selectScheduleSpecs, selectSecheduleJobs } from "@/features/scheduler/scheduler.selectors";
-import { usePipelines } from "./components/PipelineTable/usePipelines";
-import useKpis from "./components/KpiBanner/useKpis";
+
 import { selectJournal } from "@/features/diagnosis/diagnosis.selectors";
+import { selectKpiData, selectPipelineData } from "./selectors";
 interface PingResponse {
   value: string
 }
 
 export default function HomePage() {
   const connectionStatus = useSelector(selectConnectionStatus);
-  const pipelines = useSelector(selectHostPipelines);
-  const scheduleSpecs = useSelector(selectScheduleSpecs);
-  const scheduleJobs = useSelector(selectSecheduleJobs);
 
-  const pipelineData = usePipelines(pipelines, scheduleSpecs);
-  const kpiData = useKpis(pipelines, scheduleJobs);
+  const pipelineData = useSelector(selectPipelineData);
+ 
+  const kpiData = useSelector(selectKpiData);
 
   const events = useSelector(selectJournal);
   const status = HostStatus.Idle;
   const startAt = new Date().toISOString();
 
-  const { queryInvoke } = useSignalRInvoke<PingResponse>();
-  
-  const handleClick = async () => {
-    try{
-      const data = await queryInvoke('CheckVersions', { Value: 'ping' }, true);
-      console.log(data);
-    }catch(err){
-      console.log(err);
-    }
-  }
-  // const handleReset = () => {
-    
-  // }
   return (
     <>
       <div className="min-h-screen px-4 py-6">
@@ -57,7 +39,6 @@ export default function HomePage() {
             <RecentEventsCard events={events}/>
           </div>
           <PipelineTable data={pipelineData} />
-          <button onClick={handleClick}>Test</button>
         </div>
       </div>
     </>

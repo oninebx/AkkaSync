@@ -1,16 +1,11 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createEntityAdapter, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { PipelineJob, PipelineSchedules } from "./scheduler.types";
 
+export const scheduleJobAdapter = createEntityAdapter<PipelineJob>();
 
-interface SchedulerState {
-  specs: Record<string, string>
-  jobs: PipelineJob[]
-}
+type SchedulerState =   ReturnType<typeof scheduleJobAdapter.getInitialState<{ specs: Record<string, string> }>>
 
-const initialState: SchedulerState = {
-  specs: {},
-  jobs: []
-}
+const initialState: SchedulerState = scheduleJobAdapter.getInitialState({ specs: {} })
 
 export const schedulerSlice = createSlice({
   name: 'scheduler',
@@ -20,14 +15,16 @@ export const schedulerSlice = createSlice({
       state.specs = action.payload;
     },
     setSchedules(state, action: PayloadAction<PipelineSchedules>) {
-      state.jobs = action.payload.jobs;
-      state.specs = action.payload.specs;
+      const { jobs, specs } = action.payload;
+
+      scheduleJobAdapter.setAll(state, jobs);
+      state.specs = specs;
     },
     addJob(state, action: PayloadAction<PipelineJob>) {
-      state.jobs.push(action.payload);
+      scheduleJobAdapter.addOne(state, action.payload);
     },
     removeJob(state, action: PayloadAction<string>) {
-      state.jobs = state.jobs.filter(job => job.name !== action.payload);
+      scheduleJobAdapter.removeOne(state, action.payload);
     }
   }
 });

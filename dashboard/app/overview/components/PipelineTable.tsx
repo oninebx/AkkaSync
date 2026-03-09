@@ -1,9 +1,9 @@
 import { Column } from '@/components/DisplayTable';
 import { TableCard } from '@/components/TableCard';
 import React from 'react';
-import { OverviewPipeline } from './usePipelines';
+import { PipelineVM } from '@/app/overview/types';
 
-const pipelineColumns: Column<OverviewPipeline>[] = [
+const pipelineColumns: Column<PipelineVM>[] = [
   { key: "name", header: "Pipeline" },
   { key: 'duration', header: 'Duration' },
   { key: "schedule", header: "Schedule" },
@@ -12,7 +12,7 @@ const pipelineColumns: Column<OverviewPipeline>[] = [
 ];
 
 interface Props {
-  data: OverviewPipeline[];
+  data: PipelineVM[];
 }
 
 const PipelineTable = ({ data }: Props) => {

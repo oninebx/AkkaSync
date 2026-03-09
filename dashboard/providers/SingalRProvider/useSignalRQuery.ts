@@ -11,7 +11,7 @@ const buildQueryKey = ({method, payload, returnImmediately}: QueryEnvelope) => {
   return `${method}|${returnImmediately}|${sortedPayload}`;
 }
 
-export const useSignalRQuery = <TResult,>(method: string, payload: Record<string, string>, returnImmediately: boolean = false) => {
+export const useSignalRQuery = <TResult,>(method: string, payload: Record<string, string> = {}, returnImmediately: boolean = false) => {
   const context = useContext(SignalRContext);
   if(!context || !context.invoke){
     throw new Error('SignalR connection not established');

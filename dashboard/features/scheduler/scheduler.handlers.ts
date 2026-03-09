@@ -4,7 +4,7 @@ import { PipelineJob, PipelineSchedules } from "./scheduler.types";
 
 envelopeHandlerMap.set('scheduler.specs.initialized', (event, dispatch) => 
   dispatch(schedulerActions.setSpecs(event.payload as Record<string, string>)));
-envelopeHandlerMap.set('scheduler.none', (event, dispatch) =>
+envelopeHandlerMap.set('scheduler.all.notified', (event, dispatch) =>
   dispatch(schedulerActions.setSchedules(event.payload as PipelineSchedules)));
 envelopeHandlerMap.set('scheduler.jobs.added', (event, dispatch) =>
   dispatch(schedulerActions.addJob(event.payload as PipelineJob)));

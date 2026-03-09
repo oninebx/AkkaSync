@@ -7,6 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Csv2Sqlite\configs\pipeline_events.json" />
+    <None Remove="Csv2Sqlite\configs\pipeline_orders.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Csv2Sqlite\configs\pipeline_events.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Csv2Sqlite\configs\pipeline_orders.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Csv2Sqlite/input/" />
     <Folder Include="Csv2Sqlite/input/orders/" />
   </ItemGroup>
@@ -19,7 +37,7 @@
   <Target Name="CopyPipelineConfigsToHost" AfterTargets="Build">
     <Message Text="Copying pipeline configs to Host pipelines folder..." Importance="high" />
     <ItemGroup>
-      <PipelineConfigs Include="**\pipeline_*.json;**\plugin_*.json" />
+      <PipelineConfigs Include="**\pipeline_*.json;**\plugin_*.json;**\schedules*.json" />
     </ItemGroup>
     <RemoveDir Directories="$(HostPipelinesDir)" Condition="Exists('$(HostPipelinesDir)')" />
     <MakeDir Directories="$(HostPipelinesDir)" Condition="!Exists('$(HostPipelinesDir)')" />

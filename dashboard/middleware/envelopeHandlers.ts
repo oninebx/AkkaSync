@@ -1,4 +1,5 @@
 import '@/infrastructure/signalr/connection.handlers';
+import '@/features/pipeline/pipeline.handlers';
 import '@/features/host/host.handlers';
 import '@/features/scheduler/scheduler.handlers';
 import '@/features/diagnosis/dianosis.handlers';

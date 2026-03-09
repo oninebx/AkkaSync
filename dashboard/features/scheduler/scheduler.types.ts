@@ -1,4 +1,5 @@
 interface PipelineJob {
+  id: string,
   name: string,
   nextUtc: string
 }
