@@ -76,12 +76,12 @@ public class PipelineSchedulerActor : ReceiveActor
 
   private void HandleStart()
   {
-    if(_schedules == null)
+    if (_schedules == null)
     {
       _logger.Warning("PipelineSchedulerActor received Start message before initialization. Ignoring.");
       return;
     }
-    foreach(var schedule in _schedules)
+    foreach (var schedule in _schedules)
     {
       var nextUtc = ScheduleNextRun(schedule.Key, schedule.Value);
       Context.System.EventStream.Publish(new PipelineScheduled(schedule.Key, nextUtc));

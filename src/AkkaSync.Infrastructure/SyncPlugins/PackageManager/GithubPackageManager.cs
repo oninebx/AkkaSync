@@ -28,6 +28,19 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
       _client = client;
       _logger = logger;
     }
+
+    public async Task<string> CheckoutPlugin(string url, string checksum)
+    {
+      var data = await _client.DownloadPluginAsync(url, checksum);
+
+      var uri = new Uri(url);
+
+      var fileName = Path.GetFileName(uri.AbsolutePath);
+
+      return await _storage.SaveAsync(fileName, new MemoryStream(data));
+
+    }
+
     public async Task<IReadOnlySet<PluginPackageEntry>> CheckoutVersions()
     {
       var registries = new HashSet<PluginPackageRegistry>();
@@ -44,7 +57,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
           registries.Add(pluginsInRegistry);
         }
       }
-      return _storage.Diff(registries);;
+      return _storage.Diff(registries);
     }
   }
 }

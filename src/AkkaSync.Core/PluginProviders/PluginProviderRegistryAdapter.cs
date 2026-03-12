@@ -21,7 +21,7 @@ namespace AkkaSync.Core.PluginProviders
 
       if (_registry.AddProvider(typedProvider))
       {
-        return new PluginDescriptor(typedProvider.Key, typedProvider.Version.ToString());
+        return new PluginDescriptor(typedProvider.Location, typedProvider.Key, typedProvider.Version);
       }
       return null;
     }

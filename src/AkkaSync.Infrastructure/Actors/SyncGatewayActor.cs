@@ -86,7 +86,8 @@ public class SyncGatewayActor : ReceiveActor
   {
     var routes = new Dictionary<Type, IActorRef>()
     {
-      {typeof(CheckVersions), plugin}
+      { typeof(CheckVersions), plugin },
+      { typeof(UpdatePlugin), plugin },
     };
     
     return routes;

@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace AkkaSync.Abstractions.Models
 {
-  public record PluginDescriptor(string Name, string Version);
+  public record PluginDescriptor(string Holder, string Name, string Version);
 }

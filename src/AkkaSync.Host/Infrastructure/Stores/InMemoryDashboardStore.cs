@@ -5,6 +5,7 @@ using AkkaSync.Host.Application.Syncing;
 using AkkaSync.Host.Application.Swapping;
 using AkkaSync.Infrastructure.Messaging.Publish;
 using AkkaSync.Host.Application.Pipeline;
+using AkkaSync.Host.Application.Plugin;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 
@@ -14,12 +15,7 @@ public class InMemoryDashboardStore : IDashboardStore
   private volatile SyncState _syncState = SyncState.Empty;
   private volatile ScheduleState _schedules = ScheduleState.Empty;
   private volatile DiagnosisJournal _journal = DiagnosisJournal.Empty;
-  private volatile RuntimePluginSet _pluginSet = RuntimePluginSet.EMPTY;
-
-  //public SyncState SyncState => _syncState;
-  //public PipelineSchedules Schedules => _schedules;
-  //public DiagnosisJournal Journal => _journal;
-  //public RuntimePluginSet PluginSet => _pluginSet;
+  private volatile PluginState _pluginSet = PluginState.EMPTY;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
@@ -48,7 +44,7 @@ public class InMemoryDashboardStore : IDashboardStore
       case DiagnosisJournal journal:
         _journal = journal;
         break;
-      case RuntimePluginSet pluginSet:
+      case PluginState pluginSet:
         _pluginSet = pluginSet;
         break;
       default:

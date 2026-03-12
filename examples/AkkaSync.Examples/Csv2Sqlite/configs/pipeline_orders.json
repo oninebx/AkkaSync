@@ -1,7 +1,7 @@
 {
   "Pipelines": {
     "sync-orders": {
-      "Schedule": "eveny-minute",
+      "Schedule": "every-minute",
       "Name": "sync-orders",
       "SourceProvider": {
         "Type": "FolderWatcherSourceProvider",

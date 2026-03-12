@@ -1,18 +1,11 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PluginTable from './components/PluginTable/PluginTable';
 import { RefreshCcw } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { selectPlugins } from '@/features/plugin-hub/plugin-hub.selectors';
-import { PluginListItem } from '@/features/plugin-hub/plugin-hub.types';
-import { useSignalRQuery } from '@/providers/SingalRProvider';
+import { useSignalRInvoke, useSignalRQuery } from '@/providers/SingalRProvider';
 import { QueryResponse } from '@/providers/SingalRProvider/types';
-
-const mockPlugins: PluginListItem[] = [
-  { id: 'source.plugina', name: 'Plugin A', type: 'source', version: '1.0.0', usedByCount: 2, status: 'loaded' },
-  { id: 'transform.pluginb', name: 'Plugin B', type: 'transform', status: 'unloaded' },
-  { id: 'sink.pluginc', name: 'Plugin C', type: 'sink', version: '1.2.0', usedByCount: 1, status: 'error' },
-];
+import { selectPluginData } from './selectors';
 
 /*
 const { queryInvoke } = useSignalRInvoke<PingResponse>();
@@ -31,12 +24,47 @@ const { queryInvoke } = useSignalRInvoke<PingResponse>();
 */
 
 const PluginsPage = () => {
+
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const handleScan = () => {};
 
   const { data } = useSignalRQuery<QueryResponse>('CheckVersions');
-  console.log(data);
-  const plugins = useSelector(selectPlugins);
-  // console.log(plugins);
+  if(data && !data.success){
+    alert(data.message);
+  }
+  const plugins = useSelector(selectPluginData);
+
+  const { queryInvoke} = useSignalRInvoke<QueryResponse>();
+  const handleUpdate = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const id = e.currentTarget.dataset.id;
+    if(id) {
+      try{
+        const plugin = plugins.find(p => p.id === id);
+        if(plugin?.url && plugin.pkgChecksum && plugin.checksum !== plugin.pkgChecksum){
+          const response = await queryInvoke('UpdatePlugin', { Url: plugin.url, Checksum: plugin.pkgChecksum});
+          setUpdatingId(id);
+          
+          if(!response.success){
+            setUpdatingId(null);
+            alert(response.message);
+          }
+        }
+        
+      }catch(err){
+        console.error(err);
+      }
+    }
+  }
+
+ useEffect(() => {
+    if (!updatingId) return;
+
+    const plugin = plugins.find(p => p.id === updatingId);
+
+    if (plugin?.latestversion === plugin?.installedVersion) {
+      setUpdatingId(null);
+    }
+  }, [plugins, updatingId]);
 
   return (
     <div className='p-6 bg-gray-50 min-h-screen'>
@@ -46,7 +74,7 @@ const PluginsPage = () => {
           <RefreshCcw size={16} />
         </button>
       </div>
-      <PluginTable data={plugins} />
+      <PluginTable data={plugins} handleUpdate={handleUpdate} updatingId={updatingId} />
     </div>
   )
 }
