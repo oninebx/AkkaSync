@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import React from 'react'
 
-type ButtonColor =  'blue' | 'red' | 'green' | 'yellow'
+type ButtonColor =  'blue' | 'red' | 'green' | 'yellow' | 'gray';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   color: ButtonColor;
@@ -12,6 +12,7 @@ const colorMap: Record<ButtonColor, string> = {
   red: 'bg-red-500 hover:bg-red-600',
   green: 'bg-green-500 hover:bg-green-600',
   yellow: 'bg-yellow-500 hover:bg-yellow-600',
+  gray: 'bg-gray-500'
 }
 
 const ActionButton = ({ children, color, className, disabled, ...props }: ButtonProps) => {

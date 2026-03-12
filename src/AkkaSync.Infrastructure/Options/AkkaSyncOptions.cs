@@ -6,6 +6,5 @@ namespace AkkaSync.Infrastructure.Options
   {
     public string PluginFolder { get; set; } = string.Empty;
     public string ShadowFolder { get; set; } = string.Empty;
-    public Dictionary<string, PluginLoadContext> PluginContexts { get; set; } = [];
   }
 }

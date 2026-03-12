@@ -37,13 +37,13 @@ public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : cl
       return false;
     }
     
-    descriptor = new PluginDescriptor(provider.Key, provider.Version.ToString());
+    descriptor = new PluginDescriptor(provider.Location, provider.Key, provider.Version);
     return true;
   }
 
   public IEnumerable<PluginDescriptor> ToDescriptors()
   {
-    var descriptors = _providers.Select(p =>new PluginDescriptor(Name: p.Key, Version: p.Value.Version.ToString()));
+    var descriptors = _providers.Select(p =>new PluginDescriptor(p.Value.Location, p.Key, p.Value.Version));
     return descriptors;
   }
 }

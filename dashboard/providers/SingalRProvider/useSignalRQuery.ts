@@ -27,13 +27,12 @@ export const useSignalRQuery = <TResult,>(method: string, payload: Record<string
     startTransition(() => {
       setLoading(true);
       setError(undefined);
-  });
+    });
     const query = { method, payload, returnImmediately } as QueryEnvelope;
     context.invoke<TResult>('Query', query)
       .then(result => !cancelled && setData(result))
       .catch(err => !cancelled && setError(err))
       .finally(() => !cancelled && setLoading(false));
-
     return () => {
       cancelled = true;
     }

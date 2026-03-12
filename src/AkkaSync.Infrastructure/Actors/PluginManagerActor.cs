@@ -1,17 +1,20 @@
 ﻿using Akka.Actor;
+using Akka.DependencyInjection;
 using Akka.Event;
 using AkkaSync.Abstractions;
-using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
+using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Common;
+using AkkaSync.Infrastructure.DependencyInjection;
+using AkkaSync.Infrastructure.Messaging.Contract.Swap;
+using AkkaSync.Infrastructure.Options;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
+using AkkaSync.Infrastructure.SyncPlugins.Models;
+using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
-using Akka.DependencyInjection;
-using AkkaSync.Infrastructure.Options;
-using AkkaSync.Infrastructure.Messaging.Contract.Swap;
+using System.Reflection;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
-using AkkaSync.Core.Common;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
-using AkkaSync.Infrastructure.SyncPlugins.Models;
 
 namespace AkkaSync.Infrastructure.Actors
 {
@@ -39,8 +42,7 @@ namespace AkkaSync.Infrastructure.Actors
       _registryAdapters = registryAdapters;
       _watcher = EnsureWatcherCreated(options.PluginFolder);
       _shadowFolder = options.ShadowFolder;
-      _pluginContexts = options.PluginContexts;
-      options.PluginContexts = null!;
+      _pluginContexts = [];
 
       _updateActor = Context.ActorOf(DependencyResolver.For(Context.System).Props<PluginUpdateActor>(), "plugin-update");
 
@@ -50,15 +52,17 @@ namespace AkkaSync.Infrastructure.Actors
       Receive<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
 
       Receive<CheckVersions>(_ => DoCheckVersions());
+      Receive<UpdatePlugin>(msg => NotifyUpdatePlugin(msg));
     }
 
     protected override void PreStart()
     {
-      
+      LoadPlugins(_shadowFolder);
+
       var stats = _registryAdapters.Select(adapter => (Name: adapter.GetType().GetGenericArguments().FirstOrDefault()?.Name ?? "Unknown", adapter.Count)).ToList();
       var message = string.Join(", ", stats.Select(s => $"{s.Count} {s.Name} plugin(s)"));
       _logger.Info("There are {0} being managed.", message);
-      var plugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginCacheEntry(d.Name, d.Version)));
+      var plugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginCacheEntry(d.Holder, d.Version)));
       if (plugins is not null && plugins.Any())
       {
         Context.System.EventStream.Publish(new PluginManagerInitialized(plugins.ToHashSet() ?? []));
@@ -76,6 +80,15 @@ namespace AkkaSync.Infrastructure.Actors
       base.PostStop();
     }
 
+    private void LoadPlugins(string folder)
+    {
+      var pluginFiles = Directory.GetFiles(folder, "AkkaSync.Plugins*.dll", SearchOption.AllDirectories);
+      foreach (var file in pluginFiles)
+      {
+        RegisterPlugin(file);
+      }
+    }
+
     private FileSystemWatcher EnsureWatcherCreated(string folder)
     {
       if (!Directory.Exists(folder))
@@ -89,7 +102,6 @@ namespace AkkaSync.Infrastructure.Actors
       _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", folder);
       return watcher;
     }
-
     private void DoCheckAndUpdate(IEnumerable<string> required)
     {
       _logger.Info("Received CheckAndUpdatePlugins message with required plugins: {0}", string.Join(", ", required));
@@ -100,26 +112,56 @@ namespace AkkaSync.Infrastructure.Actors
     {
       await PluginLoader.EnsurePluginZipFileCreated(path);
       var shadowPath = ExtractToShadow(path);
-      var (providers, context) = PluginLoader.LoadFromFile(shadowPath, _serviceProvider);
+      var descriptor = RegisterPlugin(shadowPath);
+
+      if (descriptor is not null)
+      {
+        Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Version));
+      }
+
+      //var (providers, context) = PluginLoader.LoadFromFile(shadowPath, _serviceProvider);
+      //foreach (var provider in providers)
+      //{
+      //  var adapter = _registryAdapters.FirstOrDefault(r => r.CanHandle(provider.InterfaceType));
+      //  if (adapter != null)
+      //  {
+      //    var descriptor = adapter.AddProvider(provider.ProviderInstance);
+      //    if(descriptor is not null)
+      //    {
+      //      _logger.Info("PluginProvider {0} is added to registry.", provider.InterfaceType.Name);
+
+      //      Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Version));
+      //    }
+
+      //  }
+      //}
+      //if(context is not null)
+      //{
+      //  _pluginContexts[Path.GetFileNameWithoutExtension(shadowPath)!] = context;
+      //}
+    }
+
+    private PluginDescriptor? RegisterPlugin(string file)
+    {
+      var (providers, context) = PluginLoader.LoadFromFile(file, _serviceProvider);
+      PluginDescriptor? descriptor = null;
       foreach (var provider in providers)
       {
         var adapter = _registryAdapters.FirstOrDefault(r => r.CanHandle(provider.InterfaceType));
         if (adapter != null)
         {
-          var descriptor = adapter.AddProvider(provider.ProviderInstance);
+          descriptor = adapter.AddProvider(provider.ProviderInstance);
           if(descriptor is not null)
           {
             _logger.Info("PluginProvider {0} is added to registry.", provider.InterfaceType.Name);
-
-            Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Version));
           }
-          
         }
       }
-      if(context is not null)
+      if (context is not null)
       {
-        _pluginContexts[Path.GetDirectoryName(shadowPath)!] = context;
+        _pluginContexts[Path.GetFileNameWithoutExtension(file)!] = context;
       }
+      return descriptor;
     }
 
     private bool DoUnloadPlugin(string path)
@@ -137,15 +179,17 @@ namespace AkkaSync.Infrastructure.Actors
           }
         }
       }
-      if (_pluginContexts.TryGetValue(shadowPath, out var context))
+      var fileKey = Path.GetFileName(shadowPath);
+      if (_pluginContexts.TryGetValue(fileKey, out var context))
       {
         context.Unload();
-        _pluginContexts.Remove(shadowPath);
+        _pluginContexts.Remove(fileKey);
         context = null;
 
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
+
 
         if (!TryDelete(shadowPath)) 
         { 
@@ -182,6 +226,10 @@ namespace AkkaSync.Infrastructure.Actors
       _updateActor.Tell(new CheckVersionsForUpdate());
     }
 
+    private void NotifyUpdatePlugin(UpdatePlugin msg)
+    {
+      _updateActor.Tell(new CheckoutNewVersion(msg.Url, msg.Checksum));
+    }
     private string ExtractToShadow(string path)
     {
       ZipFile.ExtractToDirectory(path, Path.Combine(_shadowFolder, Path.GetFileNameWithoutExtension(path)));

@@ -1,5 +1,4 @@
 ﻿using AkkaSync.Abstractions;
-using AkkaSync.Core.PluginProviders;
 using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -34,29 +33,6 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
       }
     }
 
-    public static (PluginLoadContext Context, IEnumerable<Type> Types) LoadPluginTypes(string filePath)
-    {
-      PluginLoadContext context = null!;
-
-      try
-      {
-        context = new PluginLoadContext(filePath);
-        var assembly = context.LoadPlugin();
-
-        var pluginTypes = assembly.GetTypes()
-            .Where(t => !t.IsAbstract && !t.IsInterface &&
-                        SupportedPluginInterfaces.Any(iface => iface.IsAssignableFrom(t)))
-            .ToArray();
-
-        return (context, pluginTypes);
-      }
-      catch
-      {
-        context?.Unload();
-        throw;
-      }
-    }
-
     public static (IEnumerable<PluginLoadResult> LoadResult, PluginLoadContext? LoadContext) LoadFromFile(string filePath, IServiceProvider serviceProvider)
     {
       var results = new List<PluginLoadResult>();
@@ -70,6 +46,8 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
         var pluginTypes = assembly.GetTypes()
             .Where(t => !t.IsAbstract && !t.IsInterface &&
                         SupportedPluginInterfaces.Any(iface => iface.IsAssignableFrom(t)));
+
+
 
         foreach (var type in pluginTypes)
         {

@@ -3,42 +3,37 @@ import {TableCard } from '@/components/TableCard';
 import { Column } from '@/components/DisplayTable/DisplayTable';
 import { CircleBadge } from '@/components/Badges';
 import PluginActionContainer from './PluginActionContainer';
-import { usePluginActions } from './usePluginActions';
-import { PluginListItem } from '@/features/plugin-hub/plugin-hub.types';
+import { PluginVM } from '@/app/sync-plugins/types';
+import VersionCell from './VersionCell';
+import NameCell from './NameCell';
+import { useSignalRQuery } from '@/providers/SingalRProvider';
 
 
 
 type Props = {
-  data: PluginListItem[];
+  data: PluginVM[];
+  handleUpdate: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  updatingId: string | null;
 }
 
 const pluginColumns = (
-  doUpload: (e: React.MouseEvent<HTMLButtonElement>) => void,
-  doRemove: (e: React.MouseEvent<HTMLButtonElement>) => void
+  doUpdate: (e: React.MouseEvent<HTMLButtonElement>) => void,
+  updatingId: string | null
 ) => [
-  { key: "name", header: "Plugin" },
-  { key: "type", header: "Type", render: (item) => <span className="capitalize">{item.type}</span> },
-  { key: "version", header: "Version", defaultValue: '-' },
-  { key: "usedByCount", header: "Used By", defaultValue: 0 },
-  { key: "status", header: "Status", render: (item) => <CircleBadge color={item.status === 'loaded' ? 'bg-green-500' : item.status === 'unloaded' ? 'bg-gray-500' : 'bg-red-500'} /> },
-  { key: "actions", header: "Actions", render: ({id, status}) => <PluginActionContainer id={id} status={status} handleUpload={doUpload} handleRemove={doRemove} /> },
-] as Column<PluginListItem>[];
+    { key: "name", header: "Plugin", render: (item) => <NameCell name={item.name} installedVersion={item.installedVersion} latestVersion={item.latestversion} /> },
+    { key: "type", header: "Type", render: (item) => <span className="capitalize">{item.type}</span> },
+    { key: "version", header: "Version", render: (item) => <VersionCell latestVersion={item.latestversion} installedVersion={item.installedVersion} />},
+    { key: "usedByCount", header: "Used By", defaultValue: 0 },
+    { key: "actions", header: "Actions", render: (item) => <PluginActionContainer id={item.id} latestVersion={item.latestversion} installedVersion={item.installedVersion} disabled={updatingId === item.id} handleUpdate={doUpdate} /> },
+  ] as Column<PluginVM>[];
 
-const PluginTable = (props: Props) => {
-  const doUpload = (id: string, file: File) => {
-    console.log('Uploading', id, file);
-  }
-  const doRemove = (id: string) => {
-    console.log('Removing', id);
-  }
+  const PluginTable = ({data, handleUpdate, updatingId}: Props) => {
 
-  const { inputRef, handleUpload, handleRemove, handleFileChange } = usePluginActions({ upload: doUpload, remove: doRemove });
-  const columns = pluginColumns(handleUpload, handleRemove);
+  const columns = pluginColumns(handleUpdate, updatingId);
   
   return (
     <>
-      <TableCard title='Sync Plugins' columns={columns} data={props.data} />
-      <input type='file' className='hidden' onChange={handleFileChange} ref={inputRef} />
+      <TableCard title='Sync Plugins' columns={columns} data={data} />
     </>
     
   )

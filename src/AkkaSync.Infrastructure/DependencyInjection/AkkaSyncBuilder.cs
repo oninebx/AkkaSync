@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using AkkaSync.Infrastructure.PipelineStorages;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
-using AkkaSync.Infrastructure.SyncPlugins.Loader;
 using System.IO.Compression;
 using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
 using AkkaSync.Infrastructure.Options;
@@ -44,11 +43,12 @@ namespace AkkaSync.Infrastructure.DependencyInjection
 
     public AkkaSyncBuilder AddPlugins()
     {
-      
+      var pluginFolder = Path.Combine(AppContext.BaseDirectory, _pluginStorageOptions.Uri); // local plugin cache folder
+
       // build plugin storage
       IPluginStorage pluginStorage = _pluginStorageOptions.Type switch
       {
-        "Local" => new LocalPluginStorage(_pluginStorageOptions.Uri),
+        "Local" => new LocalPluginStorage(pluginFolder),
         _ => throw new NotSupportedException($"Plugin storage type {_pluginStorageOptions.Type} is not supported.")
       };
       _services.AddSingleton(pluginStorage);
@@ -62,7 +62,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
 
       _services.AddSingleton<IPluginPackageManager, GithubPackageManager>();
 
-      var pluginFolder = Path.Combine(AppContext.BaseDirectory, _pluginStorageOptions.Uri); // local plugin cache folder
+     
       var normalizedPath = Path.TrimEndingDirectorySeparator(_pluginStorageOptions.Uri);
       var parent = Path.GetDirectoryName(normalizedPath) ?? string.Empty;
       var shadowFolder = Path.Combine(AppContext.BaseDirectory, parent,"shadow"); //  local plugin shadow copy folder for loading to avoid file lock
@@ -70,14 +70,8 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       Options.PluginFolder = pluginFolder;
       Options.ShadowFolder = shadowFolder;
       PrepareShadowFolder(pluginFolder, shadowFolder);
-      LoadPlugins(shadowFolder);
       return this;
     }
-    //public AkkaSyncBuilder AddActorHook<TActor>(string name) where TActor : ActorBase
-    //{
-    //  Options.HookActors.Add(name, typeof(TActor));
-    //  return this;
-    //}
 
     private static void PrepareShadowFolder(string pluginFolder, string shadowFolder)
     {
@@ -93,51 +87,13 @@ namespace AkkaSync.Infrastructure.DependencyInjection
         {
           if(pluginFile is not null)
           {
-            ZipFile.ExtractToDirectory(pluginFile, shadowFolder);
+            var pluginName = Path.GetFileNameWithoutExtension(pluginFile);
+            var targetFolder = Path.Combine(shadowFolder, pluginName);
+            Directory.CreateDirectory(targetFolder);
+            ZipFile.ExtractToDirectory(pluginFile, targetFolder);
           }
         }
       }
     }
-
-    private AkkaSyncBuilder LoadPlugins(string folder)
-    {
-      try
-      {
-        var pluginFiles = Directory.GetFiles(folder, "AkkaSync.Plugins*.dll", SearchOption.AllDirectories);
-        foreach (var file in pluginFiles)
-        {
-          try
-          {
-            var (context, types) = PluginLoader.LoadPluginTypes(file);
-
-            foreach (var type in types)
-            {
-              var interfaces = type.GetInterfaces()
-                                  .Where(i => i.IsGenericType
-                                  && i.GetGenericTypeDefinition() == typeof(IPluginProvider<>));
-              foreach (var iface in interfaces)
-              {
-                _services.AddSingleton(iface, type);
-                Console.WriteLine("Load plugin {0} successfully.", type.Name);
-              }
-            }
-            Options.PluginContexts[file] = context;
-          }
-          catch (ReflectionTypeLoadException rex)
-          {
-            foreach (var loaderException in rex.LoaderExceptions)
-            {
-              Console.WriteLine(loaderException?.GetType().FullName + ": " + loaderException?.Message);
-            }
-          }
-        }
-      }
-      catch (Exception ex)
-      {
-        Console.WriteLine("Failed to load assembly: {0}", ex.Message);
-      }
-      return this;
-    }
-
   }
 }

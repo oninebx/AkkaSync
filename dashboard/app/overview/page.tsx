@@ -6,7 +6,7 @@ import { KpiBanner } from "./components/KpiBanner";
 import { useSelector } from "react-redux";
 import { selectConnectionStatus } from "@/infrastructure/signalr/connection.selectors";
 import { HostStatus } from "@/features/host/host.types";
-import PipelineTable from "./components/PipelineTable/PipelineTable";
+import PipelineTable from "./components/PipelineTable";
 
 import { selectJournal } from "@/features/diagnosis/diagnosis.selectors";
 import { selectKpiData, selectPipelineData } from "./selectors";

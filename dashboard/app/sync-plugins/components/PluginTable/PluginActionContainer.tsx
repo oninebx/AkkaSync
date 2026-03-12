@@ -1,23 +1,26 @@
 import { ActionButton } from '@/components/Buttons';
-import { Trash2, Upload } from 'lucide-react';
+import { PluginStatus } from '@/features/plugin/plugin.types';
+import { Trash2, DownloadCloud, CloudSync } from 'lucide-react';
 import React from 'react';
-import { PluginStatus } from './PluginTable';
 
 type Props = {
   id: string;
-  status: PluginStatus;
-  handleUpload: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  handleRemove: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  latestVersion?: string;
+  installedVersion?: string;
+  disabled?: boolean;
+  handleUpdate: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const PluginActionContainer = ({ id, status, handleUpload, handleRemove }: Props) => {
+const PluginActionContainer = ({ id, latestVersion, installedVersion, disabled, handleUpdate }: Props) => {
+  const hasUpdate = installedVersion && latestVersion && installedVersion !== latestVersion;
+  const canLoad = !installedVersion && latestVersion;
+  const canUpgrade = hasUpdate;
+  const canUpdate = canLoad || canUpgrade;
+  
   return (
     <div className='flex gap-2'>
-      <ActionButton color='blue' onClick={handleUpload} data-id={id}>
-        <Upload size={16} />
-      </ActionButton>
-      <ActionButton color='red' onClick={handleRemove} disabled={status === 'unloaded'} data-id={id}>
-        <Trash2 size={16} />
+      <ActionButton color={disabled ? 'gray' : 'blue'} disabled={disabled || !canUpdate} onClick={handleUpdate} data-id={id}>
+        <CloudSync size={16} />
       </ActionButton>
     </div>
   )

@@ -3,9 +3,11 @@ import { PipelineJob, PipelineSchedules } from "./scheduler.types";
 
 export const scheduleJobAdapter = createEntityAdapter<PipelineJob>();
 
-type SchedulerState =   ReturnType<typeof scheduleJobAdapter.getInitialState<{ specs: Record<string, string> }>>
+type ScheduleState = ReturnType<typeof scheduleJobAdapter.getInitialState> & {
+  specs: Record<string, string>
+};
 
-const initialState: SchedulerState = scheduleJobAdapter.getInitialState({ specs: {} })
+const initialState: ScheduleState = scheduleJobAdapter.getInitialState({ specs: {}  })
 
 export const schedulerSlice = createSlice({
   name: 'scheduler',
