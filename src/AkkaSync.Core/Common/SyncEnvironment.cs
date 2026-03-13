@@ -35,18 +35,18 @@ public class SyncEnvironment : ISyncEnvironment
     if (connStr.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
     {
       var pathPart = connStr[prefix.Length..].Trim();
-      var resolvedPath = ResolveDataPath(pathPart);
+      var resolvedPath = ResolvePath(pathPart);
       return $"{prefix}{resolvedPath}{connStr[(prefix.Length + pathPart.Length)..]}";
     }
 
     return connStr;
   }
 
-  public string ResolveDataPath(string logicalPath)
+  public string ResolvePath(string logicalPath)
   {
     if (string.IsNullOrWhiteSpace(_runtimeRoot))
       {
-        throw new InvalidOperationException("DataPath is not initialized. Call DataPath.Initialize() at host startup.");
+        throw new InvalidOperationException("Root Path is not initialized.");
       }
       if (Path.IsPathRooted(logicalPath))
       {
@@ -61,15 +61,15 @@ public class SyncEnvironment : ISyncEnvironment
 
       if(!fullPath.StartsWith(_runtimeRoot, StringComparison.OrdinalIgnoreCase))
       {
-        throw new InvalidOperationException($"Resolved path escapes DataRoot: {fullPath}");
+        throw new InvalidOperationException($"Resolved path escapes Root: {fullPath}");
       }
       return fullPath;
   }
 
   public static ISyncEnvironment Default()
   {
-    return new SyncEnvironment(Path.Combine(AppContext.BaseDirectory, "data"));
+    return new SyncEnvironment(Path.Combine(AppContext.BaseDirectory, "runtime"));
   }
 
-  public static ISyncEnvironment CreateDocker() => new SyncEnvironment("/app/data");
+  public static ISyncEnvironment CreateDocker() => new SyncEnvironment("/app/runtime");
 }
