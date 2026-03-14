@@ -3,7 +3,6 @@ using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Actors;
 using AkkaSync.Core.Common;
-using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Infrastructure.Messaging.Publish;
 using System;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;

@@ -17,6 +17,7 @@ export const pluginHubSlice = createSlice({
   initialState,
   reducers: {
     setPlugins(state, action: PayloadAction<PluginSet>) {
+      
       pluginAdapter.setAll(state, action.payload.entries);
       state.packages = action.payload.packages ?? [];
     },

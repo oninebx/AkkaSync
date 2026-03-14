@@ -2,6 +2,7 @@
 using Akka.Util.Internal;
 using AkkaSync.Infrastructure.Messaging.Models;
 using AkkaSync.Infrastructure.Options;
+using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 using AkkaSync.Infrastructure.SyncPlugins.Models;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using Microsoft.Extensions.Logging;
@@ -19,12 +20,15 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
   {
     private readonly IReadOnlySet<string> _catalogSources;
     private readonly IPluginStorage _storage;
+    private readonly IPluginCatalog _catalog;
     private readonly IPluginHttpClient _client;
     private readonly ILogger<GithubPackageManager> _logger;
-    public GithubPackageManager(IPluginHttpClient client, IPluginStorage storage, IOptions<PluginOptions> options, ILogger<GithubPackageManager> logger) 
+    private Dictionary<string, PluginCatalogEntry>? _pluginsToUpdate;
+    public GithubPackageManager(IPluginHttpClient client, IPluginStorage storage, IPluginCatalog catalog, IOptions<PluginOptions> options, ILogger<GithubPackageManager> logger) 
     {
       _catalogSources = options.Value.CatalogSources;
       _storage = storage;
+      _catalog = catalog; ;
       _client = client;
       _logger = logger;
     }
@@ -37,7 +41,15 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
 
       var fileName = Path.GetFileName(uri.AbsolutePath);
 
-      return await _storage.SaveAsync(fileName, new MemoryStream(data));
+      var filePath = await _storage.SaveAsync(fileName, new MemoryStream(data));
+      var id = Path.GetFileNameWithoutExtension(fileName);
+      if (_pluginsToUpdate is not null && _pluginsToUpdate.TryGetValue(id, out var entry))
+      {
+        await _catalog.AddAsync(new PluginCatalogEntry(id, entry.Version, false));
+        _pluginsToUpdate.Remove(id);
+      }
+      
+      return filePath;
 
     }
 
@@ -57,6 +69,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
           registries.Add(pluginsInRegistry);
         }
       }
+      _pluginsToUpdate = _storage.Diff(registries).Select(c => new PluginCatalogEntry(c.Id, c.Version, false)).ToDictionary(c => c.Id, c => c);
       return _storage.Diff(registries);
     }
   }

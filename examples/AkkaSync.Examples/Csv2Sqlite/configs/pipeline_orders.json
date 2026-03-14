@@ -6,7 +6,7 @@
       "SourceProvider": {
         "Type": "FolderWatcherSourceProvider",
         "Parameters": {
-          "folder": "Csv2Sqlite/input/orders",
+          "folder": "data/Csv2Sqlite/input/orders",
           "source": "csv"
         }
       },
@@ -19,7 +19,7 @@
       "SinkProvider": {
         "Type": "SqliteSinkProvider",
         "Parameters": {
-          "connectionString": "Data Source=Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+          "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
           "batchSize": 50
         }
       },

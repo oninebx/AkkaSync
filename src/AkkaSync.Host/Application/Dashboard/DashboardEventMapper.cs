@@ -1,7 +1,7 @@
 using System;
 using AkkaSync.Abstractions;
-using AkkaSync.Infrastructure.Messaging.Publish;
 using AkkaSync.Host.Application.Dashboard.NotificationMappings;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Application.Dashboard;
 

@@ -3,8 +3,6 @@ using Akka.DependencyInjection;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
-using AkkaSync.Core.Common;
-using AkkaSync.Infrastructure.DependencyInjection;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 using AkkaSync.Infrastructure.Options;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
@@ -116,29 +114,10 @@ namespace AkkaSync.Infrastructure.Actors
 
       if (descriptor is not null)
       {
-        Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Version));
+        Context.System.EventStream.Publish(new PluginAdded(descriptor.Holder, descriptor.Version));
       }
 
-      //var (providers, context) = PluginLoader.LoadFromFile(shadowPath, _serviceProvider);
-      //foreach (var provider in providers)
-      //{
-      //  var adapter = _registryAdapters.FirstOrDefault(r => r.CanHandle(provider.InterfaceType));
-      //  if (adapter != null)
-      //  {
-      //    var descriptor = adapter.AddProvider(provider.ProviderInstance);
-      //    if(descriptor is not null)
-      //    {
-      //      _logger.Info("PluginProvider {0} is added to registry.", provider.InterfaceType.Name);
-
-      //      Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Version));
-      //    }
-
-      //  }
-      //}
-      //if(context is not null)
-      //{
-      //  _pluginContexts[Path.GetFileNameWithoutExtension(shadowPath)!] = context;
-      //}
+      
     }
 
     private PluginDescriptor? RegisterPlugin(string file)

@@ -5,7 +5,7 @@
       "SourceProvider": {
         "Type": "FolderWatcherSourceProvider",
         "Parameters": {
-          "folder": "Csv2Sqlite/input/system_events",
+          "folder": "data/Csv2Sqlite/input/system_events",
           "source": "csv"
         }
       },
@@ -18,7 +18,7 @@
       "SinkProvider": {
         "Type": "SqliteSinkProvider",
         "Parameters": {
-          "connectionString": "Data Source=Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+          "connectionString": "Data Source=data/Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
           "batchSize": 50
         }
       },
@@ -33,7 +33,7 @@
       "SourceProvider": {
         "Type": "FolderWatcherSourceProvider",
         "Parameters": {
-          "folder": "Csv2Sqlite/input/system_events",
+          "folder": "data/Csv2Sqlite/input/system_events",
           "source": "csv"
         }
       },
@@ -46,7 +46,7 @@
       "SinkProvider": {
         "Type": "SqliteSinkProvider",
         "Parameters": {
-          "connectionString": "Data Source=Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+          "connectionString": "Data Source=data/Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
           "batchSize": 200
         }
       },

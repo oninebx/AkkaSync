@@ -15,7 +15,7 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
       var state = (PluginState)store;
       return @event switch
       {
-        PluginAdded => new EventNotification("plugin.entries.added", state.Entries.LastOrDefault()!),
+        PluginAdded e => new EventNotification("plugin.entries.added", state.Entries.FirstOrDefault(p => p.Id == e.Id)!),
         PluginRemoved e => new EventNotification("plugin.entries.removed", e.Name),
         PluginUpdated e => new EventNotification("plugin.entries.updated", new { e.Name, e.Version }),
         DashboardInitialized => new EventNotification("plugin.entries.initialized", state),

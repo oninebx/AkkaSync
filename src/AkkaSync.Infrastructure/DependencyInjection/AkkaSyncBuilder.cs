@@ -8,6 +8,7 @@ using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
 using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
 using AkkaSync.Infrastructure.Options;
+using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 
 namespace AkkaSync.Infrastructure.DependencyInjection
 {
@@ -17,6 +18,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
     private IServiceCollection _services { get; }
     private StorageOptions _pipelineStorageOptions { get; }
     private StorageOptions _pluginStorageOptions { get; }
+    private StorageOptions _pluginCatalogOptions { get;  }  
     public AkkaSyncBuilder(IServiceCollection services, IConfiguration configuration)
     {
       _services = services;
@@ -24,6 +26,7 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       _services.Configure<PluginOptions>(configuration.GetSection("Plugins"));
       _pluginStorageOptions = configuration.GetSection("Plugins:Storage").Get<StorageOptions>() ?? new StorageOptions();
       _pipelineStorageOptions = configuration.GetSection("PipelineStorage").Get<StorageOptions>() ?? new StorageOptions();
+      _pluginCatalogOptions = configuration.GetSection("Plugins:Catalog").Get<StorageOptions>() ?? new StorageOptions();
     }
 
     public AkkaSyncBuilder AddPipelines()
@@ -52,6 +55,15 @@ namespace AkkaSync.Infrastructure.DependencyInjection
         _ => throw new NotSupportedException($"Plugin storage type {_pluginStorageOptions.Type} is not supported.")
       };
       _services.AddSingleton(pluginStorage);
+
+      // build plugin catalog
+      var pluginCatalogFile = Path.Combine(AppContext.BaseDirectory, _pluginCatalogOptions.Uri);
+      IPluginCatalog pluginCatalog = _pluginCatalogOptions.Type switch
+      {
+        "Json" => new JsonPluginCatalog(pluginCatalogFile),
+        _ => throw new NotSupportedException($"Plugin catalog type {_pluginCatalogOptions.Type} is not supported.")
+      };
+      _services.AddSingleton(pluginCatalog);
 
       // build plugin package manager
       _services.AddHttpClient<IPluginHttpClient, PluginHttpClient>(client =>

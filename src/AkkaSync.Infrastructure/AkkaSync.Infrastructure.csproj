@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Core/AkkaSync.Core.csproj" />
   </ItemGroup>

@@ -9,7 +9,7 @@ interface HostCardProps {
   name: string;
   connectionStatus: ConnectionStatus;
   status: HostStatus;
-  startTime: string;
+  startTime?: string;
   className?: string;
 }
 

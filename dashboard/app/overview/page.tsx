@@ -23,7 +23,7 @@ export default function HomePage() {
 
   const events = useSelector(selectJournal);
   const status = HostStatus.Idle;
-  const startAt = new Date().toISOString();
+  // const startAt = new Date().toISOString();
 
   return (
     <>
@@ -34,8 +34,7 @@ export default function HomePage() {
             <HostCard 
               name="AkkaSync-Primary"
               connectionStatus={connectionStatus}
-              status={status}
-              startTime={startAt} />
+              status={status} />
             <RecentEventsCard events={events}/>
           </div>
           <PipelineTable data={pipelineData} />
