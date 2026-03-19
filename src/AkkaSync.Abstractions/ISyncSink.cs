@@ -6,8 +6,9 @@ using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Abstractions
 {
-    public interface ISyncSink
-    {
-        Task WriteAsync(IEnumerable<TransformContext> context, CancellationToken cancellationToken);
-    }
+  public interface ISyncSink
+  {
+    DataSourceIdentity Identity { get; }
+    Task WriteAsync(IEnumerable<TransformContext> context, CancellationToken cancellationToken);
+  }
 }

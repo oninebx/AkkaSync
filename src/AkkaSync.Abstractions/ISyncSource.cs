@@ -13,6 +13,7 @@ public interface ISyncSource
   string Key { get; }
   string Type { get; }
   string ETag { get; }
+  DataSourceIdentity DataSource { get; }
 
   IAsyncEnumerable<TransformContext> ReadAsync(string? cursor, CancellationToken cancellationToken);
 }
