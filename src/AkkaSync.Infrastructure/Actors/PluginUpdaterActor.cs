@@ -1,22 +1,16 @@
 ﻿using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Infrastructure.Messaging.Contract.Update;
-using AkkaSync.Infrastructure.Messaging.Models;
 using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
 
 namespace AkkaSync.Infrastructure.Actors
 {
-  public sealed class PluginUpdateActor: ReceiveActor
+  public sealed class PluginUpdaterActor: ReceiveActor
   {
     private readonly IPluginPackageManager _pluginPackageManager;
     private readonly ILoggingAdapter _logger = Context.GetLogger();
-    public PluginUpdateActor(IPluginPackageManager packageManager) 
+    public PluginUpdaterActor(IPluginPackageManager packageManager) 
     {
       _pluginPackageManager = packageManager;
 

@@ -9,7 +9,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Catalog
 {
   public interface IPluginCatalog
   {
-    Task<IReadOnlyList<PluginCatalogEntry>> GetAllAsync();
+    Task<IReadOnlyList<PluginCatalogEntry>> GetAllAsync(Func<PluginCatalogEntry, bool>? predicate = null);
     Task AddAsync(PluginCatalogEntry entry);
     Task UpdateAsync(PluginCatalogEntry entry);
     Task RemoveAsync(string id, string version);

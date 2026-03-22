@@ -66,16 +66,22 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
           }
         }
       }
-      catch (ReflectionTypeLoadException rex)
-      {
-        foreach (var loaderEx in rex.LoaderExceptions)
-        {
-          Console.WriteLine(loaderEx?.Message);
-        }
-      }
       catch (Exception ex)
       {
-        Console.WriteLine($"Failed to load plugin from {filePath}: {ex.Message}");
+        if(ex is ReflectionTypeLoadException rex)
+        {
+          foreach (var loaderEx in rex.LoaderExceptions)
+          {
+            Console.WriteLine(loaderEx?.Message);
+          }
+        }
+        
+        context.Unload();
+        context = null!;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+        results.Clear();
       }
 
       return (results, context);

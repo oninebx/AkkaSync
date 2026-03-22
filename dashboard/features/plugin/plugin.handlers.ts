@@ -17,4 +17,7 @@ envelopeHandlerMap.set('plugin.entries.removed', (event, dispatch) => {
 envelopeHandlerMap.set('plugin.packages.checked', (event, dispatch) => {
   dispatch(pluginActions.notifyPackages(event.payload as PluginPackageEntry[]))
 });
+envelopeHandlerMap.set('plugin.entries.restored', (event, dispatch) => {
+  dispatch(pluginActions.notifyEntries(event.payload as PluginEntry[]))
+});
 

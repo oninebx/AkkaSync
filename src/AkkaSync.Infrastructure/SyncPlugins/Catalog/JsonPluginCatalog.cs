@@ -12,35 +12,79 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Catalog
   public class JsonPluginCatalog : IPluginCatalog
   {
     private readonly string _filePath;
-    private readonly List<PluginCatalogEntry> _catalog;
+    private bool _isInitialized = false;
+    private readonly SemaphoreSlim _lock = new(1, 1);
+    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true, PropertyNameCaseInsensitive = true };
+    private List<PluginCatalogEntry> _catalog = [];
 
     public JsonPluginCatalog(string filePath)
     {
       _filePath = filePath;
-      var json = File.Exists(filePath) ? File.ReadAllText(filePath) : null;
-      _catalog = !string.IsNullOrWhiteSpace(json)
-        ? JsonSerializer.Deserialize<List<PluginCatalogEntry>>(json)!
-        : [];
     }
     public async Task AddAsync(PluginCatalogEntry entry)
     {
-      _catalog.Add(entry);
-      await SaveAsync();
+      await _lock.WaitAsync();
+      try
+      {
+        await EnsureInitializedAsync();
+        _catalog.Add(entry);
+        await SaveAsync();
+      }
+      finally
+      {
+        _lock.Release();
+      }
+      
     }
 
-    public Task<IReadOnlyList<PluginCatalogEntry>> GetAllAsync()
+    public async Task<IReadOnlyList<PluginCatalogEntry>> GetAllAsync(Func<PluginCatalogEntry, bool>? predicate = null)
     {
-      throw new NotImplementedException();
+      await EnsureInitializedAsync();
+      var query = _catalog.AsEnumerable();
+      if (predicate != null)
+      {
+        query = query.Where(predicate);
+      }
+      return query.ToList().AsReadOnly();
     }
 
-    public Task RemoveAsync(string id, string version)
+    public async Task RemoveAsync(string id, string version)
     {
-      throw new NotImplementedException();
+      await _lock.WaitAsync();
+      try
+      {
+        await EnsureInitializedAsync();
+        var item = _catalog.FirstOrDefault(p => p.Id == id && p.Version == version);
+        if (item != null)
+        {
+          _catalog.Remove(item);
+          await SaveAsync();
+        }
+      }
+      finally
+      {
+        _lock.Release();
+      }
+      
     }
 
-    public Task UpdateAsync(PluginCatalogEntry entry)
+    public async Task UpdateAsync(PluginCatalogEntry entry)
     {
-      throw new NotImplementedException();
+      await _lock.WaitAsync();
+      try
+      {
+        await EnsureInitializedAsync();
+        var index = _catalog.FindIndex(p => p.Id == entry.Id && p.Version == entry.Version);
+        if (index != -1)
+        {
+          _catalog[index] = entry;
+          await SaveAsync();
+        }
+      }
+      finally
+      {
+        _lock.Release();
+      }
     }
 
     private async Task SaveAsync()
@@ -51,6 +95,22 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Catalog
       });
 
       await File.WriteAllTextAsync(_filePath, json);
+      
+    }
+
+    private async Task EnsureInitializedAsync()
+    {
+      if (_isInitialized)
+      {
+        return;
+      }
+
+      if (File.Exists(_filePath))
+      {
+        using var stream = File.OpenRead(_filePath);
+        _catalog = await JsonSerializer.DeserializeAsync<List<PluginCatalogEntry>>(stream, _jsonOptions) ?? [];
+      }
+      _isInitialized = true;
     }
   }
 }

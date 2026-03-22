@@ -20,6 +20,7 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
         PluginUpdated e => new EventNotification("plugin.entries.updated", new { e.Name, e.Version }),
         DashboardInitialized => new EventNotification("plugin.entries.initialized", state),
         PluginVersionsChecked e => new EventNotification("plugin.packages.checked", state.PackageEntries),
+        PluginsRestored e => new EventNotification("plugin.entries.restored", state.Entries),
         _ => null
       };
     }

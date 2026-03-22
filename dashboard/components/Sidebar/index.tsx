@@ -15,8 +15,8 @@ import {
 
 const items = [
   { name: "Overview", href: "/overview", icon: <Gauge /> },
+  { name: "Live", href: "/live", icon: <Server /> },
   { name: "Plugins", href: "/sync-plugins", icon: <Puzzle /> },
-  { name: "Host", href: "/host-monitor", icon: <Server /> },
   { name: "Pipelines", href: "/pipelines", icon: <Workflow /> },
   { name: "Settings", href: "/settings", icon: <Settings /> },
 ];

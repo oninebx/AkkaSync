@@ -34,6 +34,9 @@ export const pluginHubSlice = createSlice({
     },
     notifyPackages(state, action: PayloadAction<PluginPackageEntry[]>) {
       state.packages = action.payload;
+    },
+    notifyEntries(state, action: PayloadAction<PluginEntry[]>){
+      pluginAdapter.setAll(state, action.payload);
     }
   }
 });

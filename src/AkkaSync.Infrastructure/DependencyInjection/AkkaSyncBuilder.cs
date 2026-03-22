@@ -46,12 +46,15 @@ namespace AkkaSync.Infrastructure.DependencyInjection
 
     public AkkaSyncBuilder AddPlugins()
     {
-      var pluginFolder = Path.Combine(AppContext.BaseDirectory, _pluginStorageOptions.Uri); // local plugin cache folder
+      var pluginFolder = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, _pluginStorageOptions.Uri)); // local plugin cache folder
+      var normalizedPath = Path.TrimEndingDirectorySeparator(_pluginStorageOptions.Uri);
+      var parent = Path.GetDirectoryName(normalizedPath) ?? string.Empty;
+      var shadowFolder = Path.Combine(AppContext.BaseDirectory, parent, "shadow"); //  local plugin shadow copy folder for loading to avoid file lock
 
       // build plugin storage
       IPluginStorage pluginStorage = _pluginStorageOptions.Type switch
       {
-        "Local" => new LocalPluginStorage(pluginFolder),
+        "Local" => new LocalPluginStorage(pluginFolder, shadowFolder),
         _ => throw new NotSupportedException($"Plugin storage type {_pluginStorageOptions.Type} is not supported.")
       };
       _services.AddSingleton(pluginStorage);
@@ -73,11 +76,6 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       });
 
       _services.AddSingleton<IPluginPackageManager, GithubPackageManager>();
-
-     
-      var normalizedPath = Path.TrimEndingDirectorySeparator(_pluginStorageOptions.Uri);
-      var parent = Path.GetDirectoryName(normalizedPath) ?? string.Empty;
-      var shadowFolder = Path.Combine(AppContext.BaseDirectory, parent,"shadow"); //  local plugin shadow copy folder for loading to avoid file lock
 
       Options.PluginFolder = pluginFolder;
       Options.ShadowFolder = shadowFolder;

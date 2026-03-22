@@ -10,7 +10,17 @@ namespace AkkaSync.Host.Application.Query.Mapper
     public RequestQueryMapper()
     {
       _queryTypes = AppDomain.CurrentDomain.GetAssemblies()
-           .SelectMany(a => a.GetTypes())
+           .SelectMany(a => {
+             try
+             {
+               return a.GetTypes();
+             }
+             catch
+             {
+               return [];
+             }
+             
+           })
            .Where(t => typeof(IRequestQuery).IsAssignableFrom(t) && !t.IsInterface)
            .ToDictionary(t => t.Name, t => t);
     }

@@ -1,16 +1,11 @@
 ﻿using Akka.Actor;
 using Akka.DependencyInjection;
 using Akka.Event;
-using AkkaSync.Abstractions;
-using AkkaSync.Abstractions.Models;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
-using AkkaSync.Infrastructure.Options;
+using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
-using AkkaSync.Infrastructure.SyncPlugins.Models;
-using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
-using System.Reflection;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
 
@@ -18,36 +13,28 @@ namespace AkkaSync.Infrastructure.Actors
 {
   public class PluginManagerActor : ReceiveActor
   {
-    private readonly IEnumerable<IPluginProviderRegistryAdapter> _registryAdapters;
-    private readonly IServiceProvider _serviceProvider;
     private readonly IPluginStorage _pluginStorage;
+    private readonly IPluginCatalog _pluginCatalog;
     private readonly FileSystemWatcher _watcher;
     private readonly string _shadowFolder;
-    private readonly Dictionary<string, PluginLoadContext> _pluginContexts;
-    private readonly List<string> _pendingCleanup = [];
-    private ICancelable? _cleanupSchedule;
-    private IActorRef _updateActor;
+    private readonly IActorRef _updateActor;
+    private readonly IActorRef _loaderActor;
 
     private readonly ILoggingAdapter _logger = Context.GetLogger();
     public PluginManagerActor(
-      IServiceProvider serviceProvider,
-      IPluginStorage pluginStorage,
-      AkkaSyncOptions options,
-      IEnumerable<IPluginProviderRegistryAdapter> registryAdapters)
+      IPluginCatalog pluginCatalog,
+      IPluginStorage pluginStorage
+      )
     {
-      _serviceProvider = serviceProvider;
       _pluginStorage = pluginStorage;
-      _registryAdapters = registryAdapters;
-      _watcher = EnsureWatcherCreated(options.PluginFolder);
-      _shadowFolder = options.ShadowFolder;
-      _pluginContexts = [];
+      _pluginCatalog = pluginCatalog;
+      _watcher = EnsureWatcherCreated(pluginStorage.PluginFolder);
+      _shadowFolder = pluginStorage.ShadowFolder;
 
-      _updateActor = Context.ActorOf(DependencyResolver.For(Context.System).Props<PluginUpdateActor>(), "plugin-update");
+      _updateActor = Context.ActorOf(DependencyResolver.For(Context.System).Props<PluginUpdaterActor>(), "plugin-updater");
+      _loaderActor = Context.ActorOf(DependencyResolver.For(Context.System).Props<PluginLoaderActor>(), "plugin-loader");
 
-      Receive<Protocol.CheckAndUpdatePlugins>(msg => DoCheckAndUpdate(msg.Required));
-      ReceiveAsync<Protocol.LoadPlugin>(msg => DoLoadPlugin(msg.Path));
-      Receive<Protocol.UnloadPlugin>(msg => DoUnloadPlugin(msg.Path));
-      Receive<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
+      ReceiveAsync<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
 
       Receive<CheckVersions>(_ => DoCheckVersions());
       Receive<UpdatePlugin>(msg => NotifyUpdatePlugin(msg));
@@ -55,20 +42,20 @@ namespace AkkaSync.Infrastructure.Actors
 
     protected override void PreStart()
     {
-      LoadPlugins(_shadowFolder);
 
-      var stats = _registryAdapters.Select(adapter => (Name: adapter.GetType().GetGenericArguments().FirstOrDefault()?.Name ?? "Unknown", adapter.Count)).ToList();
-      var message = string.Join(", ", stats.Select(s => $"{s.Count} {s.Name} plugin(s)"));
-      _logger.Info("There are {0} being managed.", message);
-      var plugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginCacheEntry(d.Holder, d.Version)));
-      if (plugins is not null && plugins.Any())
-      {
-        Context.System.EventStream.Publish(new PluginManagerInitialized(plugins.ToHashSet() ?? []));
-      }
+      Self.Tell(new Protocol.CleanupPendingPlugins());
+      _loaderActor.Tell(new Protocol.RestorePlugins());
 
-      var eventSelf = Self;
-      _watcher.Created += (s, e) => eventSelf.Tell(new Protocol.LoadPlugin(e.FullPath));
-      _watcher.Deleted += (s, e) => eventSelf.Tell(new Protocol.UnloadPlugin(e.FullPath));
+      _watcher.Created += async (s, e) => {
+        await Task.Run(async () =>
+        {
+          await PluginLoader.EnsurePluginZipFileCreated(e.FullPath);
+          var shadowPath = ExtractToShadow(e.FullPath);
+          _loaderActor.Tell(new Protocol.LoadPlugin(shadowPath));
+        });
+       
+      };
+      _watcher.Deleted += (s, e) => _loaderActor.Tell(new Protocol.UnloadPlugin(ResolvePluginId(e.FullPath)));
       _watcher.EnableRaisingEvents = true;
     }
 
@@ -78,14 +65,7 @@ namespace AkkaSync.Infrastructure.Actors
       base.PostStop();
     }
 
-    private void LoadPlugins(string folder)
-    {
-      var pluginFiles = Directory.GetFiles(folder, "AkkaSync.Plugins*.dll", SearchOption.AllDirectories);
-      foreach (var file in pluginFiles)
-      {
-        RegisterPlugin(file);
-      }
-    }
+    private string ResolvePluginId(string fileName) => Path.GetFileNameWithoutExtension(fileName);
 
     private FileSystemWatcher EnsureWatcherCreated(string folder)
     {
@@ -100,104 +80,27 @@ namespace AkkaSync.Infrastructure.Actors
       _logger.Info("PluginManagerActor is watching folder {0} for plugin changes.", folder);
       return watcher;
     }
-    private void DoCheckAndUpdate(IEnumerable<string> required)
-    {
-      _logger.Info("Received CheckAndUpdatePlugins message with required plugins: {0}", string.Join(", ", required));
-      _pluginStorage.EnsureAsync(required);
-    }
 
-    private async Task DoLoadPlugin(string path)
+    private async Task DoCleanup() 
     {
-      await PluginLoader.EnsurePluginZipFileCreated(path);
-      var shadowPath = ExtractToShadow(path);
-      var descriptor = RegisterPlugin(shadowPath);
-
-      if (descriptor is not null)
+      var pluginsToDelete = await _pluginCatalog.GetAllAsync(p => p.PendingDelete);
+      try
       {
-        Context.System.EventStream.Publish(new PluginAdded(descriptor.Holder, descriptor.Version));
-      }
-
-      
-    }
-
-    private PluginDescriptor? RegisterPlugin(string file)
-    {
-      var (providers, context) = PluginLoader.LoadFromFile(file, _serviceProvider);
-      PluginDescriptor? descriptor = null;
-      foreach (var provider in providers)
-      {
-        var adapter = _registryAdapters.FirstOrDefault(r => r.CanHandle(provider.InterfaceType));
-        if (adapter != null)
+        await _pluginStorage.DeleteRangeAsync(pluginsToDelete.Select(p => p.Id));
+        foreach(var plugin in pluginsToDelete)
         {
-          descriptor = adapter.AddProvider(provider.ProviderInstance);
-          if(descriptor is not null)
-          {
-            _logger.Info("PluginProvider {0} is added to registry.", provider.InterfaceType.Name);
-          }
+          await _pluginCatalog.RemoveAsync(plugin.Id, plugin.Version);
         }
       }
-      if (context is not null)
+      catch (AggregateException ex) 
       {
-        _pluginContexts[Path.GetFileNameWithoutExtension(file)!] = context;
+        var errorMessages = ex.Flatten().InnerExceptions
+        .Select(ex => ex.Message)
+        .Distinct();
+
+        _logger.Error("Delete plugins files failed: {0}",string.Join(" | ", errorMessages));
       }
-      return descriptor;
-    }
-
-    private bool DoUnloadPlugin(string path)
-    {
-      var shadowPath = Path.Combine(_shadowFolder, Path.GetFileNameWithoutExtension(path));
-      foreach (var adapter in _registryAdapters)
-      {
-        var descriptors = adapter.RemoveByFile(shadowPath);
-        if (descriptors != null && descriptors.Any())
-        {
-          _logger.Info("{0} PluginProvider(s) in file {1} is removed from registry.", descriptors.Count(), shadowPath);
-          foreach (var descriptor in descriptors)
-          {
-            Context.System.EventStream.Publish(new PluginRemoved(descriptor.Name));
-          }
-        }
-      }
-      var fileKey = Path.GetFileName(shadowPath);
-      if (_pluginContexts.TryGetValue(fileKey, out var context))
-      {
-        context.Unload();
-        _pluginContexts.Remove(fileKey);
-        context = null;
-
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-
-
-        if (!TryDelete(shadowPath)) 
-        { 
-          _pendingCleanup.Add(shadowPath);
-          _logger.Warning("Failed to unload Plugin Providers in {0}. Will retry later.", shadowPath);
-          StartCleanupSchedule();
-          return false;
-        }
-      }
-      _logger.Info("Plugin Providers in {0} is unloaded.", shadowPath);
-      return true;
-    }
-
-    private void DoCleanup() 
-    {
-      foreach(var path in _pendingCleanup.ToList())
-      {
-        if(TryDelete(path)) 
-        { 
-          _pendingCleanup.Remove(path); 
-          _logger.Info("Pending cleanup for {0} is successful.", path); 
-        }
-      }
-
-      if(_pendingCleanup.Count == 0) 
-      { 
-        _cleanupSchedule?.Cancel();
-        _cleanupSchedule = null;
-      }
+     
     }
 
     private void DoCheckVersions()
@@ -217,37 +120,6 @@ namespace AkkaSync.Infrastructure.Actors
     }
 
     private string GetShadowMainDllPath(string path) => Path.Combine(_shadowFolder, Path.GetFileNameWithoutExtension(path), Path.ChangeExtension(path, ".dll"));
-
-    private void StartCleanupSchedule()
-    {
-      if (_cleanupSchedule != null)
-      {
-        return;
-      }
-
-      _cleanupSchedule = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(
-          TimeSpan.FromSeconds(1),
-          TimeSpan.FromSeconds(2),
-          Self,
-          new Protocol.CleanupPendingPlugins(),
-          Self
-      );
-    }
-
-    private static bool TryDelete(string path)
-    {
-      try
-      {
-        if (Directory.Exists(path))
-        {
-          Directory.Delete(path, true);
-        }
-        return true;
-      }
-      catch (Exception)
-      {
-        return false;
-      }
-    }
+    
   }
 }
