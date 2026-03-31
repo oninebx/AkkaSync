@@ -18,23 +18,24 @@ public class PipelineRegistryActor : ReceiveActor
   private readonly IPluginProviderRegistry<ISyncSource> _sourceRegistry;
   private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
-  private readonly IPluginProviderRegistry<IHistoryStore> _storeRegistry;
   private IDictionary<string, PipelineSpec>? _pipelineSpecs;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _schedulerActor;
+  private readonly ISyncActorRegistry _actorRegistry;
+  private readonly ISyncActorResolver _actorResolver;
   public PipelineRegistryActor(
     ISyncActorRegistry actorRegistry,
+    ISyncActorResolver actorResolver,
     IPluginProviderRegistry<ISyncSource> sourceRegistry, 
     IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
-    IPluginProviderRegistry<ISyncSink> sinkRegistry,
-    IPluginProviderRegistry<IHistoryStore> storeRegistry)  
+    IPluginProviderRegistry<ISyncSink> sinkRegistry)  
   {
+    _actorResolver = actorResolver;
     _sourceRegistry = sourceRegistry;
     _transformerRegistry = transformerRegistry;
     _sinkRegistry = sinkRegistry;
-    _storeRegistry = storeRegistry;
-    _schedulerActor = actorRegistry.Get<PipelineSchedulerActor>();
-    
+    _actorRegistry = actorRegistry;
+
     Receive<RegistryProtocol.Initialize>(msg => {
       _logger.Info("{0} actor started at {1}.", Self.Path.Name, DateTimeOffset.UtcNow);
       _pipelineSpecs = msg.Pipelines;
@@ -52,6 +53,12 @@ public class PipelineRegistryActor : ReceiveActor
       _schedulerActor.Tell(msg);
       Context.System.EventStream.Publish(new PipelineCompleteReported(msg.PipelineId));
     });
+  }
+
+  protected override void PreStart()
+  {
+    _schedulerActor = _actorRegistry.Get<PipelineSchedulerActor>();
+
   }
 
   private void CreatePipeline(RegistryProtocol.CreatePipeline msg)
@@ -75,13 +82,10 @@ public class PipelineRegistryActor : ReceiveActor
       var sink = spec.SinkProvider;
       var sinkProvider = _sinkRegistry.GetProvider(sink.Type);
 
-      var store = spec.HistoryStoreProvider;
-      var storeProvider = _storeRegistry.GetProvider(store?.Type ?? string.Empty);
-      
-      if(sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
+      if (sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
       {
         var pipelineId = new PipelineId(runId, msg.Id);
-        var pipelineActor = Context.ActorOf(Props.Create(() => new PipelineActor(sourceProvider, transformerChain, sinkProvider, storeProvider, pipelineId, spec)), pipelineId.ToString());
+        var pipelineActor = _actorResolver.ActorOf<PipelineActor>(Context, pipelineId.ToString(), sourceProvider, transformerChain, sinkProvider, pipelineId, spec);
         pipelineActor.Tell(new SharedProtocol.Start());
       }
       else

@@ -5,6 +5,6 @@ namespace AkkaSync.Host.Application.Pipeline
 {
   public sealed record PipelineState(ImmutableList<PipelineRecord> Pipelines): IStoreValue 
   {
-    public static PipelineState Empty => new PipelineState([]);
+    public static PipelineState Empty => new([]);
   }
 }

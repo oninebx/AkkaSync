@@ -56,23 +56,55 @@ public class SyncWorkerActor : ReceiveActor
       }
     }
 
+    void FlushError(List<ErrorContext> batch, int size)
+    {
+      if(batch.Count >= size)
+      {
+        Context.Parent.Tell(new WorkerErrored(_id, [.. batch.Select(e => new PluginError(e.PluginId, e.Message, e.Context))]));
+        batch.Clear();
+      }
+    }
+
     var batch = new List<TransformContext>();
+    var errorBatch = new List<ErrorContext>();
     try
     {
-      await foreach (var context in _source.ReadAsync(_cursor, _cancellationToken))
+      await foreach (var (context, error) in _source.ReadAsync(_cursor, _cancellationToken))
       {
-        foreach (var transformerLayer in _transformers)
+        if(error is not null)
         {
-          await Task.WhenAll(
-            transformerLayer.Select(t => t.Transform(context, _cancellationToken))
-          );
-          context.CommitLayer();
+          errorBatch.Add(error);
+          if (error.IsFatal)
+          {
+            FlushError(errorBatch, 1);
+            Context.Parent.Tell(new WorkerFailed(_id, error.Message));
+            _logger.Error($"Worker {Self.Path.Name} stopped after encountering a fatal error: {error.Message}");
+            return;
+          }
+          else
+          {
+            _logger.Error($"Worker {Self.Path.Name} is running with an error: {error.Message}");
+            FlushError(errorBatch, _batchSize);
+          }
+          
         }
-        batch.Add(context);
-        await FlushAsync(batch, _batchSize);
+        if(context is not null)
+        {
+          foreach (var transformerLayer in _transformers)
+          {
+            await Task.WhenAll(
+              transformerLayer.Select(t => t.Transform(context, _cancellationToken))
+            );
+            context.CommitLayer();
+          }
+          batch.Add(context);
+          await FlushAsync(batch, _batchSize);
+        }
+        
       }
 
       await FlushAsync(batch, 1);
+      FlushError(errorBatch, 1);
 
       Context.Parent.Tell(new WorkerCompleted(_id, _source.ETag));
     }

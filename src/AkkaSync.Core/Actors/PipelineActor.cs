@@ -20,7 +20,8 @@ namespace AkkaSync.Core.Actors
     private readonly IReadOnlyList<IReadOnlyList<ISyncTransformer>> _transformers;
     private readonly ISyncSink _sink;
     private readonly int _batchSize;
-    private readonly IHistoryStore? _historyStore;
+    private readonly IHistoryStore _historyStore;
+    private readonly IErrorStore _errorStore;
     private CancellationTokenSource _cancellationTokenSource;
     private CancellationToken _cancellationToken;
     private readonly HashSet<WorkerId> _runWorkers = [];
@@ -29,7 +30,8 @@ namespace AkkaSync.Core.Actors
       IPluginProvider<ISyncSource> sourceProvider,
       IPluginProvider<ISyncTransformer> transformerProvider,
       IPluginProvider<ISyncSink> sinkProvider,
-      IPluginProvider<IHistoryStore>? historyProvider,
+      IHistoryStore historyStore,
+      IErrorStore errorStore,
       PipelineId id,
       PipelineSpec spec)
     {
@@ -41,7 +43,8 @@ namespace AkkaSync.Core.Actors
       _sink = sinkProvider.Create(spec.SinkProvider, _cancellationToken).First();
       _batchSize = spec.SinkProvider.Parameters.Get<int>("batchSize", 1);
 
-      _historyStore = historyProvider?.Create(spec.HistoryStoreProvider).FirstOrDefault();
+      _historyStore = historyStore;
+      _errorStore = errorStore;
       _id = id;
 
       ReceiveAsync<SharedProtocol.Start>(msg => StartAsync(msg));
@@ -51,6 +54,7 @@ namespace AkkaSync.Core.Actors
       ReceiveAsync<WorkerCompleted>(msg => FinalizeWorker(msg));
       ReceiveAsync<WorkerProgressed>(msg => HandleWorkerProgress(msg));
       ReceiveAsync<WorkerFailed>(msg => HandleFailedWorker(msg));
+      ReceiveAsync<WorkerErrored>(msg => HandleWorkerErrored(msg));
     }
 
     protected override void PostStop()
@@ -155,6 +159,12 @@ namespace AkkaSync.Core.Actors
         Context.Parent.Tell(new PipelineCompleted(pipelineId));
         Context.Stop(Self);
       }
+    }
+    private async Task HandleWorkerErrored(WorkerErrored msg)
+    {
+      _logger.Error($"Worker {msg.WorkerId} encountered errors: {string.Join(", ", msg.Errors.Select(e => $"{_id.Pid} - {e.PluginId}: {e.Message}"))}");
+      await _errorStore.RecordErrorsAsync([.. msg.Errors.Select(e => new ErrorRecord(_id.Pid, _id.RunId.ToString(), e.PluginId, e.Message) { Context = e.Context })]);
+      Context.System.EventStream.Publish(new WorkerErrorReported(msg.WorkerId, msg.Errors.GroupBy(e => e.PluginId).ToDictionary(g => g.Key, g => g.Count())));
     }
   }
 }

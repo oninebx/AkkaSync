@@ -15,5 +15,5 @@ public interface ISyncSource
   string ETag { get; }
   DataSourceIdentity DataSource { get; }
 
-  IAsyncEnumerable<TransformContext> ReadAsync(string? cursor, CancellationToken cancellationToken);
+  IAsyncEnumerable<(TransformContext? context, ErrorContext? error)> ReadAsync(string? cursor, CancellationToken cancellationToken);
 }

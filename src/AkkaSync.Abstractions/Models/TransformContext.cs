@@ -6,13 +6,13 @@ namespace AkkaSync.Abstractions.Models;
 
 public sealed class TransformContext
 {
-  // public required string RawData { get; set; }
   public IReadOnlyDictionary<string, object?> RawData { get; set; }
   public IDictionary<string, object>? MetaData { get; set; }
   public required string Cursor { get; set; }
   private IReadOnlyDictionary<string, object?> _commited;
   private readonly ConcurrentDictionary<string, object?> _pending;
   public IReadOnlyDictionary<string, object?> Artifacts => _commited;
+  public ErrorContext? Error { get; set; }
 
   public TransformContext(IReadOnlyDictionary<string, object?> rawData)
   {

@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Infrastructure/AkkaSync.Infrastructure.csproj" />
+    <ProjectReference Include="..\AkkaSync.Persistence\AkkaSync.Persistence.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -32,7 +33,7 @@
 		<Content Include="runtime\data\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-
+		
 		<!-- Plugin DLLs -->
 		<Content Include="runtime\plugins\**\*.zip">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -42,6 +43,10 @@
 		<Content Include="akka*.hocon">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Application\RunningPlugin\" />
 	</ItemGroup>
 	
   <!-- ================= PostPublish Target ================= -->

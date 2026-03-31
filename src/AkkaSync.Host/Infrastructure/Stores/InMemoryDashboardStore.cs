@@ -6,6 +6,7 @@ using AkkaSync.Host.Application.Swapping;
 using AkkaSync.Infrastructure.Messaging.Publish;
 using AkkaSync.Host.Application.Pipeline;
 using AkkaSync.Host.Application.Plugin;
+using AkkaSync.Host.Application.SyncWorker;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 
@@ -16,6 +17,7 @@ public class InMemoryDashboardStore : IDashboardStore
   private volatile ScheduleState _schedules = ScheduleState.Empty;
   private volatile DiagnosisJournal _journal = DiagnosisJournal.Empty;
   private volatile PluginState _pluginSet = PluginState.EMPTY;
+  private volatile WorkerState _workerState = WorkerState.Empty;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
@@ -25,6 +27,7 @@ public class InMemoryDashboardStore : IDashboardStore
       _schedules,
       _journal.ToShow(50),
       _pluginSet,
+      _workerState
     ];
   }
 
@@ -46,6 +49,9 @@ public class InMemoryDashboardStore : IDashboardStore
         break;
       case PluginState pluginSet:
         _pluginSet = pluginSet;
+        break;
+      case WorkerState workerState:
+        _workerState = workerState;
         break;
       default:
         throw new InvalidOperationException($"Unsupported store value type: {typeof(TValue).Name}");

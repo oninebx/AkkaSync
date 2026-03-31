@@ -1,9 +1,10 @@
 using Akka.Configuration;
 using AkkaSync.Host;
-using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Infrastructure.Extensions;
 using AkkaSync.Host.Web;
 using AkkaSync.Infrastructure.DependencyInjection;
+using AkkaSync.Persistence.ErrorStores;
+using AkkaSync.Persistence.HistoryStore;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
 
@@ -27,7 +28,9 @@ builder.Services.AddSignalR();
 
 builder.Services.AddAkkaSync(builder.Configuration, sync => sync
   .AddPipelines()
-  .AddPlugins(), akkaConfig);
+  .AddPlugins()
+  .UseHistoryStore<InMemoryHistoryStore>()
+  .UseErrorStore<InMemoryErrorStore>(), akkaConfig);
 
 builder.Services.AddDashboard();
 

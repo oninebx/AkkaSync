@@ -17,7 +17,7 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
       {
         SyncEngineReady e => new EventNotification("scheduler.specs.initialized", e.Schedules),
         PipelineScheduled e => new EventNotification("scheduler.jobs.added", state.Jobs.FirstOrDefault(j => j.Id == e.Name)!),
-        PipelineTriggered e => new EventNotification("scheduler.jobs.removed", e.Name),
+        PipelineTriggered e => new EventNotification("scheduler.jobs.removed", e.Pid),
         DashboardInitialized => new EventNotification("scheduler.all.notified", state),
         _ => null
       };

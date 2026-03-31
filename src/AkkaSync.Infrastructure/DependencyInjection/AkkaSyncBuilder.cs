@@ -1,8 +1,6 @@
-﻿using Akka.Actor;
-using AkkaSync.Abstractions;
+﻿using AkkaSync.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using System.Reflection;
 using AkkaSync.Infrastructure.PipelineStorages;
 using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
@@ -82,6 +80,18 @@ namespace AkkaSync.Infrastructure.DependencyInjection
       PrepareShadowFolder(pluginFolder, shadowFolder);
       return this;
     }
+
+    public AkkaSyncBuilder UseErrorStore<TStore>() where TStore : IErrorStore
+    {
+      _services.AddSingleton(typeof(IErrorStore), typeof(TStore));
+      return this;
+    }
+
+    public AkkaSyncBuilder UseHistoryStore<TStore>() where TStore : IHistoryStore
+    {
+      _services.AddSingleton(typeof(IHistoryStore), typeof(TStore));
+      return this;
+    } 
 
     private static void PrepareShadowFolder(string pluginFolder, string shadowFolder)
     {

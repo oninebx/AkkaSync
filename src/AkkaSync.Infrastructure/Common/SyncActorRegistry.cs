@@ -14,5 +14,6 @@ namespace AkkaSync.Infrastructure.Common
     public IActorRef Get<TActor>() => _registry.Get<TActor>();
 
     public void Register<TActor>(IActorRef actor) => _registry.Register<TActor>(actor);
+
   }
 }

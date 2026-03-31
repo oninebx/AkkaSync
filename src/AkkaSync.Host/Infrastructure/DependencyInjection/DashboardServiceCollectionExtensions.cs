@@ -6,7 +6,6 @@ using AkkaSync.Host.Application.Query.Handlers;
 using AkkaSync.Host.Application.Scheduling;
 using AkkaSync.Host.Application.Swapping;
 using AkkaSync.Host.Application.Syncing;
-using AkkaSync.Host.Infrastructure.Messaging;
 using AkkaSync.Host.Infrastructure.SignalR;
 using AkkaSync.Host.Infrastructure.Stores;
 using AkkaSync.Host.Application.Query.Mapper;
@@ -14,6 +13,8 @@ using AkkaSync.Infrastructure.Messaging.Publish;
 using AkkaSync.Host.Application.Pipeline;
 using AkkaSync.Host.Application.Dashboard.NotificationMappings;
 using AkkaSync.Host.Application.Plugin;
+using AkkaSync.Host.Application.SyncWorker;
+using AkkaSync.Host.Application.RunningWorker;
 
 namespace AkkaSync.Host.Infrastructure.Extensions;
 
@@ -28,6 +29,7 @@ public static class DashboardServiceExtension
     services.AddSingleton<IEventNotificationMapping, PipelineStateMapping>();
     services.AddSingleton<IEventNotificationMapping, ScheduleStateMapping>();
     services.AddSingleton<IEventNotificationMapping, PluginStateMapping>();
+    services.AddSingleton<IEventNotificationMapping, WorkerStateMapping>();
 
     services.AddSingleton(sp =>
       new EventReducerRegistryBuilder()
@@ -36,6 +38,7 @@ public static class DashboardServiceExtension
       .Add<ScheduleState>(ScheduleStateReducer.Reduce)
       .Add<DiagnosisJournal>(DiagnosisReducer.Reduce)
       .Add<PluginState>(PluginStateReducer.Reduce)
+      .Add<WorkerState>(WorkerReducer.Reduce)  
       .Build());
 
     services.AddSingleton<IDashboardClientRegistry, DashboardClientRegistry>();

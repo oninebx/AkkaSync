@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Akka.Event;
+using Akka.Hosting;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Actors;
 using AkkaSync.Core.Common;
@@ -13,10 +14,11 @@ namespace AkkaSync.Infrastructure.Actors;
 public class SyncGatewayActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  private IReadOnlyDictionary<Type, IActorRef> _routes;
+  private IReadOnlyDictionary<Type, IActorRef>? _routes;
 
-  private IActorRef _pipelineManager;
-  private IActorRef _pluginManager;
+  private IActorRef? _pipelineManager;
+  private IActorRef? _pluginManager;
+  private ISyncActorRegistry _actorRegistry;
   public SyncGatewayActor(
     ISyncActorRegistry actorRegistry,
     IDashboardStore store,
@@ -25,10 +27,8 @@ public class SyncGatewayActor : ReceiveActor
     IEventEnvelopeFactory factory,
     IEventEnvelopePublisher publisher)
   {
-
-    _pipelineManager = actorRegistry.Get<PipelineManagerActor>();
-    _pluginManager = actorRegistry.Get<PluginManagerActor>();
-    _routes = BuildQueryRoutes(_pipelineManager, _pluginManager);
+    _actorRegistry = actorRegistry;
+   
 
     ReceiveAsync<INotificationEvent>(async @event =>
     {
@@ -48,6 +48,10 @@ public class SyncGatewayActor : ReceiveActor
             envelopes.Add(envelope);
           }
         }
+        else
+        {
+          _logger.Debug("event {0} is emmited without reducing.", @event);
+        }
       }
 
       foreach(var envelop in envelopes)
@@ -60,6 +64,11 @@ public class SyncGatewayActor : ReceiveActor
   }
   protected override void PreStart()
   {
+
+    _pipelineManager = _actorRegistry.Get<PipelineManagerActor>();
+    _pluginManager = _actorRegistry.Get<PluginManagerActor>();
+    _routes = BuildQueryRoutes(_pipelineManager, _pluginManager);
+
     Context.System.EventStream.Subscribe(Self, typeof(INotificationEvent));
     _logger.Info("SyncGatewayActor started.");
   }
@@ -71,7 +80,7 @@ public class SyncGatewayActor : ReceiveActor
 
   private void HandleQuery(IRequestQuery msg)
   {
-    if(_routes.TryGetValue(msg.GetType(), out var target))
+    if(_routes!.TryGetValue(msg.GetType(), out var target))
     {
       target.Forward(msg);
     }

@@ -11,7 +11,6 @@ using AkkaSync.Infrastructure.Common;
 using AkkaSync.Infrastructure.Messaging.Publish;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace AkkaSync.Infrastructure.DependencyInjection;
 
@@ -20,6 +19,7 @@ public static class AkkaSyncExtension
   public static IServiceCollection AddAkkaSync(this IServiceCollection services, IConfiguration configuration, Action<AkkaSyncBuilder> syncConfigure, Config? akkaConfig = null)
   {
     services.AddSingleton<ISyncActorRegistry, SyncActorRegistry>();
+    services.AddSingleton<ISyncActorResolver>(sp => new SyncActorResolver(sp.GetRequiredService<ActorSystem>()));
 
     ISyncEnvironment env;
     if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")

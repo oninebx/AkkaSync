@@ -11,7 +11,7 @@ public static class ScheduleStateReducer
   {
     SyncEngineReady e => current with { Specs = e.Schedules.ToDictionary(s => s.Key, s => s.Value.Cron) },
     PipelineScheduled e => current with { Jobs = [.. current.Jobs, new PipelineJob(e.Name, e.NextUtc)] },
-    PipelineTriggered e => current with { Jobs = [.. current.Jobs.Where(j => j.Id != e.Name)]},
+    PipelineTriggered e => current with { Jobs = [.. current.Jobs.Where(j => j.Id != e.Pid)]},
     _ => current
   };
 }

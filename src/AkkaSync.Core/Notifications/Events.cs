@@ -1,5 +1,6 @@
 using System;
 using AkkaSync.Abstractions;
+using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Workers;
 
@@ -12,3 +13,4 @@ public sealed record WorkerFailureReported(WorkerId WorkerId, string Message) : 
 public sealed record WorkerStartReported(WorkerId WorkerId) : INotificationEvent;
 public sealed record WorkerCompleteReported(WorkerId WorkerId) : INotificationEvent;
 public sealed record WorkerNonCreationReported(string SourceName) : INotificationEvent;
+public sealed record WorkerErrorReported(WorkerId WorkerId, IReadOnlyDictionary<string, int> ErrorStats) : INotificationEvent;

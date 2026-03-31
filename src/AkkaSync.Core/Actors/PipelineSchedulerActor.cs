@@ -1,7 +1,6 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
-using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
@@ -18,10 +17,11 @@ public class PipelineSchedulerActor : ReceiveActor
   private IReadOnlyDictionary<string, string>? _schedules;
   private readonly Dictionary<string, ICancelable> _jobs = [];
   private readonly ILoggingAdapter _logger = Context.GetLogger();
-  private IActorRef _pipelineRegistry;
+  private IActorRef? _pipelineRegistry;
+  private ISyncActorRegistry _actorRegistry;
   public PipelineSchedulerActor(ISyncActorRegistry actorRegistry)
   {
-    _pipelineRegistry = actorRegistry.Get<PipelineRegistryActor>();
+    _actorRegistry = actorRegistry;
 
     Receive<SchedulerProtocol.Initialize>(msg =>
     {
@@ -51,7 +51,7 @@ public class PipelineSchedulerActor : ReceiveActor
     Context.System.EventStream.Publish(new PipelineScheduled(id.Pid, nextUtc));
   }
 
-  private DateTime ScheduleNextRun(string pipeline, string cron)
+  private DateTime ScheduleNextRun(string pid, string cron)
   {
     var schedule = CrontabSchedule.Parse(cron);
     var nextUtc = schedule.GetNextOccurrence(DateTime.UtcNow);
@@ -60,16 +60,16 @@ public class PipelineSchedulerActor : ReceiveActor
     var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
       delay,
       Self,
-      new SchedulerProtocol.Trigger(pipeline),
+      new SchedulerProtocol.Trigger(pid),
       Self
     );
 
-    if(_jobs.TryGetValue(pipeline, out var job))
+    if(_jobs.TryGetValue(pid, out var job))
     {
       job.Cancel();
     }
-    _jobs[pipeline] = cancelable;
-    _logger.Info("{0} will run at {1}. Please wait for {2}.", pipeline, nextUtc, delay);
+    _jobs[pid] = cancelable;
+    _logger.Info("{0} will run at {1}. Please wait for {2}.", pid, nextUtc, delay);
 
     return nextUtc;
   }
@@ -88,6 +88,10 @@ public class PipelineSchedulerActor : ReceiveActor
     }
   }
 
+  protected override void PreStart()
+  {
+    _pipelineRegistry = _actorRegistry.Get<PipelineRegistryActor>();
+  }
   protected override void PostStop()
   {
     foreach(var job in _jobs.Values)

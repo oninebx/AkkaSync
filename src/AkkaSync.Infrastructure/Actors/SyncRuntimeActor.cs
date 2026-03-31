@@ -1,5 +1,4 @@
 using Akka.Actor;
-using Akka.DependencyInjection;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Actors;
@@ -14,35 +13,24 @@ public class SyncRuntimeActor : ReceiveActor
   private ILoggingAdapter _logger = Context.GetLogger();
   
 
-  public SyncRuntimeActor(ISyncActorRegistry registry)
+  public SyncRuntimeActor(ISyncActorRegistry registry, ISyncActorResolver resolver)
   {
-    var strategy = new OneForOneStrategy(
-      maxNrOfRetries: 3,
-      withinTimeRange: TimeSpan.FromSeconds(10),
-      localOnlyDecider: ex =>
-      {
-        return Directive.Restart;
-      }
-    );
 
-    var resolver = DependencyResolver.For(Context.System);
-    var gatewayProps = resolver.Props<SyncGatewayActor>().WithSupervisorStrategy(strategy);
-    var gateway = Context.ActorOf(gatewayProps, "sync-gateway");
+    var gateway = resolver.ActorOf<SyncGatewayActor>(Context, "sync-gateway");
+    Context.Watch(gateway);
     registry.Register<SyncGatewayActor>(gateway);
-    
-    var pipelineManagerActor = Context.ActorOf(resolver.Props<PipelineManagerActor>(new Dictionary<string, Props>
-          {
-            { "pipeline-registry", resolver.Props<PipelineRegistryActor>() },
-            { "pipeline-scheduler", resolver.Props<PipelineSchedulerActor>() },
-          }).WithSupervisorStrategy(strategy), "pipeline-manager");
+
+    var pipelineManagerActor = resolver.ActorOf<PipelineManagerActor>(Context, "pipeline-manager");
+    Context.Watch(pipelineManagerActor);
     registry.Register<PipelineManagerActor>(pipelineManagerActor);
 
-    var pluginManagerActor = Context.ActorOf(resolver.Props<PluginManagerActor>().WithSupervisorStrategy(strategy), "plugin-manager");
+    var pluginManagerActor = resolver.ActorOf<PluginManagerActor>(Context, "plugin-manager");
+    Context.Watch(pluginManagerActor);
     registry.Register<PluginManagerActor>(pluginManagerActor);
 
     Receive<IRequestQuery>(msg =>
     {
-      if(!gateway.IsNobody())
+      if (!gateway.IsNobody())
       {
         gateway.Forward(msg);
       }
@@ -50,7 +38,7 @@ public class SyncRuntimeActor : ReceiveActor
       {
         _logger.Warning("SyncGatewayActor is invalid.");
       }
-      
+
     });
 
     Receive<Terminated>(t =>
@@ -58,4 +46,14 @@ public class SyncRuntimeActor : ReceiveActor
       _logger.Info("{0} actor terminated at {1}", t.ActorRef.Path.Name, DateTimeOffset.UtcNow);
     });
   }
+
+  protected override SupervisorStrategy SupervisorStrategy() => new OneForOneStrategy(
+      maxNrOfRetries: 3,
+      withinTimeRange: TimeSpan.FromSeconds(10),
+      localOnlyDecider: ex =>
+      {
+        _logger.Error(ex, "An error occurred in child actor. Restarting the actor.");
+        return Directive.Restart;
+      }
+    );
 }

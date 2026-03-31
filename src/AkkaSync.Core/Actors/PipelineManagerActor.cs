@@ -17,41 +17,35 @@ public class PipelineManagerActor : ReceiveActor
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef _schedulerActor;
   private IActorRef _registryActor;
-  private IDictionary<string, Props> _props;
   private IReadOnlyList<PipelineSpec> _pipelines = [];
   private IReadOnlyDictionary<string, ScheduleSpec> _schedules = new Dictionary<string, ScheduleSpec>();
   private readonly IPipelineStorage _pipelineStorage;
   private bool _registryReady;
   private bool _schedulerReady;
   private readonly ISyncActorRegistry _actorRegistry;
-  public PipelineManagerActor(ISyncActorRegistry actorRegistry, IDictionary<string, Props> props, IPipelineStorage pipelineStorage)
+  private readonly ISyncActorResolver _actorResolver;
+
+  public PipelineManagerActor(ISyncActorRegistry actorRegistry, ISyncActorResolver actorResolver, IPipelineStorage pipelineStorage)
   {
     _actorRegistry = actorRegistry;
-    _props = props;
+    _actorResolver = actorResolver;
     _pipelineStorage = pipelineStorage;
 
-    var strategy = new OneForOneStrategy(
-       maxNrOfRetries: 3,
-       withinTimeRange: TimeSpan.FromSeconds(10),
-       localOnlyDecider: ex =>
-       {
-         return Directive.Restart;
-       }
-     );
-
-    _schedulerActor = Context.ActorOf(_props["pipeline-scheduler"].WithSupervisorStrategy(strategy), "pipeline-scheduler");
-    _actorRegistry.Register<PipelineSchedulerActor>(_schedulerActor);
-
-    _registryActor = Context.ActorOf(_props["pipeline-registry"].WithSupervisorStrategy(strategy), "pipeline-registry");
+    _registryActor = actorResolver.ActorOf<PipelineRegistryActor>(Context, "pipeline-registry");
     _actorRegistry.Register<PipelineRegistryActor>(_registryActor);
 
+    _schedulerActor = actorResolver.ActorOf<PipelineSchedulerActor>(Context, "pipeline-scheduler");
+    _actorRegistry.Register<PipelineSchedulerActor>(_schedulerActor);
+
     ReceiveAsync<SharedProtocol.Start>(_ => HandleStartAsync());
-    Receive<RegistryInitialized>(_ => {
+    Receive<RegistryInitialized>(_ =>
+    {
       _logger.Info("PipelineRegistryActor is ready at {0}.", DateTimeOffset.UtcNow);
       _registryReady = true;
       CheckReady();
     });
-    Receive<SchedulerInitialized>(_ => {
+    Receive<SchedulerInitialized>(_ =>
+    {
       _logger.Info("PipelineSchedulerActor is ready at {0}.", DateTimeOffset.UtcNow);
       _schedulerReady = true;
       CheckReady();
@@ -75,6 +69,7 @@ public class PipelineManagerActor : ReceiveActor
   protected override void PostStop()
   {
     Context.System.EventStream.Publish(new SyncEngineStopped());
+    
   }
 
   private async Task HandleStartAsync()

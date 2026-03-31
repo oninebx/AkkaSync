@@ -15,7 +15,6 @@ public record PipelineSpec
   public required PluginSpec SourceProvider { get; init; }
   public required PluginSpec TransformerProvider { get; init; }
   public required PluginSpec SinkProvider { get; init; }
-  public required PluginSpec HistoryStoreProvider { get; init; }
 }
 
 public record PluginSpec
