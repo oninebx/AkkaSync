@@ -2,6 +2,7 @@
   "Pipelines": {
     "sync-system-events": {
       "Schedule": "every-5-minutes",
+      "IsActive": false,
       "SourceProvider": {
         "Type": "FolderWatcherSourceProvider",
         "Parameters": {
@@ -20,12 +21,6 @@
         "Parameters": {
           "connectionString": "Data Source=data/Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
           "batchSize": 50
-        }
-      },
-      "HistoryStoreProvider": {
-        "Type": "InMemoryHistoryStoreProvider",
-        "Parameters": {
-          "name": "system-events-history"
         }
       }
     },
@@ -48,12 +43,6 @@
         "Parameters": {
           "connectionString": "Data Source=data/Csv2Sqlite/output/systemstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
           "batchSize": 200
-        }
-      },
-      "HistoryStoreProvider": {
-        "Type": "InMemoryHistoryStoreProvider",
-        "Parameters": {
-          "name": "system-metrics-history"
         }
       }
     }

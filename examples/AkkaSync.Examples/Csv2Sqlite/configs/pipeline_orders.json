@@ -22,12 +22,6 @@
           "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
           "batchSize": 50
         }
-      },
-      "HistoryStoreProvider": {
-        "Type": "InMemoryHistoryStoreProvider",
-        "Parameters": {
-          "name": "demo"
-        }
       }
     }
   }

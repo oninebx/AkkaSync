@@ -48,6 +48,8 @@
     <ItemGroup>
       <DataFiles Include="**\input\**\*.*;**\output\**\*.*" />
     </ItemGroup>
+		<RemoveDir Directories="$(DataDir)" Condition="Exists('$(DataDir)')" />
+		<MakeDir Directories="$(DataDir)" Condition="!Exists('$(DataDir)')" />
     <Copy SourceFiles="@(DataFiles)" DestinationFiles="@(DataFiles->'$(DataDir)\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
