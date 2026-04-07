@@ -1,4 +1,4 @@
-import { pluginSelectors } from "@/features/plugin/plugin.selectors";
+import { pluginSelectors } from "@/features/plugin-artifact/plugin.selectors";
 import { PluginVM } from "./types";
 import { RootState } from "@/store";
 import { createSelector } from "@reduxjs/toolkit";

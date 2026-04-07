@@ -1,5 +1,5 @@
 import { ActionButton } from '@/components/Buttons';
-import { PluginStatus } from '@/features/plugin/plugin.types';
+import { PluginStatus } from '@/features/plugin-artifact/plugin.types';
 import { Trash2, DownloadCloud, CloudSync } from 'lucide-react';
 import React from 'react';
 

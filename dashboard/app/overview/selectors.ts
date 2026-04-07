@@ -1,8 +1,7 @@
 import { RootState } from "@/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { cronToNext, cronToText, formatDuration, formatTimeMixed } from "@/shared/utils/time";
-import { pipelineSelectors } from "@/features/pipeline/pipeline.slice";
-import { selectPipelines } from "@/features/pipeline/pipeline.selectors";
+import { pipelineSelectors, selectPipelines } from "@/features/pipeline/pipeline.selectors";
 import { selectScheduleJobs } from "@/features/scheduler/scheduler.selectors";
 import { KpiVM, PipelineVM } from "./types";
 
@@ -17,10 +16,12 @@ export const selectPipelineData = createSelector(
       return {
         name: p.id,
         schedule: pipelineSchedule ? cronToText(pipelineSchedule) : '-',
-        duration: p.startAt
-          ? formatDuration(p.startAt, p.finishAt ?? new Date()) ?? "-"
-          : "-",
-        lastRun: p.startAt ? formatTimeMixed(p.startAt) : "-",
+        // duration: p.startAt
+        //   ? formatDuration(p.startAt, p.finishAt ?? new Date()) ?? "-"
+        //   : "-",
+        // lastRun: p.startAt ? formatTimeMixed(p.startAt) : "-",
+        duration: '-',
+        lastRun: p.lastRunAt ?? '-',
         nextRun: pipelineSchedule ? formatTimeMixed(cronToNext(pipelineSchedule)) : '-'
       };
     })

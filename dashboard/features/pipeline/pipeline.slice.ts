@@ -17,4 +17,4 @@ const pipelineSlice = createSlice({
 
 export const { setPipelines, pipelineAdded, pipelineUpdated, pipelineRemoved } = pipelineSlice.actions;
 export default pipelineSlice.reducer;
-export const pipelineSelectors = pipelineAdapter.getSelectors((state: RootState) => state.pipeline);
+// export const pipelineSelectors = pipelineAdapter.getSelectors((state: RootState) => state.pipeline);

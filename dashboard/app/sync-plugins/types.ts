@@ -1,9 +1,10 @@
-import { PluginStatus } from "@/features/plugin/plugin.types";
+import { PluginType } from "@/contracts/plugin/types";
+import { PluginStatus } from "@/features/plugin-artifact/plugin.types";
 
 interface PluginVM {
   id: string;
   name: string;
-  type: 'source' | 'transform' | 'sink' | 'store';
+  type: PluginType;
   latestversion?: string;
   installedVersion?: string;
   usedByCount?: number;

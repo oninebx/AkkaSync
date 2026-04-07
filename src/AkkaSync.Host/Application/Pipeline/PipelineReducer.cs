@@ -15,12 +15,12 @@ namespace AkkaSync.Host.Application.Pipeline
       })] },
       PipelineStartReported e => current with
       {
-        Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Pid ?
+        Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Key ?
         p with { StartedAt = @event.OccurredAt } : p)]
       },
       PipelineCompleteReported e => current with
       {
-        Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Pid ?
+        Pipelines = [..current.Pipelines.Select(p => p.Id == e.PipelineId.Key ?
         p with { FinishedAt = @event.OccurredAt } : p)]
       },
       _ => current

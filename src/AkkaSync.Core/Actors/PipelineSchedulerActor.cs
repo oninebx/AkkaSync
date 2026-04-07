@@ -46,9 +46,9 @@ public class PipelineSchedulerActor : ReceiveActor
 
   private void HandlePipeline(PipelineId id)
   {
-    var spec = _schedules![id.Pid];
-    var nextUtc = ScheduleNextRun(id.Pid, spec);
-    Context.System.EventStream.Publish(new PipelineScheduled(id.Pid, nextUtc));
+    var spec = _schedules![id.Key];
+    var nextUtc = ScheduleNextRun(id.Key, spec);
+    Context.System.EventStream.Publish(new PipelineScheduled(id.Key, nextUtc));
   }
 
   private DateTime ScheduleNextRun(string pid, string cron)

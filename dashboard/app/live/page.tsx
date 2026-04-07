@@ -3,9 +3,12 @@
 import { Node, Edge, ReactFlow, Controls, MiniMap, Background, addEdge, NodeChange, applyNodeChanges } from '@xyflow/react';
 import React, { useCallback, useState } from 'react'
 import { PipelineNode } from './components/PipelineNode';
-import '@xyflow/react/dist/style.css';
 import useLiveLayout from './hooks/useLiveLayout';
 import { applyLiveLayout } from './utils/liveLayout';
+import { SinkNode, SourceNode, TransformNode } from './components/FlowNode';
+import { useSelector } from 'react-redux';
+import { selectLayoutedFlowData } from './selectors';
+import '@xyflow/react/dist/style.css';
 
 type Props = {}
 
@@ -21,23 +24,28 @@ const initialEdges: Edge[] = [
 ];
 
 const LivePage = (props: Props) => {
-  const { saveLayout, loadLayout } = useLiveLayout();
-  const [nodes, setNodes] = useState<Node[]>(() => {
-    const layout = loadLayout();
-    return applyLiveLayout(initialNodes, layout);
-  });
-  const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
-  
+  const {nodes, edges } = useSelector(selectLayoutedFlowData);
+
+  const { saveLayout, loadLayout } = useLiveLayout();
+  const [layoutNodes, setLayoutNodes] = useState<Node[]>(() => {
+    const layout = loadLayout();
+    return applyLiveLayout(nodes, layout);
+  });
+  const [layoutEdges, setLayoutEdges] = useState<Edge[]>(edges);
+
 
   const nodeTypes = {
     pipelineNode: PipelineNode,
+    source: SourceNode,
+    transform: TransformNode,
+    sink: SinkNode,
   };
 
-  const onConnect = useCallback((params: any) => setEdges((eds) => addEdge(params, eds)), []);
+  const onConnect = useCallback((params: any) => setLayoutEdges((eds) => addEdge(params, eds)), []);
   const onNodesChange = useCallback(
   (changes: NodeChange[]) => {
-    setNodes((nds) => {
+    setLayoutNodes((nds) => {
       const updated = applyNodeChanges(changes, nds);
       saveLayout(updated);
       return updated;
@@ -49,8 +57,8 @@ const LivePage = (props: Props) => {
   return (
     <div className='w-full h-full'>
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={layoutNodes}
+        edges={layoutEdges}
         nodeTypes={nodeTypes}
         onConnect={onConnect}
         onNodesChange={onNodesChange}

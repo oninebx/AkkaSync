@@ -14,8 +14,9 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
       var state = (WorkerState)store;
       return @event switch
       {
-        WorkerStartReported e => new EventNotification("runningworker.worker.start", new { e.WorkerId, StartedAt = @event.OccurredAt }),
-        WorkerErrorReported e => new EventNotification("runningworker.worker.error", state.Workers[e.WorkerId].ErrorCounts),
+        DashboardInitialized e => new EventNotification("worker.state.initialized",state.Workers.Select(kvp => new { PipelineId = kvp.Key.PipelineId.Key, Id = kvp.Key.SourceId, kvp.Value.StartedAt, kvp.Value.ErrorCounts })),
+        WorkerStartReported e => new EventNotification("worker.records.added", new { PipelineId = e.WorkerId.PipelineId.Key, Id = e.WorkerId.SourceId, StartedAt = @event.OccurredAt }),
+        WorkerErrorReported e => new EventNotification("worker.errors.added", new { PipelineId = e.WorkerId.PipelineId.Key, Id = e.WorkerId.SourceId, state.Workers[e.WorkerId].ErrorCounts }),
         _ => null
       };
     }

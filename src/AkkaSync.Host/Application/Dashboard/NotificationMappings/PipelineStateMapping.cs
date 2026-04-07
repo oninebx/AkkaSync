@@ -19,8 +19,8 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
       {
         SyncEngineReady e => new EventNotification("pipeline.specs.initialized", e.Pipelines),
         DashboardInitialized => new EventNotification("pipeline.specs.initialized", state.Pipelines),
-        PipelineStartReported e => new EventNotification("pipeline.run.started", new { Id = e.PipelineId.Pid, StartedAt = @event.OccurredAt }),
-        PipelineCompleteReported e => new EventNotification("pipeline.run.completed", new { Id = e.PipelineId.Pid, FinishAt = @event.OccurredAt }),
+        PipelineStartReported e => new EventNotification("pipeline.run.started", new { Id = e.PipelineId.Key, StartedAt = @event.OccurredAt }),
+        PipelineCompleteReported e => new EventNotification("pipeline.run.completed", new { Id = e.PipelineId.Key, FinishAt = @event.OccurredAt }),
         _ => null
       };
     }

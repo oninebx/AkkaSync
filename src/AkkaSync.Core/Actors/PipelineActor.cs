@@ -162,8 +162,8 @@ namespace AkkaSync.Core.Actors
     }
     private async Task HandleWorkerErrored(WorkerErrored msg)
     {
-      _logger.Error($"Worker {msg.WorkerId} encountered errors: {string.Join(", ", msg.Errors.Select(e => $"{_id.Pid} - {e.PluginId}: {e.Message}"))}");
-      await _errorStore.RecordErrorsAsync([.. msg.Errors.Select(e => new ErrorRecord(_id.Pid, _id.RunId.ToString(), e.PluginId, e.Message) { Context = e.Context })]);
+      _logger.Error($"Worker {msg.WorkerId} encountered errors: {string.Join(", ", msg.Errors.Select(e => $"{_id.Key} - {e.PluginId}: {e.Message}"))}");
+      await _errorStore.RecordErrorsAsync([.. msg.Errors.Select(e => new ErrorRecord(_id.Key, _id.RunId.ToString(), e.PluginId, e.Message) { Context = e.Context })]);
       Context.System.EventStream.Publish(new WorkerErrorReported(msg.WorkerId, msg.Errors.GroupBy(e => e.PluginId).ToDictionary(g => g.Key, g => g.Count())));
     }
   }
