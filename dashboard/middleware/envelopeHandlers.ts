@@ -5,6 +5,7 @@ import '@/features/scheduler/scheduler.handlers';
 import '@/features/diagnosis/dianosis.handlers';
 import '@/features/plugin-artifact/plugin.handlers';
 import '@/features/worker/worker.handlers';
+import '@/features/execution/execution.handlers';
 
 
 export { envelopeHandlerMap as envelopeHandlers } from '@/shared/events/envelopeHandlerMap';

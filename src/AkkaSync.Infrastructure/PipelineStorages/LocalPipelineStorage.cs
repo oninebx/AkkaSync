@@ -50,7 +50,6 @@ public class LocalPipelineStorage : IPipelineStorage
       var json = await File.ReadAllTextAsync(file, cancellationToken);
 
       using var doc = JsonDocument.Parse(json);
-
       var syncOptions = doc.Deserialize<TSpecHolder>(converterOptions);
 
       if (syncOptions is null)
@@ -62,6 +61,7 @@ public class LocalPipelineStorage : IPipelineStorage
       var dict = selector(syncOptions);
       if(dict is null)
       {
+        _logger.LogWarning("No specifications found in pipeline file: {File}", file);
         continue;
       }
       foreach (var kvp in dict)

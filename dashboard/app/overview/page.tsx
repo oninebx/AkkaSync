@@ -9,7 +9,7 @@ import { HostStatus } from "@/features/host/host.types";
 import PipelineTable from "./components/PipelineTable";
 
 import { selectJournal } from "@/features/diagnosis/diagnosis.selectors";
-import { selectKpiData, selectPipelineData } from "./selectors";
+import { selectKpiData, selectOverviewPipelines,  } from "./selectors";
 interface PingResponse {
   value: string
 }
@@ -17,7 +17,7 @@ interface PingResponse {
 export default function HomePage() {
   const connectionStatus = useSelector(selectConnectionStatus);
 
-  const pipelineData = useSelector(selectPipelineData);
+  const pipelineData = useSelector(selectOverviewPipelines);
  
   const kpiData = useSelector(selectKpiData);
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AkkaSync.Abstractions.Models;
 
@@ -10,18 +11,29 @@ public record PipelineSpec
 {
   public string Name { get; set; } = string.Empty;
   public string? Schedule { get; set; }
-  public bool AutoStart { get; init; } = true;
   public bool IsActive { get; init; } = true;
-  public required PluginSpec SourceProvider { get; init; }
-  public required PluginSpec TransformerProvider { get; init; }
-  public required PluginSpec SinkProvider { get; init; }
+  public IReadOnlyList<PluginSpec> Plugins { get; set; } = [];
+  [JsonIgnore]
+  public PluginSpec Source => Plugins.FirstOrDefault(p => p.Type.Equals("source", StringComparison.OrdinalIgnoreCase))!;
+  [JsonIgnore]
+  public PluginSpec Sink => Plugins.FirstOrDefault(p => p.Type.Equals("sink", StringComparison.OrdinalIgnoreCase))!;
+  //public required PluginSpec SourceProvider { get; init; }
+  //public required PluginSpec TransformerProvider { get; init; }
+  //public required PluginSpec SinkProvider { get; init; }
 }
 
-public record PluginSpec
+public record PluginSpec(string Key, string Type, string Provider, JsonElement Parameters)
 {
-  public required string Type { get; init; }
-  public IReadOnlyDictionary<string, string> Parameters { get; init; } = default!;
+  public PluginMeta? Meta { get; init; }
+  //public IReadOnlyDictionary<string, string> Parameters
+  public string[] DependsOn {  get; init; } = [];
 }
+
+public record PluginMeta()
+{
+  public DataSourceMeta? DataSource { get; init; }
+}
+public record DataSourceMeta(string Name, string Type);
 
 public static class ParametersExtensions
 {

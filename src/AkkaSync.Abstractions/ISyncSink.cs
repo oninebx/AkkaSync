@@ -8,7 +8,9 @@ namespace AkkaSync.Abstractions
 {
   public interface ISyncSink
   {
-    DataSourceIdentity Identity { get; }
+    string QualifiedId { get; }
+    string Name { get; }
+    //string Key { get; }
     Task WriteAsync(IEnumerable<TransformContext> context, CancellationToken cancellationToken);
   }
 }

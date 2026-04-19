@@ -16,7 +16,7 @@ namespace AkkaSync.Core.Actors;
 public class PipelineRegistryActor : ReceiveActor
 {
   private readonly IPluginProviderRegistry<ISyncSource> _sourceRegistry;
-  private readonly IPluginProviderRegistry<ISyncTransformer> _transformerRegistry;
+  private readonly IPluginProviderRegistry<ISyncTransform> _transformRegistry;
   private readonly IPluginProviderRegistry<ISyncSink> _sinkRegistry;
   private IDictionary<string, PipelineSpec>? _pipelineSpecs;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
@@ -27,12 +27,12 @@ public class PipelineRegistryActor : ReceiveActor
     ISyncActorRegistry actorRegistry,
     ISyncActorResolver actorResolver,
     IPluginProviderRegistry<ISyncSource> sourceRegistry, 
-    IPluginProviderRegistry<ISyncTransformer> transformerRegistry, 
+    IPluginProviderRegistry<ISyncTransform> transformRegistry, 
     IPluginProviderRegistry<ISyncSink> sinkRegistry)  
   {
     _actorResolver = actorResolver;
     _sourceRegistry = sourceRegistry;
-    _transformerRegistry = transformerRegistry;
+    _transformRegistry = transformRegistry;
     _sinkRegistry = sinkRegistry;
     _actorRegistry = actorRegistry;
 
@@ -73,19 +73,19 @@ public class PipelineRegistryActor : ReceiveActor
     var actorName = $"{msg.Id}-${runId}";
     if (Context.Child(actorName).IsNobody())
     {
-      var source = spec.SourceProvider;
-      var sourceProvider = _sourceRegistry.GetProvider(source.Type);
+      var source = spec.Source.Provider ??  throw new NullReferenceException("Source Provider cannot be empty") ;
+      var sourceProvider = _sourceRegistry.GetProvider(source);
 
-      var transformer = spec.TransformerProvider;
-      var transformerChain = _transformerRegistry.GetProvider(transformer.Type);
+      var transforms = spec.Plugins.Where(p => p.Type == "transform").Select(p => p.Provider).Distinct().ToList() ?? [];
+      var transformerMap = transforms.Select(t => _transformRegistry.GetProvider(t)).ToDictionary(p => p.Key, p => p);
 
-      var sink = spec.SinkProvider;
-      var sinkProvider = _sinkRegistry.GetProvider(sink.Type);
+      var sink = spec.Sink.Provider ?? throw new NullReferenceException("Sink Provider cannot be empty");
+      var sinkProvider = _sinkRegistry.GetProvider(sink);
 
-      if (sourceProvider is not null && transformerChain is not null && sinkProvider is not null)
+      if (sourceProvider is not null && transformerMap is not null && sinkProvider is not null)
       {
         var pipelineId = new PipelineId(runId, msg.Id);
-        var pipelineActor = _actorResolver.ActorOf<PipelineActor>(Context, pipelineId.ToString(), sourceProvider, transformerChain, sinkProvider, pipelineId, spec);
+        var pipelineActor = _actorResolver.ActorOf<PipelineActor>(Context, pipelineId.ToString(), sourceProvider, transformerMap, sinkProvider, pipelineId, spec.Plugins);
         pipelineActor.Tell(new SharedProtocol.Start());
       }
       else

@@ -1,28 +1,168 @@
-{
+﻿{
   "Pipelines": {
-    "sync-orders": {
+    "sync-orders" :{
       "Schedule": "every-minute",
       "Name": "sync-orders",
-      "SourceProvider": {
-        "Type": "FolderWatcherSourceProvider",
-        "Parameters": {
-          "folder": "data/Csv2Sqlite/input/orders",
-          "source": "csv"
+      "Plugins": [
+        {
+          "Key": "orders-raw-data",
+          "Type": "source",
+          "Provider": "FolderWatcherSourceProvider",
+          "Parameters": {
+            "folder": "data/Csv2Sqlite/input/orders",
+            "source": "csv"
+          },
+          "Meta": {
+            "DataSource": {
+              "Name": "Order Files",
+              "Type": "folder"
+            }
+          }
+        },
+        {
+          "Key": "customer-table-data",
+          "Type": "transform",
+          "Provider": "TableTransformProvider",
+          "Parameters": {
+            "name": "Customer",
+            "fields": [
+              "customer_external_id",
+              "customer_first_name",
+              "customer_last_name",
+              "customer_email",
+              "customer_phone",
+              "customer_dob",
+              "customer_country",
+              "customer_is_active"
+            ],
+            "columns": [
+              "id",
+              "first_name",
+              "last_name",
+              "email",
+              "phone",
+              "dob",
+              "country",
+              "is_active"
+            ]
+          },
+          "DependsOn": [
+            "orders-raw-data"
+          ]
+        },
+        {
+          "Key": "product-table-data",
+          "Type": "transform",
+          "Provider": "TableTransformProvider",
+          "Parameters": {
+            "name": "Product",
+            "fields": [
+              "product_sku",
+              "product_name",
+              "product_price"
+            ],
+            "columns": [
+              "sku",
+              "name",
+              "price"
+            ]
+          },
+          "DependsOn": [
+            "orders-raw-data"
+          ]
+        },
+        {
+          "Key": "order-table-data",
+          "Type": "transform",
+          "Provider": "TableTransformProvider",
+          "Parameters": {
+            "name": "Order",
+            "fields": [
+              "order_external_id",
+              "customer_external_id",
+              "order_date",
+              "order_status",
+              "order_shipping_address",
+              "order_country",
+              "order_is_priority"
+            ],
+            "columns": [
+              "id",
+              "customer_id",
+              "date",
+              "status",
+              "shipping_address",
+              "country",
+              "is_priority"
+            ]
+          },
+          "DependsOn": [
+            "customer-table-data"
+          ]
+        },
+        {
+          "Key": "order-item-table-data",
+          "Type": "transform",
+          "Provider": "TableTransformProvider",
+          "Parameters": {
+            "name": "OrderItem",
+            "fields": [
+              "order_external_id",
+              "product_sku",
+              "order_item_quantity"
+            ],
+            "columns": [
+              "order_id",
+              "product_sku",
+              "quantity"
+            ]
+          },
+          "DependsOn": [
+            "order-table-data",
+            "product-table-data"
+          ]
+        },
+        {
+          "Key": "audit-table-data",
+          "Type": "transform",
+          "Provider": "TableTransformProvider",
+          "Parameters": {
+            "name": "Audit",
+            "fields": [
+              "order_external_id",
+              "audit_action",
+              "audit_notes"
+            ],
+            "columns": [
+              "order_id",
+              "action",
+              "notes"
+            ]
+          },
+          "DependsOn": [
+            "order-table-data"
+          ]
+        },
+        {
+          "Key": "orders-sink-data",
+          "Type": "sink",
+          "Provider": "SqliteSinkProvider",
+          "Parameters": {
+            "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+            "batchSize": 50
+          },
+          "Meta": {
+            "DataSource": {
+              "Name": "Order Store",
+              "Type": "sqlite"
+            }
+          },
+          "DependsOn": [
+            "order-item-table-data",
+            "audit-table-data"
+          ]
         }
-      },
-      "TransformerProvider": {
-        "Type": "TableTransformerProvider",
-        "Parameters": {
-          "transformers": "pipelines/plugin_transformers_order.json"
-        }
-      },
-      "SinkProvider": {
-        "Type": "SqliteSinkProvider",
-        "Parameters": {
-          "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
-          "batchSize": 50
-        }
-      }
+      ]
     }
   }
 }

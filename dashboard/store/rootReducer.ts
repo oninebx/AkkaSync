@@ -7,7 +7,8 @@ import { diagnosisReducer } from "@/features/diagnosis/diagnosis.slice";
 import { pluginReducers } from "@/features/plugin-artifact/plugin.slice";
 import pipelineReducer from '@/features/pipeline/pipeline.slice';
 import { workerReducer } from "@/features/worker/worker.slice";
-import { pluginGraphReducer } from "@/features/plugin-graph/pluginGraph.slice";
+import { executionReducer } from "@/features/execution/execution.slice";
+import { pluginGraphReducer } from "@/features/execution/pluginGraph.slice";
 
 export const rootReducer = combineReducers({
   pipeline: pipelineReducer,
@@ -17,5 +18,6 @@ export const rootReducer = combineReducers({
   scheduler: schedulerReducer,
   diagnosis: diagnosisReducer,
   plugin: pluginReducers,
+  execution: executionReducer,
   pluginGraph: pluginGraphReducer
 });

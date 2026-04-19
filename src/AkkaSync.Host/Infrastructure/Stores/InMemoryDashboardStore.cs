@@ -18,6 +18,7 @@ public class InMemoryDashboardStore : IDashboardStore
   private volatile DiagnosisJournal _journal = DiagnosisJournal.Empty;
   private volatile PluginState _pluginSet = PluginState.EMPTY;
   private volatile WorkerState _workerState = WorkerState.Empty;
+  private volatile SyncingState _syncingState = SyncingState.Empty;
 
   public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
   {
@@ -27,7 +28,8 @@ public class InMemoryDashboardStore : IDashboardStore
       _schedules,
       _journal.ToShow(50),
       _pluginSet,
-      _workerState
+      _workerState,
+      _syncingState,
     ];
   }
 
@@ -52,6 +54,9 @@ public class InMemoryDashboardStore : IDashboardStore
         break;
       case WorkerState workerState:
         _workerState = workerState;
+        break;
+      case SyncingState syncingState:
+        _syncingState = syncingState;
         break;
       default:
         throw new InvalidOperationException($"Unsupported store value type: {typeof(TValue).Name}");

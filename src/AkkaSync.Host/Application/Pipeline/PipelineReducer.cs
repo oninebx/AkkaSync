@@ -8,8 +8,12 @@ namespace AkkaSync.Host.Application.Pipeline
   {
     public static PipelineState Reduce(PipelineState current, INotificationEvent @event) => @event switch
     {
-      SyncEngineReady e => current with { Pipelines = [..e.Pipelines.Select(p => new PipelineRecord(p.Name, p.SourceProvider.Type, p.TransformerProvider.Type, p.SinkProvider.Type) 
-      {
+      SyncEngineReady e => current with { Pipelines = [..e.Pipelines.Select(p => new PipelineRecord(
+        p.Name, 
+        DataSourceRecord.From(p.Source.Meta?.DataSource), 
+        DataSourceRecord.From(p.Sink.Meta?.DataSource),
+        [.. p.Plugins.Select(plugin => new PluginRecord(plugin.Key, plugin.Provider, plugin.Type, plugin.DependsOn))]
+      ) {
         Schedule = p.Schedule,
         Name = p.Name
       })] },

@@ -1,9 +1,12 @@
 interface PipelineVM {
   name: string;
-  schedule: string;
-  duration: string;
-  lastRun: string;
-  nextRun: string;
+  runCount: number;
+  totalProcessed: number;
+  totalErrors: number;
+  // schedule: string;
+  // duration: string;
+  // lastRun: string;
+  // nextRun: string;
 }
 
 interface KpiVM {

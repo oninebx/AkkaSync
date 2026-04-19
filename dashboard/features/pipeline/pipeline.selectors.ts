@@ -10,3 +10,12 @@ export const pipelineSelectors = pipelineAdapter.getSelectors(
 export const selectPipelines = pipelineSelectors.selectAll;
 export const selectPipelineEntities = pipelineSelectors.selectEntities;
 export const selectPipelineIds = pipelineSelectors.selectIds;
+
+export const selectPipelineOverviewMap = (state: RootState) =>
+  state.pipeline.overview;
+
+export const selectPipelineLiveMap = (state: RootState) =>
+  state.pipeline.live;
+
+export const selectPipelineDefinitionMap = (state: RootState) =>
+  state.pipeline.definition;

@@ -5,10 +5,9 @@ import { PipelineVM } from '@/app/overview/types';
 
 const pipelineColumns: Column<PipelineVM>[] = [
   { key: "name", header: "Pipeline" },
-  { key: 'duration', header: 'Duration' },
-  { key: "schedule", header: "Schedule" },
-  { key: "lastRun", header: "Last Run" },
-  { key: 'nextRun', header: 'Next Run'}
+  { key: 'runCount', header: 'Runs' },
+  { key: "totalProcessed", header: "Total Processed" },
+  { key: "totalErrors", header: "Total Errors" }
 ];
 
 interface Props {

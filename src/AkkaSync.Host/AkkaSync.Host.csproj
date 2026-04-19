@@ -29,11 +29,12 @@
   </ItemGroup>
 
 	<ItemGroup>
+
 		<!-- Data files -->
 		<Content Include="runtime\data\**\*">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-		
+
 		<!-- Plugin DLLs -->
 		<Content Include="runtime\plugins\**\*.zip">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -43,10 +44,6 @@
 		<Content Include="akka*.hocon">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Application\RunningPlugin\" />
 	</ItemGroup>
 	
   <!-- ================= PostPublish Target ================= -->

@@ -1,114 +1,45 @@
-import { selectPluginEdges, selectPluginInstances } from "@/features/plugin-graph/pluginGraph.selectors";
-import { PluginEdge, PluginInstance } from "@/features/plugin-graph/pluginGraph.type";
-import { createComplexFlow } from "@/mocks/plugin-graph";
-import { createSelector } from "@reduxjs/toolkit";
-import { Edge, Node } from "@xyflow/react";
+import { createSelector } from '@reduxjs/toolkit';
+import {
+  selectPipelineEntities,
+  selectPipelineDefinitionMap,
+  selectPipelineLiveMap
+} from '@/features/pipeline/pipeline.selectors';
+import { DEFAULT_LIVE } from '@/features/pipeline/pipeline.defaults';
 
-// This function builds layers of plugin instances based on their dependencies defined by edges.
-function buildLayers(
-  instances: PluginInstance[], 
-  edges: PluginEdge[]
-): PluginInstance[][] {
+export const selectClusterPipelines = createSelector(
+  selectPipelineEntities,
+  selectPipelineDefinitionMap,
+  selectPipelineLiveMap,
+  (entities, definition, live) =>
+    Object.keys(definition).map((id) => {
+      const base = entities[id] ?? { id };
+      const def = definition[id];
+      const l = live[id];
 
-  const instanceMap = new Map(instances.map(i => [i.id, i]));
-  const inDegree = new Map<string, number>();
-  const adjacencyList = new Map<string, string[]>();  
+      // 👉 从 definition 提取 source / target
+      const source =
+        def?.source?.name ?? '-';
 
-  instances.forEach(i => {
-    inDegree.set(i.id, 0);
-    adjacencyList.set(i.id, []);
-  });
+      const target =
+        def?.target?.name ?? '-';
 
-  edges.forEach(e => {
-    inDegree.set(e.to, (inDegree.get(e.to) || 0) + 1);
-    adjacencyList.get(e.from)?.push(e.to);
-  });
+      const { id: _, ...liveRest } = l ?? {};
+      return {
+        id: base.id,
+        name: base.name,
 
-  const layers: PluginInstance[][] = [];
-  let currentLayer = instances.filter(i => (inDegree.get(i.id) || 0) === 0);
-  
-  while (currentLayer.length > 0) {
-    layers.push(currentLayer);
-    const nextLayer: PluginInstance[] = [];
-    currentLayer.forEach(i => {
-      adjacencyList.get(i.id)?.forEach(toId => {
-        const toInstance = instanceMap.get(toId);
-        if (toInstance) {
-          inDegree.set(toId, (inDegree.get(toId) || 0) - 1);
-          if (inDegree.get(toId) === 0) {
-            nextLayer.push(toInstance);
-          }
-        }
-      });
-    });
-    currentLayer = nextLayer;
-  }
+        source,
+        target,
 
-  return layers;
+        ...DEFAULT_LIVE,
+        ...liveRest,
 
-}
+        // 👉 时间字段统一处理
+        // startedAt: l?.currentRunTime
+        //   ? Date.now() - l.currentRunTime
+        //   : undefined,
 
-function layoutNodes(layers: PluginInstance[][]): Node[]
-{
-  const layerGap = 250;
-  const nodeGap = 120;
-
-  const nodes: Node[] = [];
-  layers.forEach((layer, layerIndex) => {
-    const y = layerIndex * layerGap;
-    const totalWidth = (layer.length - 1) * nodeGap;
-    const startX = -totalWidth / 2;
-    layer.forEach((instance, nodeIndex) => {
-      const x = startX + nodeIndex * nodeGap;
-      nodes.push({
-        id: instance.id,
-        data: instance,
-        position: { x, y },
-        type: instance.type
-      });
-    });
-  });
-
-  return nodes;
-}
-
-/**
- * Test Mock data
- */
-const USE_MOCK = true;
-const { instances, edges } = createComplexFlow();
-export const selectInstances = (state: any) => USE_MOCK ? instances : selectPluginInstances(state);
-export const selectEdges = (state: any) => USE_MOCK ? edges : selectPluginEdges(state);
-
-const selectFlowData = createSelector(
-  [selectInstances, selectEdges],
-  (
-    instances,
-    edges
-  ) => {
-    return { 
-      instances,
-      edges
-    };
-  }
+        // nextRunAt: l?.nextRunTime ?? undefined
+      };
+    })
 );
-
-const selectLayoutedFlowData = createSelector(
-  [selectFlowData],
-  (flowData):{nodes: Node[]; edges: Edge[]} => {
-    const { instances, edges } = flowData;
-    const layers = buildLayers(instances, edges);
-    const nodes = layoutNodes(layers);
-    const flowEdges: Edge[] = edges.map(e => ({
-      id: e.id,
-      source: e.from,
-      target: e.to,
-    }));
-    return {
-      nodes,
-      edges: flowEdges,
-    };
-  }
-);
-
-export { selectFlowData, selectLayoutedFlowData };

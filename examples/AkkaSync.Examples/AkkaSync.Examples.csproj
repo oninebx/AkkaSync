@@ -8,20 +8,6 @@
 
   <ItemGroup>
     <None Remove="Csv2Sqlite\configs\pipeline_events.json" />
-    <None Remove="Csv2Sqlite\configs\pipeline_orders.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Csv2Sqlite\configs\pipeline_events.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-    <Content Include="Csv2Sqlite\configs\pipeline_orders.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>

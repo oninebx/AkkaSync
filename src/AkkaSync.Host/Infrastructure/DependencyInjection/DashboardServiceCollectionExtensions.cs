@@ -30,6 +30,7 @@ public static class DashboardServiceExtension
     services.AddSingleton<IEventNotificationMapping, ScheduleStateMapping>();
     services.AddSingleton<IEventNotificationMapping, PluginStateMapping>();
     services.AddSingleton<IEventNotificationMapping, WorkerStateMapping>();
+    services.AddSingleton<IEventNotificationMapping, SyncingStateMapping>();
 
     services.AddSingleton(sp =>
       new EventReducerRegistryBuilder()
@@ -38,7 +39,8 @@ public static class DashboardServiceExtension
       .Add<ScheduleState>(ScheduleStateReducer.Reduce)
       .Add<DiagnosisJournal>(DiagnosisReducer.Reduce)
       .Add<PluginState>(PluginStateReducer.Reduce)
-      .Add<WorkerState>(WorkerReducer.Reduce)  
+      .Add<WorkerState>(WorkerReducer.Reduce)
+      .Add<SyncingState>(SyncingStateReducer.Reduce)
       .Build());
 
     services.AddSingleton<IDashboardClientRegistry, DashboardClientRegistry>();

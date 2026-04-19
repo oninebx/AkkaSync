@@ -14,7 +14,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
     private static readonly Type[] SupportedPluginInterfaces =
     [
         typeof(IPluginProvider<ISyncSource>),
-        typeof(IPluginProvider<ISyncTransformer>),
+        typeof(IPluginProvider<ISyncTransform>),
         typeof(IPluginProvider<ISyncSink>),
         typeof(IPluginProvider<IHistoryStore>)
     ];

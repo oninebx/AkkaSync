@@ -10,10 +10,11 @@ namespace AkkaSync.Abstractions;
 public interface ISyncSource
 {
   string Id { get; }
+  string QualifiedId { get; }
+  string Name { get; }
   string Key { get; }
   string Type { get; }
   string ETag { get; }
-  DataSourceIdentity DataSource { get; }
 
   IAsyncEnumerable<(TransformContext? context, ErrorContext? error)> ReadAsync(string? cursor, CancellationToken cancellationToken);
 }

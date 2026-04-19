@@ -1,6 +1,6 @@
 // src/mocks/plugin-graph/generators.ts
 import { PluginType } from "@/contracts/plugin/types";
-import { PluginInstance, PluginEdge } from "@/features/plugin-graph/pluginGraph.type";
+import { PluginInstance, PluginEdge } from "@/features/execution/pluginGraph.type";
 
 const statuses = ['idle', 'running', 'succeeded', 'failed'] as const;
 type NodeStatus = typeof statuses[number];

@@ -17,7 +17,7 @@ namespace AkkaSync.Core.Actors
   {
     private readonly PipelineId _id;
     private readonly IEnumerable<ISyncSource> _sources;
-    private readonly IReadOnlyList<IReadOnlyList<ISyncTransformer>> _transformers;
+    private readonly IReadOnlyList<IReadOnlyList<ISyncTransform>> _transformers;
     private readonly ISyncSink _sink;
     private readonly int _batchSize;
     private readonly IHistoryStore _historyStore;
@@ -28,20 +28,33 @@ namespace AkkaSync.Core.Actors
     private readonly ILoggingAdapter _logger = Context.GetLogger();
     public PipelineActor(
       IPluginProvider<ISyncSource> sourceProvider,
-      IPluginProvider<ISyncTransformer> transformerProvider,
+      IReadOnlyDictionary<string, IPluginProvider<ISyncTransform>> transformProviders,
       IPluginProvider<ISyncSink> sinkProvider,
       IHistoryStore historyStore,
       IErrorStore errorStore,
       PipelineId id,
-      PipelineSpec spec)
+      IReadOnlyList<PluginSpec> specs)
     {
       _cancellationTokenSource = new CancellationTokenSource();
       _cancellationToken = _cancellationTokenSource.Token;
 
-      _sources = sourceProvider.Create(spec.SourceProvider, _cancellationToken);
-      _transformers = TransformerDagBuilder.Build(transformerProvider.Create(spec.TransformerProvider, _cancellationToken));
-      _sink = sinkProvider.Create(spec.SinkProvider, _cancellationToken).First();
-      _batchSize = spec.SinkProvider.Parameters.Get<int>("batchSize", 1);
+      var sourceSpec = specs.FirstOrDefault(s => s.Type == "source") ?? throw new NullReferenceException("Source Provider cannot be empty");
+      _sources = sourceProvider.Create(sourceSpec, _cancellationToken);
+
+      var transformSpecs = specs.Where(s => s.Type == "transform").ToList();
+      _transformers = DagBuilder.Build(transformSpecs.SelectMany(transform => transformProviders[transform.Provider].Create(transform, _cancellationToken)), sourceSpec.Key);
+
+      var sinkSpec = specs.FirstOrDefault(s => s.Type == "sink") ?? throw new NullReferenceException("Sink Provider cannot be empty");
+      _sink = sinkProvider.Create(sinkSpec, _cancellationToken).First();
+      if(sinkSpec.Parameters.TryGetProperty("batchSize", out var batchSizeElement))
+      {
+        _batchSize = batchSizeElement.GetInt32();
+      }
+      else
+      {
+        _batchSize = 1;
+      }
+      //_batchSize = sinkSpec.Parameters.Get<int>("batchSize", 1);
 
       _historyStore = historyStore;
       _errorStore = errorStore;
@@ -55,6 +68,38 @@ namespace AkkaSync.Core.Actors
       ReceiveAsync<WorkerProgressed>(msg => HandleWorkerProgress(msg));
       ReceiveAsync<WorkerFailed>(msg => HandleFailedWorker(msg));
       ReceiveAsync<WorkerErrored>(msg => HandleWorkerErrored(msg));
+    }
+
+    protected override void PreStart()
+    {
+      var sourceInstances = _sources.Select(s => new PluginInstance(s.QualifiedId, s.Name, "source", _id.Key)).ToList();
+      var transformerInstances = _transformers.Select(layer => (IReadOnlyList<PluginInstance>)[.. layer.Select(t => new PluginInstance(t.QualifiedId, t.Name, "transformer", _id.Key) {
+        Dependencies = [.. t.DependsOn.Select(d => d)]
+      })])
+        .ToList();
+      var sinkInstance = new PluginInstance(_sink.QualifiedId, _sink.Name, "sink", _id.Key);
+
+      if (transformerInstances.Count > 0)
+      {
+        var firstLayer = transformerInstances[0];
+        foreach (var t in firstLayer)
+        {
+          t.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
+        }
+      }
+
+      if (transformerInstances.Count > 0)
+      {
+        var lastLayer = transformerInstances[^1];
+
+        sinkInstance.Dependencies.AddRange(lastLayer.Select(t => t.Id));
+      }
+      else
+      {
+        sinkInstance.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
+      }
+
+      Context.System.EventStream.Publish(new PipelineCreatedReported(_id, sourceInstances, [.. transformerInstances.SelectMany(layer => layer)], sinkInstance));
     }
 
     protected override void PostStop()

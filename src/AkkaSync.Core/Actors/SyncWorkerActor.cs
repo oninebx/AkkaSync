@@ -13,7 +13,7 @@ public class SyncWorkerActor : ReceiveActor
 {
   private readonly WorkerId _id;
   private readonly ISyncSource _source;
-  private readonly IReadOnlyList<IReadOnlyList<ISyncTransformer>> _transformers;
+  private readonly IReadOnlyList<IReadOnlyList<ISyncTransform>> _transformers;
   private readonly ISyncSink _sink;
   private readonly CancellationToken _cancellationToken;
   private readonly ILoggingAdapter _logger = Context.GetLogger();
@@ -22,7 +22,7 @@ public class SyncWorkerActor : ReceiveActor
   public SyncWorkerActor(
     WorkerId id,
     ISyncSource source,
-    IReadOnlyList<IReadOnlyList<ISyncTransformer>> transformers,
+    IReadOnlyList<IReadOnlyList<ISyncTransform>> transformers,
     ISyncSink sink,
     int batchSize,
     string? cursor,

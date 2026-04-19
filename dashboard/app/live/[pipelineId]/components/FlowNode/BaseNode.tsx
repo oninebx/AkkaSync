@@ -1,18 +1,20 @@
-import { PluginInstance } from '@/features/plugin-graph/pluginGraph.type';
+import { PluginInstance } from '@/features/execution/pluginGraph.type';
 import { cn } from '@/lib/utils';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, NodeProps, Position } from '@xyflow/react';
 import React from 'react'
+import { PluginNodeData, PluginNodePayload, PluginStatus } from '../../types';
 
-type Props = {
-  data: PluginInstance;
+export type PluginNodeProps = NodeProps<PluginNodeData>;
+type BaseNodeProps = {
+  data: PluginNodePayload;
   color: string;
   label: string;
   icon: string;
   isSource: boolean;
   isTarget: boolean;
-}
+};
 
-function getStatusTextColor(status: PluginInstance['status']) {
+function getStatusTextColor(status: PluginStatus) {
   switch (status) {
     case 'running':
     case 'succeeded':
@@ -24,7 +26,7 @@ function getStatusTextColor(status: PluginInstance['status']) {
   }
 }
 
-function BaseNode({data, color, label, icon, isSource, isTarget}: Props) {
+function BaseNode({data, color, label, icon, isSource, isTarget}: BaseNodeProps) {
   return (
     <div 
       className='min-w-[220px] rounded-xl border-2 bg-white shadow-md overflow-hidden text-sm transition hover:shadow-lg'
