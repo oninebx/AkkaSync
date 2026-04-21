@@ -34,10 +34,10 @@ public class PipelineSchedulerActor : ReceiveActor
 
     Receive<SchedulerProtocol.Trigger>(msg =>
     {
-      _logger.Info($"Pipeline triggered: { msg.Id }");
-      _pipelineRegistry.Tell(new RegistryProtocol.CreatePipeline(msg.Id));
-      var spec = _schedules!.FirstOrDefault(s => s.Key.Contains(msg.Id)).Value;
-      Context.System.EventStream.Publish(new PipelineTriggered(msg.Id));
+      _logger.Info($"Pipeline triggered: { msg.Key }");
+      _pipelineRegistry.Tell(new RegistryProtocol.CreatePipeline(msg.Key));
+      var spec = _schedules!.FirstOrDefault(s => s.Key.Contains(msg.Key)).Value;
+      Context.System.EventStream.Publish(new PipelineTriggered(msg.Key));
     });
 
     Receive<PipelineCompleted>(msg => HandlePipeline(msg.PipelineId));
@@ -51,7 +51,7 @@ public class PipelineSchedulerActor : ReceiveActor
     Context.System.EventStream.Publish(new PipelineScheduled(id.Key, nextUtc));
   }
 
-  private DateTime ScheduleNextRun(string pid, string cron)
+  private DateTime ScheduleNextRun(string key, string cron)
   {
     var schedule = CrontabSchedule.Parse(cron);
     var nextUtc = schedule.GetNextOccurrence(DateTime.UtcNow);
@@ -60,16 +60,16 @@ public class PipelineSchedulerActor : ReceiveActor
     var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
       delay,
       Self,
-      new SchedulerProtocol.Trigger(pid),
+      new SchedulerProtocol.Trigger(key),
       Self
     );
 
-    if(_jobs.TryGetValue(pid, out var job))
+    if(_jobs.TryGetValue(key, out var job))
     {
       job.Cancel();
     }
-    _jobs[pid] = cancelable;
-    _logger.Info("{0} will run at {1}. Please wait for {2}.", pid, nextUtc, delay);
+    _jobs[key] = cancelable;
+    _logger.Info("{0} will run at {1}. Please wait for {2}.", key, nextUtc, delay);
 
     return nextUtc;
   }

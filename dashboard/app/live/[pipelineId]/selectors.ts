@@ -8,6 +8,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { PluginAggregate, PluginNodeData, PluginNodeEdge, PluginNodePayload } from "./types";
 import { PluginDefinition } from "@/features/pipeline/pipeline.types";
 import { buildLayers, buildPluginGraph, layoutNodes } from "./utils";
+import { selectBasePipelineEntities, selectPipelineDefinitionMap, selectPipelineRunEntities, selectPipelineRunMap } from "@/features/pipeline/pipeline.selectors";
 // import { Edge, Node } from "@xyflow/react";
 
 // // This function builds layers of plugin instances based on their dependencies defined by edges.
@@ -121,31 +122,120 @@ import { buildLayers, buildPluginGraph, layoutNodes } from "./utils";
 
 
 
-export const selectEffectivePlugins = createSelector(
-  [
-    (state: RootState, pipelineId: string) =>
-      state.pipeline.definition[pipelineId]?.plugins ?? [],
-    (state: RootState, pipelineId: string) =>
-      state.pipeline.live[pipelineId]?.plugins ?? []
-  ],
-  (definitions, lives) => {
-    return definitions.map((def, index) => {
-      const live = lives[index];
-      const { id: _, ...liveRest } = live ?? {};
-      return {
-        id: live?.id ?? def.key, // fallback id
+// export const selectEffectivePlugins = createSelector(
+//   [
+//     (state: RootState, pipelineId: string) =>
+//       state.pipeline.base.definition[pipelineId]?.plugins ?? [],
+//     (state: RootState, pipelineId: string) =>
+//       selectPipelineRunMap(state)[pipelineId]?.plugins ?? []
+//       // state.pipeline.live[pipelineId]?.plugins ?? []
+//   ],
+//   (definitions, lives) => {
+//     return definitions.map((def, index) => {
+//       const live = lives[index];
+//       const { id: _, ...liveRest } = live ?? {};
+//       return {
+//         id: live?.id ?? def.key, // fallback id
 
-        name: def.name,
-        type: def.type,
-        dependsOn: def.dependsOn ?? [],
-        stats: { processed: 0, errors: 0 },
-        status: 'idle',
-        // ...DEFAULT_PLUGIN_LIVE,
-        ...(liveRest ?? {})
-      } as PluginAggregate;
-    });
+//         name: def.name,
+//         type: def.type,
+//         dependsOn: def.dependsOn ?? [],
+//         stats: { processed: 0, errors: 0 },
+//         status: 'idle',
+//         // ...DEFAULT_PLUGIN_LIVE,
+//         ...(liveRest ?? {})
+//       } as PluginAggregate;
+//     });
+//   }
+// );
+
+// export const selectEffectivePlugins = createSelector(
+//   [
+//     (state: RootState, pipelineId: string) =>
+//       state.pipeline.base.definition[pipelineId]?.plugins ?? [],
+
+//     (state: RootState, pipelineId: string) => 
+//       selectPipelineRunMap(state)[pipelineId]?.plugins ?? []
+      
+//   ],
+//   (definitions, runs) => {
+
+//     const runMap = new Map(runs.map(r => [r.key, r]));
+
+//     return definitions.map(def => {
+//       const run = runMap.get(def.key);
+
+//       if (!run) {
+//         return {
+//           id: def.key,
+//           name: def.name,
+//           type: def.type,
+//           dependsOn: def.dependsOn ?? [],
+//           stats: { processed: 0, errors: 0 },
+//           status: 'idle'
+//         } as PluginAggregate;
+//       }
+
+//       const { id, name, dependsOn, ...runRest } = run;
+
+//       return {
+//         id: run.id ?? def.key,
+
+//         name: def.name,
+//         type: def.type,
+//         dependsOn: def.dependsOn ?? [],
+
+//         stats: { processed: 0, errors: 0 },
+//         status: 'idle',
+
+//         ...runRest
+//       } as PluginAggregate;
+//     });
+//   }
+// );
+
+export const selectEffectivePlugins = createSelector([
+    selectPipelineDefinitionMap,
+    selectPipelineRunMap,
+    (_: RootState, pipelineId: string) => pipelineId
+], (definitionMap, runMap, pipelineId) => {
+  const pluginDefs = definitionMap[pipelineId]?.plugins ?? [];
+  const pluginRuns = runMap[pipelineId] ?? {};
+
+  const result: PluginAggregate[] = [];
+  for(const def of pluginDefs) {
+    const runs = pluginRuns[def.key] ?? [];
+    if(runs && runs.length > 0) {
+      for(const run of runs) {
+        result.push({
+          id: run.id,
+          name: def.name,
+          type: def.type,
+          dependsOn: run.dependsOn ?? [],
+          status: run.status,
+          stats: { processed: run.processed ?? 0, errors: run.errors ?? 0 },
+        });
+      }
+    }else{
+      result.push({
+          id: def.key,
+
+          name: def.name,
+          type: def.type,
+
+          status: 'idle',
+
+          dependsOn: def.dependsOn ?? [],
+
+          stats: {
+            processed: 0,
+            errors: 0
+          }
+        });
+    }
   }
-);
+  return result;
+});
 
 export const selectPluginGraph = createSelector(
   [selectEffectivePlugins],
@@ -159,7 +249,6 @@ export const selectPluginGraph = createSelector(
 
     // 3. layout
     const layoutedNodes = layoutNodes(layers);
-    console.log('edges', edges);
     return {
       nodes: layoutedNodes,
       edges

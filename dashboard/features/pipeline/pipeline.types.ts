@@ -13,7 +13,7 @@
 //     totalErrors: number;
 //   };
 
-import { PluginType } from "@/contracts/plugin/types";
+import { PluginStatus, PluginType } from "@/contracts/plugin/types";
 
 // }
 
@@ -55,13 +55,19 @@ interface PluginDefinition {
   dependsOn?: string[];
 }
 
-interface PipelineLive {
+interface PipelineRun {
   id: string;
-  plugins: PluginLive[];
+  plugins: Record<string, PluginRun>;
 }
 
-interface PluginLive {
+interface PluginRun {
   id: string;
+  key: string;
+  name: string;
+  status: PluginStatus;
+  dependsOn: string[];
+  processed: number;
+  errors: number;
 }
 
 export type {
@@ -70,6 +76,6 @@ export type {
   DataSource,
   PipelineDefinition,
   PluginDefinition,
-  PipelineLive,
-  PluginLive
+  PipelineRun,
+  PluginRun
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AkkaSync.Core.Domain.Pipelines
 {
-  public sealed record PluginInstance(string Id, string Name, string Type, string PipelineId)
+  public sealed record PluginInstance(string Id, string Key, string Name, string Type)
   {
     public List<string> Dependencies { get; init; } = [];
   }

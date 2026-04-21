@@ -1,21 +1,22 @@
 import { RootState } from "@/store";
-import { pipelineAdapter } from "./pipeline.slice";
+import { pipelineAdapter, runAdapter } from "./pipeline.slice";
 
-export const selectPipelineState = (state: RootState) => state.pipeline;
+export const selectPipelineBaseState = (state: RootState) => state.pipeline.base;
 
-export const pipelineSelectors = pipelineAdapter.getSelectors(
-  selectPipelineState
-);
-
-export const selectPipelines = pipelineSelectors.selectAll;
-export const selectPipelineEntities = pipelineSelectors.selectEntities;
-export const selectPipelineIds = pipelineSelectors.selectIds;
+export const pipelineBaseSelectors = pipelineAdapter.getSelectors(selectPipelineBaseState);
+export const selectBasePipelines = pipelineBaseSelectors.selectAll;
+export const selectBasePipelineEntities = pipelineBaseSelectors.selectEntities;
+export const selectBasePipelineIds = pipelineBaseSelectors.selectIds;
 
 export const selectPipelineOverviewMap = (state: RootState) =>
-  state.pipeline.overview;
-
-export const selectPipelineLiveMap = (state: RootState) =>
-  state.pipeline.live;
+  state.pipeline.base.overview;
 
 export const selectPipelineDefinitionMap = (state: RootState) =>
-  state.pipeline.definition;
+  state.pipeline.base.definition;
+
+
+export const selectPipelineRunState = (state: RootState) => state.pipeline.run;
+export const pipelineRunSelectors = runAdapter.getSelectors(selectPipelineRunState);
+export const selectPipelineRuns = pipelineRunSelectors.selectAll;
+export const selectPipelineRunEntities = pipelineRunSelectors.selectEntities;
+export const selectPipelineRunMap = (state: RootState) => state.pipeline.run.byPipelinePlugin;

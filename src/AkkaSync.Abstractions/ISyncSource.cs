@@ -12,7 +12,7 @@ public interface ISyncSource
   string Id { get; }
   string QualifiedId { get; }
   string Name { get; }
-  string Key { get; }
+  string Key { get; init; }
   string Type { get; }
   string ETag { get; }
 

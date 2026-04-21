@@ -17,9 +17,6 @@ public record PipelineSpec
   public PluginSpec Source => Plugins.FirstOrDefault(p => p.Type.Equals("source", StringComparison.OrdinalIgnoreCase))!;
   [JsonIgnore]
   public PluginSpec Sink => Plugins.FirstOrDefault(p => p.Type.Equals("sink", StringComparison.OrdinalIgnoreCase))!;
-  //public required PluginSpec SourceProvider { get; init; }
-  //public required PluginSpec TransformerProvider { get; init; }
-  //public required PluginSpec SinkProvider { get; init; }
 }
 
 public record PluginSpec(string Key, string Type, string Provider, JsonElement Parameters)

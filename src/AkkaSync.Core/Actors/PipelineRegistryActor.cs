@@ -63,14 +63,14 @@ public class PipelineRegistryActor : ReceiveActor
 
   private void CreatePipeline(RegistryProtocol.CreatePipeline msg)
   {
-    if(_pipelineSpecs == null || !_pipelineSpecs.TryGetValue(msg.Id, out var spec))
+    if(_pipelineSpecs == null || !_pipelineSpecs.TryGetValue(msg.Key, out var spec))
     {
-      _logger.Warning($"Pipeline spec with name {msg.Id} not found.");
+      _logger.Warning($"Pipeline spec with name {msg.Key} not found.");
 
       return;
     }
     var runId = RunId.New();
-    var actorName = $"{msg.Id}-${runId}";
+    var actorName = $"{msg.Key}-${runId}";
     if (Context.Child(actorName).IsNobody())
     {
       var source = spec.Source.Provider ??  throw new NullReferenceException("Source Provider cannot be empty") ;
@@ -84,20 +84,20 @@ public class PipelineRegistryActor : ReceiveActor
 
       if (sourceProvider is not null && transformerMap is not null && sinkProvider is not null)
       {
-        var pipelineId = new PipelineId(runId, msg.Id);
+        var pipelineId = new PipelineId(runId, msg.Key);
         var pipelineActor = _actorResolver.ActorOf<PipelineActor>(Context, pipelineId.ToString(), sourceProvider, transformerMap, sinkProvider, pipelineId, spec.Plugins);
         pipelineActor.Tell(new SharedProtocol.Start());
       }
       else
       {
-        _logger.Warning($"Failed to create pipeline {msg.Id}. Source, Transformer or Sink provider not found.");
-        _schedulerActor.Tell(new PipelineSkipped(new PipelineId(runId, msg.Id), $"Source, Transformer or Sink provider not found for pipeline {msg.Id}."));
+        _logger.Warning($"Failed to create pipeline {msg.Key}. Source, Transformer or Sink provider not found.");
+        _schedulerActor.Tell(new PipelineSkipped(new PipelineId(runId, msg.Key), $"Source, Transformer or Sink provider not found for pipeline {msg.Key}."));
         return;
       }
     }
     else
     {
-      _logger.Warning($"Pipeline with ID {msg.Id} already exists.");
+      _logger.Warning($"Pipeline with ID {msg.Key} already exists.");
     }
   }
 }

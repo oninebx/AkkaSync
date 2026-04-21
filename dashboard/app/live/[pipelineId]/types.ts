@@ -1,7 +1,7 @@
-import { PluginType } from '@/contracts/plugin/types';
+import { PluginStatus, PluginType } from '@/contracts/plugin/types';
 import { Node, Edge } from '@xyflow/react';
 
-export type PluginStatus = 'running' | 'idle' | 'succeeded' | 'failed';
+
 export type PluginNodePayload = {
   id: string;
   name: string;

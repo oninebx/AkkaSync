@@ -72,12 +72,17 @@ namespace AkkaSync.Core.Actors
 
     protected override void PreStart()
     {
-      var sourceInstances = _sources.Select(s => new PluginInstance(s.QualifiedId, s.Name, "source", _id.Key)).ToList();
-      var transformerInstances = _transformers.Select(layer => (IReadOnlyList<PluginInstance>)[.. layer.Select(t => new PluginInstance(t.QualifiedId, t.Name, "transformer", _id.Key) {
-        Dependencies = [.. t.DependsOn.Select(d => d)]
+      var sourceInstances = _sources.Select(s => new PluginInstance(s.QualifiedId, s.Key, s.Name, "source")).ToList();
+      var pluginDict = _transformers.SelectMany(layer => layer).GroupBy(t => t.Key).ToDictionary(t => t.Key, t => t.Select(x => x.QualifiedId).ToList());
+      
+      pluginDict.Add(sourceInstances.GroupBy(s => s.Key).First().Key, [.. sourceInstances.Select(s => s.Id)]);
+      
+      
+      var transformerInstances = _transformers.Select(layer => (IReadOnlyList<PluginInstance>)[.. layer.Select(t => new PluginInstance(t.QualifiedId, t.Key, t.Name, "transformer") {
+        Dependencies = [.. t.DependsOn.Select(d => pluginDict[d]).SelectMany(x => x)]
       })])
         .ToList();
-      var sinkInstance = new PluginInstance(_sink.QualifiedId, _sink.Name, "sink", _id.Key);
+      var sinkInstance = new PluginInstance(_sink.QualifiedId, _sink.Key, _sink.Name, "sink");
 
       if (transformerInstances.Count > 0)
       {

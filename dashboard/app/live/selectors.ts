@@ -1,20 +1,20 @@
 import { createSelector } from '@reduxjs/toolkit';
 import {
-  selectPipelineEntities,
+  selectBasePipelineEntities,
   selectPipelineDefinitionMap,
-  selectPipelineLiveMap
+  selectPipelineRunEntities
 } from '@/features/pipeline/pipeline.selectors';
 import { DEFAULT_LIVE } from '@/features/pipeline/pipeline.defaults';
 
 export const selectClusterPipelines = createSelector(
-  selectPipelineEntities,
+  selectBasePipelineEntities,
   selectPipelineDefinitionMap,
-  selectPipelineLiveMap,
-  (entities, definition, live) =>
+  selectPipelineRunEntities,
+  (entities, definition, run) =>
     Object.keys(definition).map((id) => {
       const base = entities[id] ?? { id };
       const def = definition[id];
-      const l = live[id];
+      const l = run[id];
 
       // 👉 从 definition 提取 source / target
       const source =

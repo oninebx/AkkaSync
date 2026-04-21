@@ -1,6 +1,6 @@
 'use client';
 import { Node, Edge, ReactFlow, Controls, MiniMap, Background, addEdge, NodeChange, applyNodeChanges } from '@xyflow/react';
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import useLiveLayout from './hooks/useLiveLayout';
 import { applyLiveLayout } from './utils/liveLayout';
 import { SinkNode, SourceNode, TransformNode } from './components/FlowNode';
@@ -22,6 +22,15 @@ const LivePage = () => {
     return applyLiveLayout(nodes, layout);
   });
   const [layoutEdges, setLayoutEdges] = useState<Edge[]>(edges);
+
+useEffect(() => {
+  const layout = loadLayout();
+  setLayoutNodes(applyLiveLayout(nodes, layout));
+}, [nodes, loadLayout]);
+
+useEffect(() => {
+  setLayoutEdges(edges);
+}, [edges]);
 
   const nodeTypes = {
     source: SourceNode,

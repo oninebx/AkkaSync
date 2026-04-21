@@ -24,6 +24,7 @@
 //   });
 // }
 
+import { PluginDefinition, PluginRun } from '@/features/pipeline/pipeline.types';
 import { FlowNodeData, FlowEdge, Pipeline } from './types';
 
 type BuildResult = {

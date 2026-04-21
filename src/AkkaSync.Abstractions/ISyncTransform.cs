@@ -8,6 +8,7 @@ namespace AkkaSync.Abstractions
 {
   public interface ISyncTransform
   {
+    string Key { get; init; }
     string QualifiedId { get; }
     string Name { get; }
     Task<TransformContext> Transform(TransformContext context, CancellationToken cancellationToken);

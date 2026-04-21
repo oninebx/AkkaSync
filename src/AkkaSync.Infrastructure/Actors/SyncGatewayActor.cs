@@ -36,22 +36,30 @@ public class SyncGatewayActor : ReceiveActor
       var storeValues = store.GetEventsToReplay(0);
       foreach(var current in storeValues)
       {
-        if(reducerRegistry.TryReduce(current, @event, out var next) 
-          && !ReferenceEquals(current, next))
+        try 
         {
-          _logger.Info("event {0} is emitted.", @event);
-          store.Update(next);
-          var payload = notificationMapper.TryMap(next, @event);
-          if(payload is not null)
+          if (reducerRegistry.TryReduce(current, @event, out var next)
+          && !ReferenceEquals(current, next))
           {
-            var envelope = factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
-            envelopes.Add(envelope);
+            _logger.Info("event {0} is emitted.", @event);
+            store.Update(next);
+            var payload = notificationMapper.TryMap(next, @event);
+            if (payload is not null)
+            {
+              var envelope = factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
+              envelopes.Add(envelope);
+            }
+          }
+          else
+          {
+            _logger.Debug("event {0} is emmited without reducing.", @event);
           }
         }
-        else
+        catch (Exception ex) 
         {
-          _logger.Debug("event {0} is emmited without reducing.", @event);
+          _logger.Error(ex,"Reducer failed. Event={Event}, StateType={StateType}", @event.GetType().Name, current.GetType().Name);
         }
+
       }
 
       foreach(var envelop in envelopes)

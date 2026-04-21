@@ -1,7 +1,7 @@
 import { RootState } from "@/store";
 import { createSelector } from "@reduxjs/toolkit";
 import { cronToNext, cronToText, formatDuration, formatTimeMixed } from "@/shared/utils/time";
-import { pipelineSelectors, selectPipelineDefinitionMap, selectPipelineEntities, selectPipelineOverviewMap, selectPipelines } from "@/features/pipeline/pipeline.selectors";
+import { pipelineBaseSelectors, selectPipelineDefinitionMap, selectBasePipelineEntities, selectPipelineOverviewMap, selectBasePipelines } from "@/features/pipeline/pipeline.selectors";
 import { selectScheduleJobs } from "@/features/scheduler/scheduler.selectors";
 import { KpiVM, PipelineVM } from "./types";
 import { DEFAULT_OVERVIEW } from "@/features/pipeline/pipeline.defaults";
@@ -29,7 +29,7 @@ import { DEFAULT_OVERVIEW } from "@/features/pipeline/pipeline.defaults";
 // );
 
 export const selectOverviewPipelines = createSelector(
-  selectPipelineEntities,
+  selectBasePipelineEntities,
   selectPipelineDefinitionMap,
   selectPipelineOverviewMap,
   (entities, definition, overview) =>
@@ -49,7 +49,7 @@ const KPI_TEMPLATES = [
 ];
 
 export const selectKpiData = createSelector(
-  [selectPipelines, selectScheduleJobs],
+  [selectBasePipelines, selectScheduleJobs],
   (pipelines, jobs): KpiVM[] => {
 
     const total = pipelines.length;

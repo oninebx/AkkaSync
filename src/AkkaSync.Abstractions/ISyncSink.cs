@@ -8,6 +8,7 @@ namespace AkkaSync.Abstractions
 {
   public interface ISyncSink
   {
+    string Key { get; init; }
     string QualifiedId { get; }
     string Name { get; }
     //string Key { get; }
