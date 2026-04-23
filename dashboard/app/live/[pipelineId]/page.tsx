@@ -23,14 +23,15 @@ const LivePage = () => {
   });
   const [layoutEdges, setLayoutEdges] = useState<Edge[]>(edges);
 
-useEffect(() => {
-  const layout = loadLayout();
-  setLayoutNodes(applyLiveLayout(nodes, layout));
-}, [nodes, loadLayout]);
+  useEffect(() => {
+    const layout = loadLayout();
+    setLayoutNodes(applyLiveLayout(nodes, layout));
+  }, [nodes, loadLayout]);
 
-useEffect(() => {
-  setLayoutEdges(edges);
-}, [edges]);
+  useEffect(() => {
+    setLayoutEdges(edges);
+    
+  }, [edges]);
 
   const nodeTypes = {
     source: SourceNode,

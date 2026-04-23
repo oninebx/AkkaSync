@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace AkkaSync.Abstractions.Models;
 
@@ -37,8 +35,6 @@ public sealed class TransformContext
     _commited = newCommitted;
     _pending.Clear();
   }
-
-  // public required IDictionary<string, Dictionary<string,object?>> TablesData { get; init; }
   
 }
 

@@ -5,6 +5,8 @@ using AkkaSync.Core.Domain.Workers;
 namespace AkkaSync.Core.Notifications;
 
 public sealed record PipelineCreatedReported(PipelineId PipelineId, IReadOnlyList<PluginInstance> SourceInstances, IReadOnlyList<PluginInstance> TransformerInstances, PluginInstance SinkInstance) : INotificationEvent;
+public sealed record WorkerMetricsReported(WorkerId WorkerId, IReadOnlyList<PluginMetrics> MetricsList) : INotificationEvent;
+
 public sealed record PipelineStartReported(PipelineId PipelineId) : INotificationEvent;
 public sealed record PipelineSkipReported(PipelineId PipelineId, string Reason) : INotificationEvent;
 public sealed record PipelineCompleteReported(PipelineId PipelineId) : INotificationEvent;

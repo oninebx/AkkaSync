@@ -11,7 +11,7 @@ namespace AkkaSync.Abstractions
     string Key { get; init; }
     string QualifiedId { get; }
     string Name { get; }
-    Task<TransformContext> Transform(TransformContext context, CancellationToken cancellationToken);
+    Task<ErrorContext?> Transform(TransformContext context, CancellationToken cancellationToken);
     string Produce { get; init; }
     string[] DependsOn { get; init; }
   }

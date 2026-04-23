@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Abstractions
@@ -11,7 +7,6 @@ namespace AkkaSync.Abstractions
     string Key { get; init; }
     string QualifiedId { get; }
     string Name { get; }
-    //string Key { get; }
-    Task WriteAsync(IEnumerable<TransformContext> context, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ErrorContext>> WriteAsync(IEnumerable<TransformContext> context, CancellationToken cancellationToken);
   }
 }

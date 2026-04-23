@@ -22,6 +22,7 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
         PipelineCreatedReported e => new EventNotification("pipeline.run.created", new { Id = e.PipelineId.Key, state.Runs[e.PipelineId].Plugins }),
         PipelineStartReported e => new EventNotification("pipeline.run.started", new { Id = e.PipelineId.Key, StartedAt = @event.OccurredAt }),
         PipelineCompleteReported e => new EventNotification("pipeline.run.completed", new { Id = e.PipelineId.Key, FinishAt = @event.OccurredAt }),
+        WorkerMetricsReported e => new EventNotification("pipeline.metrics.updated", new { Id = e.WorkerId.PipelineId.Key, MetricsData = e.MetricsList }),
         _ => null
       };
     }

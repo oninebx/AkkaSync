@@ -54,7 +54,6 @@ namespace AkkaSync.Core.Actors
       {
         _batchSize = 1;
       }
-      //_batchSize = sinkSpec.Parameters.Get<int>("batchSize", 1);
 
       _historyStore = historyStore;
       _errorStore = errorStore;
