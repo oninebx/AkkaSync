@@ -6,14 +6,14 @@ namespace AkkaSync.Infrastructure.Messaging.Publish;
 
 public sealed class EventReducerRegistry
 {
-  private readonly IReadOnlyDictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>> _reducers;
+  private readonly IReadOnlyDictionary<Type, Func<IStateSnashot, IProjectionEvent, IStateSnashot>> _reducers;
 
-  internal EventReducerRegistry(IReadOnlyDictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>> reducers)
+  internal EventReducerRegistry(IReadOnlyDictionary<Type, Func<IStateSnashot, IProjectionEvent, IStateSnashot>> reducers)
   {
-    _reducers = new Dictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>>(reducers);
+    _reducers = new Dictionary<Type, Func<IStateSnashot, IProjectionEvent, IStateSnashot>>(reducers);
   }
 
-  public bool TryReduce(IStoreValue current, INotificationEvent @event, out IStoreValue next)
+  public bool TryReduce(IStateSnashot current, IProjectionEvent @event, out IStateSnashot next)
   {
     if(_reducers.TryGetValue(current.GetType(), out var reducer))
     {
@@ -27,12 +27,12 @@ public sealed class EventReducerRegistry
 
 public sealed class EventReducerRegistryBuilder
 {
-    private readonly Dictionary<Type, Func<IStoreValue, INotificationEvent, IStoreValue>> _reducers = [];
+    private readonly Dictionary<Type, Func<IStateSnashot, IProjectionEvent, IStateSnashot>> _reducers = [];
 
     public EventReducerRegistryBuilder Add<TState>(
-        Func<TState, INotificationEvent, TState> reducer)
-        where TState : class, IStoreValue
-    {
+        Func<TState, IProjectionEvent, TState> reducer)
+        where TState : class, IStateSnashot
+  {
         var stateType = typeof(TState);
 
         if (_reducers.ContainsKey(stateType))

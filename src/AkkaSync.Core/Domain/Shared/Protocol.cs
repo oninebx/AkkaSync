@@ -1,6 +1,3 @@
-using System;
-using Akka.Actor;
-
 namespace AkkaSync.Core.Domain.Shared;
 
 public static class SharedProtocol

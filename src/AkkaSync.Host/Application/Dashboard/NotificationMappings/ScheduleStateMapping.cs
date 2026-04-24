@@ -8,9 +8,9 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
 {
   public sealed class ScheduleStateMapping : IEventNotificationMapping
   {
-    public bool CanHandle(IStoreValue value) => value is ScheduleState;
+    public bool CanHandle(IStateSnashot value) => value is ScheduleState;
 
-    public EventNotification? TryMap(IStoreValue store, INotificationEvent? @event)
+    public EventNotification? TryMap(IStateSnashot store, IProjectionEvent? @event)
     {
       var state = (ScheduleState)store;
       return @event switch

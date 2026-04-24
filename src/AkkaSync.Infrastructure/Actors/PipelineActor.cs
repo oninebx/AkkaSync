@@ -10,15 +10,16 @@ using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Core.Notifications;
+using AkkaSync.Core.Projection;
 
-namespace AkkaSync.Core.Actors
+namespace AkkaSync.Infrastructure.Actors
 {
   public class PipelineActor : ReceiveActor
   {
     private readonly PipelineId _id;
     private readonly IEnumerable<ISyncSource> _sources;
     private readonly IReadOnlyList<IReadOnlyList<ISyncTransform>> _transformers;
-    private readonly ISyncSink _sink;
+    private readonly IReadOnlyList<ISyncSink> _sinks;
     private readonly int _batchSize;
     private readonly IHistoryStore _historyStore;
     private readonly IErrorStore _errorStore;
@@ -29,10 +30,11 @@ namespace AkkaSync.Core.Actors
     public PipelineActor(
       IPluginProvider<ISyncSource> sourceProvider,
       IReadOnlyDictionary<string, IPluginProvider<ISyncTransform>> transformProviders,
-      IPluginProvider<ISyncSink> sinkProvider,
+      IReadOnlyDictionary<string, IPluginProvider<ISyncSink>> sinkProviders,
       IHistoryStore historyStore,
       IErrorStore errorStore,
       PipelineId id,
+      int batchSize,
       IReadOnlyList<PluginSpec> specs)
     {
       _cancellationTokenSource = new CancellationTokenSource();
@@ -44,16 +46,21 @@ namespace AkkaSync.Core.Actors
       var transformSpecs = specs.Where(s => s.Type == "transform").ToList();
       _transformers = DagBuilder.Build(transformSpecs.SelectMany(transform => transformProviders[transform.Provider].Create(transform, _cancellationToken)), sourceSpec.Key);
 
-      var sinkSpec = specs.FirstOrDefault(s => s.Type == "sink") ?? throw new NullReferenceException("Sink Provider cannot be empty");
-      _sink = sinkProvider.Create(sinkSpec, _cancellationToken).First();
-      if(sinkSpec.Parameters.TryGetProperty("batchSize", out var batchSizeElement))
+      var sinkSpecs = specs.Where(s => s.Type == "sink").ToList();
+      if(sinkSpecs.Count == 0)
       {
-        _batchSize = batchSizeElement.GetInt32();
+        throw new NullReferenceException("Sink Provider cannot be empty");
       }
-      else
-      {
-        _batchSize = 1;
-      }
+      _sinks = [.. sinkSpecs.SelectMany(sink => sinkProviders[sink.Provider].Create(sink, _cancellationToken))]; //sinkProviders.Create(sinkSpec, _cancellationToken).First();
+      _batchSize = batchSize;
+      //if(sinkSpec.Parameters.TryGetProperty("batchSize", out var batchSizeElement))
+      //{
+      //  _batchSize = batchSizeElement.GetInt32();
+      //}
+      //else
+      //{
+      //  _batchSize = 1;
+      //}
 
       _historyStore = historyStore;
       _errorStore = errorStore;
@@ -77,11 +84,11 @@ namespace AkkaSync.Core.Actors
       pluginDict.Add(sourceInstances.GroupBy(s => s.Key).First().Key, [.. sourceInstances.Select(s => s.Id)]);
       
       
-      var transformerInstances = _transformers.Select(layer => (IReadOnlyList<PluginInstance>)[.. layer.Select(t => new PluginInstance(t.QualifiedId, t.Key, t.Name, "transformer") {
+      var transformerInstances = _transformers.Select(layer => (IReadOnlyList<PluginInstance>)[.. layer.Select(t => new PluginInstance(t.QualifiedId, t.Key, t.Name, "transformer") 
+      {
         Dependencies = [.. t.DependsOn.Select(d => pluginDict[d]).SelectMany(x => x)]
-      })])
-        .ToList();
-      var sinkInstance = new PluginInstance(_sink.QualifiedId, _sink.Key, _sink.Name, "sink");
+      })]).ToList();
+      var sinkInstances = _sinks.Select(sink => new PluginInstance(sink.QualifiedId, sink.Key, sink.Name, "sink")).ToList();
 
       if (transformerInstances.Count > 0)
       {
@@ -91,19 +98,27 @@ namespace AkkaSync.Core.Actors
           t.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
         }
       }
-
-      if (transformerInstances.Count > 0)
+      
+      foreach (var sink in sinkInstances)
       {
-        var lastLayer = transformerInstances[^1];
+        if (transformerInstances.Count > 0)
+        {
+          var lastLayer = transformerInstances[^1];
+          sink.Dependencies.AddRange(lastLayer.Select(t => t.Id));
+        }
+        else
+        {
+          sink.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
+        }
 
-        sinkInstance.Dependencies.AddRange(lastLayer.Select(t => t.Id));
       }
-      else
+
+      Context.System.EventStream.Publish(new PipelineCreatedTransition(_id)
       {
-        sinkInstance.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
-      }
-
-      Context.System.EventStream.Publish(new PipelineCreatedReported(_id, sourceInstances, [.. transformerInstances.SelectMany(layer => layer)], sinkInstance));
+        SourceInstances = sourceInstances,
+        TransformerInstances = [..transformerInstances.SelectMany(layer => layer)],
+        SinkInstances = sinkInstances
+      });
     }
 
     protected override void PostStop()
@@ -152,7 +167,7 @@ namespace AkkaSync.Core.Actors
         return;
       }
 
-      var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sink, _batchSize, msg.Cursor, _cancellationToken)), workerId.ToString());
+      var worker = Context.ActorOf(Props.Create(() => new SyncWorkerActor(workerId, source, _transformers, _sinks, _batchSize, msg.Cursor, _cancellationToken)), workerId.ToString());
       
       worker.Tell(new SharedProtocol.Start());
     }
@@ -211,7 +226,7 @@ namespace AkkaSync.Core.Actors
     }
     private async Task HandleWorkerErrored(WorkerErrored msg)
     {
-      _logger.Error($"Worker {msg.WorkerId} encountered errors: {string.Join(", ", msg.Errors.Select(e => $"{_id.Key} - {e.PluginId}: {e.Message}"))}");
+      //_logger.Error($"Worker {msg.WorkerId} encountered errors: {string.Join(", ", msg.Errors.Select(e => $"{_id.Key} - {e.PluginId}: {e.Message}"))}");
       await _errorStore.RecordErrorsAsync([.. msg.Errors.Select(e => new ErrorRecord(_id.Key, _id.RunId.ToString(), e.PluginId, e.Message) { Context = e.Context })]);
       Context.System.EventStream.Publish(new WorkerErrorReported(msg.WorkerId, msg.Errors.GroupBy(e => e.PluginId).ToDictionary(g => g.Key, g => g.Count())));
     }

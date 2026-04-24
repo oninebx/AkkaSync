@@ -5,5 +5,5 @@ using AkkaSync.Core.Notifications;
 
 namespace AkkaSync.Core.Domain.Shared;
 
-public sealed record SyncEngineReady(IReadOnlyList<PipelineSpec> Pipelines, IReadOnlyDictionary<string, ScheduleSpec> Schedules) : INotificationEvent;
+public sealed record SyncEngineReady(IReadOnlyList<PipelineSpec> Pipelines, IReadOnlyDictionary<string, ScheduleSpec> Schedules) : IProjectionEvent;
 public sealed record SyncEngineStopped();

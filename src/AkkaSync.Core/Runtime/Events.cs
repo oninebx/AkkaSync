@@ -10,8 +10,3 @@ public sealed record PipelineManagerFailed()
 }
 
 public sealed record RegistryInitialized();
-
-// public sealed record PipelineCreationFailed(string Name) : ISyncEvent
-// {
-//   public DateTimeOffset Timestamp => DateTimeOffset.UtcNow;
-// }

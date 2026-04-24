@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Concurrent;
-using System.Text.Json;
 using Akka.Actor;
-using Akka.Hosting;
-using AkkaSync.Core.Common;
 using AkkaSync.Host.Application.Dashboard;
 using AkkaSync.Host.Application.Query;
 using AkkaSync.Host.Application.Query.Mapper;
 using AkkaSync.Host.Infrastructure.SignalR;
+using AkkaSync.Infrastructure.Abstractions;
 using AkkaSync.Infrastructure.Actors;
 using AkkaSync.Infrastructure.Messaging.Publish;
 using Microsoft.AspNetCore.SignalR;

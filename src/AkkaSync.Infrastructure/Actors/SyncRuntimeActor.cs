@@ -1,8 +1,7 @@
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Actors;
-using AkkaSync.Core.Common;
+using AkkaSync.Infrastructure.Abstractions;
 
 namespace AkkaSync.Infrastructure.Actors;
 

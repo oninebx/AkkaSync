@@ -8,9 +8,9 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
 {
   public sealed class PluginStateMapping : IEventNotificationMapping
   {
-    public bool CanHandle(IStoreValue value) => value is PluginState;
+    public bool CanHandle(IStateSnashot value) => value is PluginState;
 
-    public EventNotification? TryMap(IStoreValue store, INotificationEvent? @event)
+    public EventNotification? TryMap(IStateSnashot store, IProjectionEvent? @event)
     {
       var state = (PluginState)store;
       return @event switch

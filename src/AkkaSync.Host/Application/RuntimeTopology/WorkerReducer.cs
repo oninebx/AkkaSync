@@ -7,7 +7,7 @@ namespace AkkaSync.Host.Application.RunningWorker
 {
   public static class WorkerReducer
   {
-    public static WorkerState Reduce(WorkerState current, INotificationEvent @event) => @event switch
+    public static WorkerState Reduce(WorkerState current, IProjectionEvent @event) => @event switch
     {
       WorkerStartReported e => current with
       {

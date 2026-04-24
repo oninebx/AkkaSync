@@ -7,7 +7,7 @@ namespace AkkaSync.Host.Application.Swapping
 {
   public static class PluginStateReducer
   {
-    public static PluginState Reduce(PluginState current, INotificationEvent @event) => @event switch
+    public static PluginState Reduce(PluginState current, IProjectionEvent @event) => @event switch
     {
       PluginsRestored e => current with { Entries = [..e.Plugins.Select(p => new PluginCacheInfo(p.Id, p.Version, PluginStatus.Loaded))] },
       PluginAdded e => current with { Entries = [ ..current.Entries, new PluginCacheInfo(e.Id, e.Version, PluginStatus.Loaded)] },

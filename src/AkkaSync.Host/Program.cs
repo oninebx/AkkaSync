@@ -13,7 +13,7 @@ var logConfig = new LoggerConfiguration()
     .MinimumLevel.Information();
 
 Config? akkaConfig = null;
-if (!builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment())
 {
   builder.Host.UseWindowsService();
   logConfig.WriteTo.File(Path.Combine(AppContext.BaseDirectory, "logs", "log-.txt"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30);

@@ -5,7 +5,7 @@ namespace AkkaSync.Host.Application.Dashboard.NotificationMappings
 {
   public interface IEventNotificationMapping
   {
-    bool CanHandle(IStoreValue value);
-    EventNotification? TryMap(IStoreValue store, INotificationEvent? @event);
+    bool CanHandle(IStateSnashot value);
+    EventNotification? TryMap(IStateSnashot store, IProjectionEvent? @event);
   }
 }

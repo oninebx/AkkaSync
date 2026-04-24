@@ -3,4 +3,4 @@ using AkkaSync.Abstractions;
 
 namespace AkkaSync.Host.Application.Dashboard;
 
-public sealed record DashboardInitialized : INotificationEvent;
+public sealed record DashboardInitialized : IProjectionEvent;

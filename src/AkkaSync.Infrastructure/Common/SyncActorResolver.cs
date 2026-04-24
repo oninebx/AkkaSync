@@ -1,6 +1,7 @@
 ﻿using Akka.Actor;
 using Akka.DependencyInjection;
 using AkkaSync.Core.Common;
+using AkkaSync.Infrastructure.Abstractions;
 
 namespace AkkaSync.Infrastructure.Common
 {

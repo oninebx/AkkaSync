@@ -3,6 +3,7 @@
     "sync-orders" :{
       "Schedule": "every-minute",
       "Name": "sync-orders",
+      "BatchSize": 50,
       "Plugins": [
         {
           "Key": "orders-raw-data",
@@ -148,8 +149,7 @@
           "Type": "sink",
           "Provider": "SqliteSinkProvider",
           "Parameters": {
-            "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
-            "batchSize": 50
+            "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;"
           },
           "Meta": {
             "DataSource": {

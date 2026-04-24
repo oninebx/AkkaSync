@@ -11,12 +11,13 @@ public record PipelineSpec
 {
   public string Name { get; set; } = string.Empty;
   public string? Schedule { get; set; }
+  public int BatchSize { get; set; } = 1;
   public bool IsActive { get; init; } = true;
   public IReadOnlyList<PluginSpec> Plugins { get; set; } = [];
   [JsonIgnore]
   public PluginSpec Source => Plugins.FirstOrDefault(p => p.Type.Equals("source", StringComparison.OrdinalIgnoreCase))!;
   [JsonIgnore]
-  public PluginSpec Sink => Plugins.FirstOrDefault(p => p.Type.Equals("sink", StringComparison.OrdinalIgnoreCase))!;
+  public IReadOnlyList<PluginSpec> Sinks => [.. Plugins.Where(p => p.Type.Equals("sink", StringComparison.OrdinalIgnoreCase))];
 }
 
 public record PluginSpec(string Key, string Type, string Provider, JsonElement Parameters)

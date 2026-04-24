@@ -1,27 +1,28 @@
 ﻿using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Notifications;
+using AkkaSync.Core.Projection;
 using System.Collections.Immutable;
 
 namespace AkkaSync.Host.Application.Pipeline
 {
   public static class PipelineReducer
   {
-    public static PipelineState Reduce(PipelineState current, INotificationEvent @event) => @event switch
+    public static PipelineState Reduce(PipelineState current, IProjectionEvent @event) => @event switch
     {
       SyncEngineReady e => current with
       {
         Definitions = [..e.Pipelines.Select(p => new PipelineDefinition(
         p.Name,
         DataSourceRecord.From(p.Source.Meta?.DataSource),
-        DataSourceRecord.From(p.Sink.Meta?.DataSource),
+        [.. p.Sinks.Select(sink => DataSourceRecord.From(sink.Meta?.DataSource))],
         [.. p.Plugins.Select(plugin => new PluginDefinition(plugin.Key, plugin.Provider, plugin.Type, plugin.DependsOn))]
       ) {
         Schedule = p.Schedule,
         Name = p.Name
       })]
       },
-      PipelineCreatedReported e => current with
+      PipelineCreatedTransition e => current with
       {
         Runs = current.Runs.Add(e.PipelineId, new PipelineRun(e.PipelineId,
         GeneratePlugins(e)))
@@ -77,7 +78,7 @@ namespace AkkaSync.Host.Application.Pipeline
       };
     }
 
-    private static ImmutableDictionary<string, PluginRun> GeneratePlugins(PipelineCreatedReported e)
-      => e.SourceInstances.Concat(e.TransformerInstances).Append(e.SinkInstance).Select(x => new PluginRun(x.Key, x.Id, x.Name, x.Dependencies)).ToImmutableDictionary(p => p.Id, p => p);
+    private static ImmutableDictionary<string, PluginRun> GeneratePlugins(PipelineCreatedTransition e)
+      => e.SourceInstances.Concat(e.TransformerInstances).Concat(e.SinkInstances).Select(x => new PluginRun(x.Key, x.Id, x.Name, x.Dependencies)).ToImmutableDictionary(p => p.Id, p => p);
   }
 }

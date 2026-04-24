@@ -6,7 +6,7 @@ namespace AkkaSync.Host.Application.Diagnosing;
 
 public static class DiagnosisReducer
 {
-  public static DiagnosisJournal Reduce(DiagnosisJournal current, INotificationEvent @event) => @event switch
+  public static DiagnosisJournal Reduce(DiagnosisJournal current, IProjectionEvent @event) => @event switch
   {
     PipelineStartReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' started.") { Timestamp = @event.OccurredAt }),
     PipelineCompleteReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' completed.") { Timestamp = @event.OccurredAt }),

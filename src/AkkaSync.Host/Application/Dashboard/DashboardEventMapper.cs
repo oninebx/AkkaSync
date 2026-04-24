@@ -13,7 +13,7 @@ public class DashboardEventMapper: IEventNotificationMapper
     _mappings = mappings;
   }
 
-  public EventNotification? TryMap(IStoreValue value, INotificationEvent? @event = null)
+  public EventNotification? TryMap(IStateSnashot value, IProjectionEvent? @event = null)
   {
     foreach (var mapping in _mappings)
     {

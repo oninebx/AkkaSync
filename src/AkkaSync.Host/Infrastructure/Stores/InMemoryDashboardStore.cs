@@ -1,12 +1,11 @@
-using System;
+using AkkaSync.Abstractions;
 using AkkaSync.Host.Application.Diagnosing;
-using AkkaSync.Host.Application.Scheduling;
-using AkkaSync.Host.Application.Syncing;
-using AkkaSync.Host.Application.Swapping;
-using AkkaSync.Infrastructure.Messaging.Publish;
 using AkkaSync.Host.Application.Pipeline;
 using AkkaSync.Host.Application.Plugin;
+using AkkaSync.Host.Application.Scheduling;
+using AkkaSync.Host.Application.Syncing;
 using AkkaSync.Host.Application.SyncWorker;
+using AkkaSync.Infrastructure.Messaging.Publish;
 
 namespace AkkaSync.Host.Infrastructure.Stores;
 
@@ -20,7 +19,7 @@ public class InMemoryDashboardStore : IDashboardStore
   private volatile WorkerState _workerState = WorkerState.Empty;
   private volatile SyncingState _syncingState = SyncingState.Empty;
 
-  public IReadOnlyList<IStoreValue> GetEventsToReplay(long lastSeenSequence)
+  public IReadOnlyList<IStateSnashot> GetEventsToReplay(long lastSeenSequence)
   {
     return [
       _pipelineState,
@@ -33,7 +32,7 @@ public class InMemoryDashboardStore : IDashboardStore
     ];
   }
 
-  public void Update<TValue>(TValue state) where TValue : IStoreValue
+  public void Update<TValue>(TValue state) where TValue : IStateSnashot
   {
     switch (state)
     {

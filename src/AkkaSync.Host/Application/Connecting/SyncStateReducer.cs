@@ -6,7 +6,7 @@ namespace AkkaSync.Host.Application.Syncing;
 
 public static class SyncStateReducer
 {
-  public static SyncState Reduce(SyncState current, INotificationEvent @event)
+  public static SyncState Reduce(SyncState current, IProjectionEvent @event)
   {
     return @event switch
     {

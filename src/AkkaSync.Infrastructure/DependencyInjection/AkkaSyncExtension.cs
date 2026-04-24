@@ -4,11 +4,12 @@ using Akka.DependencyInjection;
 using Akka.Hosting;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Common;
-using AkkaSync.Core.PluginProviders;
 using AkkaSync.Host.Infrastructure.Messaging;
+using AkkaSync.Infrastructure.Abstractions;
 using AkkaSync.Infrastructure.Actors;
 using AkkaSync.Infrastructure.Common;
 using AkkaSync.Infrastructure.Messaging.Publish;
+using AkkaSync.Infrastructure.SyncPlugins.Providers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,12 +1,8 @@
 using Akka.Actor;
 using Akka.Event;
-using Akka.Hosting;
 using AkkaSync.Abstractions;
-using AkkaSync.Core.Actors;
-using AkkaSync.Core.Common;
+using AkkaSync.Infrastructure.Abstractions;
 using AkkaSync.Infrastructure.Messaging.Publish;
-using System;
-using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
 
 namespace AkkaSync.Infrastructure.Actors;
@@ -30,7 +26,7 @@ public class SyncGatewayActor : ReceiveActor
     _actorRegistry = actorRegistry;
    
 
-    ReceiveAsync<INotificationEvent>(async @event =>
+    ReceiveAsync<IProjectionEvent>(async @event =>
     {
       var envelopes = new List<EventEnvelope>();
       var storeValues = store.GetEventsToReplay(0);
@@ -77,13 +73,13 @@ public class SyncGatewayActor : ReceiveActor
     _pluginManager = _actorRegistry.Get<PluginManagerActor>();
     _routes = BuildQueryRoutes(_pipelineManager, _pluginManager);
 
-    Context.System.EventStream.Subscribe(Self, typeof(INotificationEvent));
+    Context.System.EventStream.Subscribe(Self, typeof(IProjectionEvent));
     _logger.Info("SyncGatewayActor started.");
   }
 
   protected override void PostStop()
   {
-    Context.System.EventStream.Unsubscribe(Self, typeof(INotificationEvent));
+    Context.System.EventStream.Unsubscribe(Self, typeof(IProjectionEvent));
   }
 
   private void HandleQuery(IRequestQuery msg)
