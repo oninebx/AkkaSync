@@ -1,10 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AkkaSync.Abstractions
+﻿namespace AkkaSync.Abstractions
 {
-  public interface IChangeSet{ }
+  public interface IChangeSet
+  {
+    string Slice { get; }
+    ChangeOperation Operation { get; }
+    object Payload { get; }
+  }
+
+  public enum ChangeOperation
+  {
+    Upsert = 0,
+    Remove = 1,
+    Replace = 2
+  }
 }

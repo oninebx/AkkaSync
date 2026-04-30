@@ -7,7 +7,7 @@
 
 		<!-- NuGet Package message -->
 		<PackageId>AkkaSync.Abstractions</PackageId>
-		<VersionPrefix>1.0.4</VersionPrefix>
+		<VersionPrefix>1.0.5</VersionPrefix>
 		<VersionSuffix Condition="'$(Configuration)' == 'Debug'">dev</VersionSuffix>
 		<Authors>Ryan Xu</Authors>
 		<Company>AkkaSync Project</Company>
