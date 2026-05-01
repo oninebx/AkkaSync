@@ -6,7 +6,6 @@ import PluginActionContainer from './PluginActionContainer';
 import { PluginVM } from '@/app/sync-plugins/types';
 import VersionCell from './VersionCell';
 import NameCell from './NameCell';
-import { useSignalRQuery } from '@/providers/SingalRProvider';
 
 
 
@@ -21,10 +20,10 @@ const pluginColumns = (
   updatingId: string | null
 ) => [
     { key: "name", header: "Plugin", render: (item) => <NameCell name={item.name} installedVersion={item.installedVersion} latestVersion={item.latestversion} /> },
-    { key: "type", header: "Type", render: (item) => <span className="capitalize">{item.type}</span> },
+    { key: "type", header: "Type", render: (item) => <span className="capitalize">{item.kind}</span> },
     { key: "version", header: "Version", render: (item) => <VersionCell latestVersion={item.latestversion} installedVersion={item.installedVersion} />},
     { key: "usedByCount", header: "Used By", defaultValue: 0 },
-    { key: "actions", header: "Actions", render: (item) => <PluginActionContainer id={item.id} latestVersion={item.latestversion} installedVersion={item.installedVersion} disabled={updatingId === item.id} handleUpdate={doUpdate} /> },
+    { key: "actions", header: "Actions", render: (item) => <PluginActionContainer id={item.id} /*latestVersion={item.latestversion} installedVersion={item.installedVersion} */disabled={updatingId === item.id} canUpgrade={item.status === 'updateAvailable'} handleUpdate={doUpdate} /> },
   ] as Column<PluginVM>[];
 
   const PluginTable = ({data, handleUpdate, updatingId}: Props) => {

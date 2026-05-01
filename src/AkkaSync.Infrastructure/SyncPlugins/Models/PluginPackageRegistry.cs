@@ -1,3 +1,4 @@
+using AkkaSync.Core.Domain.Plugins.Models;
 using System;
 
 namespace AkkaSync.Infrastructure.SyncPlugins.Models;

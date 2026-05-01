@@ -1,5 +1,6 @@
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using Google.Protobuf.WellKnownTypes;
 
 namespace AkkaSync.Infrastructure.SyncPlugins.Providers;
 
@@ -33,13 +34,14 @@ public class PluginProviderRegistry<T> : IPluginProviderRegistry<T> where T : cl
       return false;
     }
     
-    descriptor = new PluginDescriptor(provider.Location, provider.Key, provider.Version);
+    descriptor = new PluginDescriptor(provider.Location, provider.Key, provider.Kind, provider.Version);
     return true;
   }
 
   public IEnumerable<PluginDescriptor> ToDescriptors()
   {
-    var descriptors = _providers.Select(p =>new PluginDescriptor(p.Value.Location, p.Key, p.Value.Version));
+    var descriptors = _providers.Select(p =>new PluginDescriptor(p.Value.Location, p.Key, p.Value.Kind, p.Value.Version));
+
     return descriptors;
   }
 }

@@ -10,8 +10,6 @@
 	<ItemGroup>
 		<PackageReference Include="Akka.Logger.Serilog" Version="1.5.60" />
 		<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.0" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="8.0.22" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 	</ItemGroup>
 

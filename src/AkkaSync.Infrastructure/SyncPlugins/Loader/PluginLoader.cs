@@ -16,7 +16,6 @@ namespace AkkaSync.Infrastructure.SyncPlugins.Loader
         typeof(IPluginProvider<ISyncSource>),
         typeof(IPluginProvider<ISyncTransform>),
         typeof(IPluginProvider<ISyncSink>),
-        typeof(IPluginProvider<IHistoryStore>)
     ];
 
     

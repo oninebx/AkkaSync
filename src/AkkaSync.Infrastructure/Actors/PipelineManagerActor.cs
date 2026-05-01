@@ -6,6 +6,7 @@ using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Domain.Schedules;
 using AkkaSync.Core.Domain.Schedules.Events;
 using AkkaSync.Core.Domain.Shared;
+using AkkaSync.Core.Domain.Shared.Events;
 using AkkaSync.Core.Runtime;
 using AkkaSync.Core.Runtime.Event;
 using AkkaSync.Infrastructure.Abstractions;

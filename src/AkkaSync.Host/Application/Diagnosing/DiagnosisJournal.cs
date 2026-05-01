@@ -3,10 +3,12 @@ using AkkaSync.Abstractions;
 
 namespace AkkaSync.Host.Application.Diagnosing;
 
-public sealed record DiagnosisJournal(ImmutableList<DiagnosisRecord> Records) : IStateSnashot
+public sealed record DiagnosisJournal(ImmutableList<DiagnosisRecord> Records) : ISnapshot
 {
   public const int MaxRecords = 100;
   public static DiagnosisJournal Empty => new([]);
+
+  public string Identifier => throw new NotImplementedException();
 
   private DiagnosisJournal() : this([]) { }
   public DiagnosisJournal AddRecord(DiagnosisRecord record)

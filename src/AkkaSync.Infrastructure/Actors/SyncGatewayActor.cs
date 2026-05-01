@@ -1,8 +1,11 @@
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
+using AkkaSync.Core.Domain.Plugins.Commands;
+using AkkaSync.Core.Registries;
 using AkkaSync.Infrastructure.Abstractions;
 using AkkaSync.Infrastructure.Messaging.Publish;
+using AkkaSync.Infrastructure.StateStore;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
 
 namespace AkkaSync.Infrastructure.Actors;
@@ -11,58 +14,34 @@ public class SyncGatewayActor : ReceiveActor
 {
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IReadOnlyDictionary<Type, IActorRef>? _routes;
+  private readonly ReducerRegistry _reducerRegistry;
 
   private IActorRef? _pipelineManager;
   private IActorRef? _pluginManager;
   private ISyncActorRegistry _actorRegistry;
+  private ISnapshotStore _snapshotStore;
+  private readonly ProjectionRegistry _projectionRegistry;
+  private readonly IEnvelopeFactory _envelopeFactory;
+  private readonly IEnvelopePublisher _publisher;
   public SyncGatewayActor(
     ISyncActorRegistry actorRegistry,
-    IDashboardStore store,
-    IEventNotificationMapper notificationMapper,
-    EventReducerRegistry reducerRegistry,
-    IEventEnvelopeFactory factory,
-    IEventEnvelopePublisher publisher)
+    ISnapshotStore snapshotStore,
+    ReducerRegistry reducerRegistry,
+    ProjectionRegistry projectionRegistry,
+    IEnvelopeFactory envelopeFactory,
+    IEnvelopePublisher publisher)
   {
     _actorRegistry = actorRegistry;
-   
+    _snapshotStore = snapshotStore;
+    _reducerRegistry = reducerRegistry;
 
-    ReceiveAsync<IProjectionEvent>(async @event =>
-    {
-      var envelopes = new List<EventEnvelope>();
-      var storeValues = store.GetEventsToReplay(0);
-      foreach(var current in storeValues)
-      {
-        try 
-        {
-          if (reducerRegistry.TryReduce(current, @event, out var next)
-          && !ReferenceEquals(current, next))
-          {
-            _logger.Info("event {0} is emitted.", @event);
-            store.Update(next);
-            var payload = notificationMapper.TryMap(next, @event);
-            if (payload is not null)
-            {
-              var envelope = factory.Create(payload.TypeName, payload, DateTimeOffset.UtcNow);
-              envelopes.Add(envelope);
-            }
-          }
-          else
-          {
-            _logger.Debug("event {0} is emmited without reducing.", @event);
-          }
-        }
-        catch (Exception ex) 
-        {
-          _logger.Error(ex,"Reducer failed. Event={Event}, StateType={StateType}", @event.GetType().Name, current.GetType().Name);
-        }
+    _reducerRegistry = reducerRegistry;
+    _projectionRegistry = projectionRegistry;
+    _envelopeFactory = envelopeFactory;
 
-      }
+    _publisher = publisher;
 
-      foreach(var envelop in envelopes)
-      {
-        await publisher.PublishAsync(envelop);
-      }
-    });
+    ReceiveAsync<ISnapshotEvent>(HandleSnapshotAsync);
 
     Receive<IRequestQuery>(query => HandleQuery(query));
   }
@@ -74,12 +53,45 @@ public class SyncGatewayActor : ReceiveActor
     _routes = BuildQueryRoutes(_pipelineManager, _pluginManager);
 
     Context.System.EventStream.Subscribe(Self, typeof(IProjectionEvent));
+    Context.System.EventStream.Subscribe(Self, typeof(ISnapshotEvent));
     _logger.Info("SyncGatewayActor started.");
   }
 
   protected override void PostStop()
   {
     Context.System.EventStream.Unsubscribe(Self, typeof(IProjectionEvent));
+    Context.System.EventStream.Unsubscribe(Self, typeof(ISnapshotEvent));
+  }
+
+  private async Task HandleSnapshotAsync(ISnapshotEvent @event)
+  {
+    var nexts = new List<ISnapshot>();
+    var idGroups = @event.IdGroups;
+    var changesToSend = new List<IChangeSet>();
+    foreach (var type in @event.SupportedTypes)
+    {
+      var currents = _snapshotStore.GetCurrentByType(type);
+      var ids = idGroups[type];
+      foreach (var id in ids) 
+      {
+        currents.TryGetValue(id, out var current);
+
+        if (_reducerRegistry.TryReduce(type, id, current, @event, out var next))
+        {
+          nexts.Add(next);
+        }
+      }
+      _snapshotStore.Update(nexts);
+
+      if ( _projectionRegistry.TryProjection(type, [.. currents.Values], nexts, out var changes))
+      {
+        changesToSend.AddRange(changes);
+      }
+      nexts.Clear();
+    }
+
+    var envelope = _envelopeFactory.Create(changesToSend);
+    await _publisher.PublishAsync(envelope);
   }
 
   private void HandleQuery(IRequestQuery msg)
@@ -98,7 +110,7 @@ public class SyncGatewayActor : ReceiveActor
   {
     var routes = new Dictionary<Type, IActorRef>()
     {
-      { typeof(CheckVersions), plugin },
+      { typeof(CheckForUpdates), plugin },
       { typeof(UpdatePlugin), plugin },
     };
     

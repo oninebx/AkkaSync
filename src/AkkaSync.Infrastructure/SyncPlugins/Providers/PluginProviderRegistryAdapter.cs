@@ -21,7 +21,7 @@ public class PluginProviderRegistryAdapter<T> : IPluginProviderRegistryAdapter w
 
     if (_registry.AddProvider(typedProvider))
     {
-      return new PluginDescriptor(typedProvider.Location, typedProvider.Key, typedProvider.Version);
+      return new PluginDescriptor(typedProvider.Location, typedProvider.Key, typedProvider.Kind, typedProvider.Version);
     }
     return null;
   }

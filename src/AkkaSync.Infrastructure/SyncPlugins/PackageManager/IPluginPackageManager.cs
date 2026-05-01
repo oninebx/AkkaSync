@@ -1,4 +1,4 @@
-﻿using AkkaSync.Infrastructure.SyncPlugins.Models;
+﻿using AkkaSync.Core.Domain.Plugins.Models;
 
 namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
 {

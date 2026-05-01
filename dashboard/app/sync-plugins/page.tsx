@@ -3,9 +3,8 @@ import React, { useEffect, useState } from 'react';
 import PluginTable from './components/PluginTable/PluginTable';
 import { RefreshCcw } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useSignalRInvoke, useSignalRQuery } from '@/providers/SingalRProvider';
-import { QueryResponse } from '@/providers/SingalRProvider/types';
-import { selectPluginData } from './selectors';
+import { selectPluginPackages } from './selectors';
+import { QueryResponse, useSignalRInvoke, useSignalRQuery } from '@/infrastructure/realtime/SignalRProvider';
 
 /*
 const { queryInvoke } = useSignalRInvoke<PingResponse>();
@@ -28,11 +27,11 @@ const PluginsPage = () => {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const handleScan = () => {};
 
-  const { data } = useSignalRQuery<QueryResponse>('CheckVersions');
+  const { data } = useSignalRQuery<QueryResponse>('CheckForUpdates');
   if(data && !data.success){
     alert(data.message);
   }
-  const plugins = useSelector(selectPluginData);
+  const plugins = useSelector(selectPluginPackages);
 
   const { queryInvoke} = useSignalRInvoke<QueryResponse>();
   const handleUpdate = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -40,8 +39,8 @@ const PluginsPage = () => {
     if(id) {
       try{
         const plugin = plugins.find(p => p.id === id);
-        if(plugin?.url && plugin.pkgChecksum && plugin.checksum !== plugin.pkgChecksum){
-          const response = await queryInvoke('UpdatePlugin', { Url: plugin.url, Checksum: plugin.pkgChecksum});
+        if(plugin?.installedVersion !== plugin?.latestversion){
+          const response = await queryInvoke('UpdatePlugin');
           setUpdatingId(id);
           
           if(!response.success){

@@ -2,12 +2,13 @@
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Domain.Plugins.Events;
+using AkkaSync.Core.Domain.Plugins.Models;
+using AkkaSync.Infrastructure.Abstractions;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
-using AkkaSync.Infrastructure.SyncPlugins.Models;
 using AkkaSync.Infrastructure.SyncPlugins.PluginProviders;
-using AkkaSync.Infrastructure.SyncPlugins.Storage;
 
 namespace AkkaSync.Infrastructure.Actors
 {
@@ -40,7 +41,7 @@ namespace AkkaSync.Infrastructure.Actors
     private async Task HandleRestore()
     {
       var registeredPlugins = await _pluginCatalog.GetAllAsync(p => !p.PendingDelete);
-
+        
       var registeredPluginFileNames = registeredPlugins.Select(p => p.Id).ToHashSet();
       var pluginFiles = _pluginStorage.GetPluginFiles().Where(f => registeredPluginFileNames.Contains(Path.GetFileNameWithoutExtension(f)));
       foreach (var file in pluginFiles)
@@ -50,13 +51,13 @@ namespace AkkaSync.Infrastructure.Actors
       var stats = _registryAdapters.Select(adapter => (Name: adapter.GetType().GetGenericArguments().FirstOrDefault()?.Name ?? "Unknown", adapter.Count)).ToList();
       var message = string.Join(", ", stats.Select(s => $"{s.Count} {s.Name} plugin(s)"));
       _logger.Info("There are {0} being managed.", message);
-
-      var loadedPlugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginCacheEntry(d.Holder, d.Version))).ToHashSet();
+       
+      var loadedPlugins = _registryAdapters.SelectMany(adapter => adapter.Descriptors.Select(d => new PluginCacheEntry(d.Holder, d.Name, d.Version, d.Kind))).ToHashSet();
 
       var validLoadedPlugins = new HashSet<PluginCacheEntry>();
       foreach (var plugin in registeredPlugins)
       {
-        var loadedPlugin = loadedPlugins.FirstOrDefault(p => p.Id == plugin.Id);
+        var loadedPlugin = loadedPlugins.FirstOrDefault(p => p.QualifiedName == plugin.Id);
         if (loadedPlugin == null)
         {
           await _pluginCatalog.UpdateAsync(plugin with { PendingDelete = true });

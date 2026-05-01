@@ -1,8 +1,8 @@
 using Akka.Configuration;
 using AkkaSync.Host;
-using AkkaSync.Host.Infrastructure.Extensions;
-using AkkaSync.Host.Web;
+using AkkaSync.Host.DependencyInjection;
 using AkkaSync.Infrastructure.DependencyInjection;
+using AkkaSync.Infrastructure.Realtime;
 using AkkaSync.Persistence.ErrorStores;
 using AkkaSync.Persistence.HistoryStore;
 using Microsoft.Extensions.FileProviders;
@@ -38,7 +38,7 @@ builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
 
-app.MapHub<DashboardHub>("/hub/dashboard");
+app.MapHub<StateHub>("/hub/state");
 
 if (!app.Environment.IsDevelopment())
 {

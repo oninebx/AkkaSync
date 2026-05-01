@@ -6,6 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Messaging\Subscribe\**" />
+    <EmbeddedResource Remove="Messaging\Subscribe\**" />
+    <None Remove="Messaging\Subscribe\**" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="../AkkaSync.Core/AkkaSync.Core.csproj" />
@@ -21,11 +27,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Messaging/Subscribe/" />
-    <Folder Include="PipelineStorages/" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="8.0.22" />
+		<PackageReference Include="NuGet.Versioning" Version="7.3.1" />
   </ItemGroup>
 
 </Project>

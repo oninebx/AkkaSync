@@ -31,7 +31,7 @@ public record PluginMeta()
 {
   public DataSourceMeta? DataSource { get; init; }
 }
-public record DataSourceMeta(string Name, string Type);
+public record DataSourceMeta(string Key, string Name, string Type);
 
 public static class ParametersExtensions
 {

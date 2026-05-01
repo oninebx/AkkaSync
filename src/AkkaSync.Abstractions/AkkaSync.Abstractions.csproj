@@ -7,7 +7,7 @@
 
 		<!-- NuGet Package message -->
 		<PackageId>AkkaSync.Abstractions</PackageId>
-		<VersionPrefix>1.0.5</VersionPrefix>
+		<VersionPrefix>1.0.4</VersionPrefix>
 		<VersionSuffix Condition="'$(Configuration)' == 'Debug'">dev</VersionSuffix>
 		<Authors>Ryan Xu</Authors>
 		<Company>AkkaSync Project</Company>
@@ -27,11 +27,11 @@
   </PropertyGroup>
 
 	<PropertyGroup>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild Condition="'$(Configuration)' == 'Debug'">true</GeneratePackageOnBuild>
 		<LocalNuGetPath>C:\Development\LocalNuget</LocalNuGetPath>
 	</PropertyGroup>
 
-	<Target Name="PushToLocalNuGet" AfterTargets="Pack">
+	<Target Name="PushToLocalNuGet" AfterTargets="Pack" Condition="'$(Configuration)' == 'Debug'">
 		<Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg"
 					DestinationFolder="$(LocalNuGetPath)" />
 	</Target>

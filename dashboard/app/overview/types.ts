@@ -1,13 +1,6 @@
-interface PipelineVM {
-  name: string;
-  runCount: number;
-  totalProcessed: number;
-  totalErrors: number;
-  // schedule: string;
-  // duration: string;
-  // lastRun: string;
-  // nextRun: string;
-}
+import { PipelineMetrics } from "@/features/pipelines/types";
+
+type PipelineVM = PipelineMetrics
 
 interface KpiVM {
   id: string;

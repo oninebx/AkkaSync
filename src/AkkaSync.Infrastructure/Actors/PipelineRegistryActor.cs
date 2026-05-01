@@ -51,7 +51,7 @@ public class PipelineRegistryActor : ReceiveActor
     Receive<PipelineCompleted>(msg => {
       _logger.Info($"Pipeline {msg.PipelineId} completed");
       _schedulerActor.Tell(msg);
-      Context.System.EventStream.Publish(new PipelineCompleteReported(msg.PipelineId));
+      Context.System.EventStream.Publish(new PipelineCompleted(msg.PipelineId));
     });
   }
 
@@ -77,12 +77,12 @@ public class PipelineRegistryActor : ReceiveActor
       var sourceProvider = _sourceRegistry.GetProvider(source);
 
       var transforms = spec.Plugins.Where(p => p.Type == "transform").Select(p => p.Provider).Distinct().ToList() ?? [];
-      var transformerMap = transforms.Select(t => _transformRegistry.GetProvider(t)).ToDictionary(p => p.Key, p => p);
+      var transformerMap = transforms.Select(t => _transformRegistry.GetProvider(t)).Where(p => p is not null).ToDictionary(p => p.Key, p => p);
 
       //var sink = spec.Sinks.Provider ?? throw new NullReferenceException("Sink Provider cannot be empty");
       var sinkProviderMap = spec.Sinks.Select(sink => _sinkRegistry.GetProvider(sink.Provider)).ToDictionary(p => p.Key, p => p);
 
-      if (sourceProvider is not null && transformerMap is not null && sinkProviderMap is not null)
+      if (sourceProvider is not null && transformerMap.Count != transforms.Count && sinkProviderMap is not null)
       {
         var pipelineId = new PipelineId(runId, msg.Key);
         var pipelineActor = _actorResolver.ActorOf<PipelineActor>(Context, pipelineId.ToString(), sourceProvider, transformerMap, sinkProviderMap, pipelineId, spec.BatchSize, spec.Plugins);

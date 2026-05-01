@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Reducers\" />
+    <Folder Include="Contracts\" />
   </ItemGroup>
 
 </Project>

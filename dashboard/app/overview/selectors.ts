@@ -1,45 +1,10 @@
 import { RootState } from "@/store";
 import { createSelector } from "@reduxjs/toolkit";
-import { cronToNext, cronToText, formatDuration, formatTimeMixed } from "@/shared/utils/time";
-import { pipelineBaseSelectors, selectPipelineDefinitionMap, selectBasePipelineEntities, selectPipelineOverviewMap, selectBasePipelines } from "@/features/pipeline/pipeline.selectors";
+
 import { selectScheduleJobs } from "@/features/scheduler/scheduler.selectors";
 import { KpiVM, PipelineVM } from "./types";
-import { DEFAULT_OVERVIEW } from "@/features/pipeline/pipeline.defaults";
+import { pipelineConfigSelectors, pipelineRuntimeSelectors } from "@/features/pipelines";
 
-// export const selectPipelineData = createSelector(
-//   [
-//     pipelineSelectors.selectAll,
-//     (state: RootState) => state.scheduler.specs
-//   ],
-//   (pipelines, schedules): PipelineVM[] =>
-//     pipelines.map(p => {
-//       const pipelineSchedule = schedules?.[p.schedule];
-//       return {
-//         name: p.id,
-//         schedule: pipelineSchedule ? cronToText(pipelineSchedule) : '-',
-//         // duration: p.startAt
-//         //   ? formatDuration(p.startAt, p.finishAt ?? new Date()) ?? "-"
-//         //   : "-",
-//         // lastRun: p.startAt ? formatTimeMixed(p.startAt) : "-",
-//         duration: '-',
-//         lastRun: p.lastRunAt ?? '-',
-//         nextRun: pipelineSchedule ? formatTimeMixed(cronToNext(pipelineSchedule)) : '-'
-//       };
-//     })
-// );
-
-export const selectOverviewPipelines = createSelector(
-  selectBasePipelineEntities,
-  selectPipelineDefinitionMap,
-  selectPipelineOverviewMap,
-  (entities, definition, overview) =>
-    Object.keys(definition).map((id) => ({
-      ...(entities[id] ?? { id }),
-      ...definition[id],
-      ...DEFAULT_OVERVIEW,
-      ...overview[id]
-    }))
-);
 
 const KPI_TEMPLATES = [
   { id: "running", title: "Running Pipelines", color: "#1F2937" },
@@ -49,7 +14,7 @@ const KPI_TEMPLATES = [
 ];
 
 export const selectKpiData = createSelector(
-  [selectBasePipelines, selectScheduleJobs],
+  [pipelineConfigSelectors.selectEntities, selectScheduleJobs],
   (pipelines, jobs): KpiVM[] => {
 
     const total = pipelines.length;

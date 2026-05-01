@@ -1,45 +1,57 @@
-import { createSelector } from '@reduxjs/toolkit';
-import {
-  selectBasePipelineEntities,
-  selectPipelineDefinitionMap,
-  selectPipelineRunEntities
-} from '@/features/pipeline/pipeline.selectors';
-import { DEFAULT_LIVE } from '@/features/pipeline/pipeline.defaults';
+import { connectorConfigSelectors } from "@/features/connector";
+import { RootState } from "@/store";
+import { createSelector } from "@reduxjs/toolkit";
 
-export const selectClusterPipelines = createSelector(
-  selectBasePipelineEntities,
-  selectPipelineDefinitionMap,
-  selectPipelineRunEntities,
-  (entities, definition, run) =>
-    Object.keys(definition).map((id) => {
-      const base = entities[id] ?? { id };
-      const def = definition[id];
-      const l = run[id];
+const selectConnectors = connectorConfigSelectors.selectAll;
 
-      // 👉 从 definition 提取 source / target
-      const source =
-        def?.source?.name ?? '-';
+const selectPipelineTopogy = createSelector([
+  selectConnectors
+],(connectors) => {
+  
+});
 
-      const target =
-        def?.target?.name ?? '-';
+// import { createSelector } from '@reduxjs/toolkit';
+// import {
+//   selectBasePipelineEntities,
+//   selectPipelineDefinitionMap,
+//   selectPipelineRunEntities
+// } from '@/features/pipeline/pipeline.selectors';
+// import { DEFAULT_LIVE } from '@/features/pipeline/pipeline.defaults';
 
-      const { id: _, ...liveRest } = l ?? {};
-      return {
-        id: base.id,
-        name: base.name,
+// export const selectClusterPipelines = createSelector(
+//   selectBasePipelineEntities,
+//   selectPipelineDefinitionMap,
+//   selectPipelineRunEntities,
+//   (entities, definition, run) =>
+//     Object.keys(definition).map((id) => {
+//       const base = entities[id] ?? { id };
+//       const def = definition[id];
+//       const l = run[id];
 
-        source,
-        target,
+//       // 👉 从 definition 提取 source / target
+//       const source =
+//         def?.source?.name ?? '-';
 
-        ...DEFAULT_LIVE,
-        ...liveRest,
+//       const target =
+//         def?.target?.name ?? '-';
 
-        // 👉 时间字段统一处理
-        // startedAt: l?.currentRunTime
-        //   ? Date.now() - l.currentRunTime
-        //   : undefined,
+//       const { id: _, ...liveRest } = l ?? {};
+//       return {
+//         id: base.id,
+//         name: base.name,
 
-        // nextRunAt: l?.nextRunTime ?? undefined
-      };
-    })
-);
+//         source,
+//         target,
+
+//         ...DEFAULT_LIVE,
+//         ...liveRest,
+
+//         // 👉 时间字段统一处理
+//         // startedAt: l?.currentRunTime
+//         //   ? Date.now() - l.currentRunTime
+//         //   : undefined,
+
+//         // nextRunAt: l?.nextRunTime ?? undefined
+//       };
+//     })
+// );

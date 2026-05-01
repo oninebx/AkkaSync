@@ -1,10 +1,11 @@
 ﻿using Akka.Actor;
 using Akka.DependencyInjection;
 using Akka.Event;
+using AkkaSync.Abstractions;
+using AkkaSync.Core.Domain.Plugins.Commands;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
-using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using System.IO.Compression;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Request;
@@ -36,7 +37,7 @@ namespace AkkaSync.Infrastructure.Actors
 
       ReceiveAsync<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
 
-      Receive<CheckVersions>(_ => DoCheckVersions());
+      Receive<CheckForUpdates>(DoCheckVersions);
       Receive<UpdatePlugin>(msg => NotifyUpdatePlugin(msg));
     }
 
@@ -103,9 +104,9 @@ namespace AkkaSync.Infrastructure.Actors
      
     }
 
-    private void DoCheckVersions()
+    private void DoCheckVersions(CheckForUpdates msg)
     {
-      _updateActor.Tell(new CheckVersionsForUpdate());
+      _updateActor.Tell(msg);
     }
 
     private void NotifyUpdatePlugin(UpdatePlugin msg)

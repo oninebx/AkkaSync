@@ -11,6 +11,7 @@ using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Core.Notifications;
 using AkkaSync.Core.Projection;
+using AkkaSync.Core.Projection.Events;
 
 namespace AkkaSync.Infrastructure.Actors
 {

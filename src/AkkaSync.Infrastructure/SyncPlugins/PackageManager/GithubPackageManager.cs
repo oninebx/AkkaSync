@@ -1,10 +1,11 @@
-﻿using Akka.Streams.Implementation.Fusing;
+﻿using AkkaSync.Abstractions;
+using AkkaSync.Core.Domain.Plugins.Models;
 using AkkaSync.Infrastructure.Options;
 using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 using AkkaSync.Infrastructure.SyncPlugins.Models;
-using AkkaSync.Infrastructure.SyncPlugins.Storage;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NuGet.Versioning;
 using System.Text.Json;
 
 namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
@@ -37,7 +38,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
       var filePath = await _storage.SaveAsync(id, new MemoryStream(data));
       if (_pluginsToUpdate is not null && _pluginsToUpdate.TryGetValue(id, out var entry))
       {
-        await _catalog.AddAsync(new PluginCatalogEntry(id, entry.Version, false));
+        await _catalog.AddAsync(new PluginCatalogEntry(id, entry.Version, entry.Checksum, false));
         _pluginsToUpdate.Remove(id);
       }
       
@@ -61,8 +62,35 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
           registries.Add(pluginsInRegistry);
         }
       }
-      _pluginsToUpdate = _storage.Diff(registries).Select(c => new PluginCatalogEntry(c.Id, c.Version, false)).ToDictionary(c => c.Id, c => c);
-      return _storage.Diff(registries);
+
+      var localPlugins = (await _catalog.GetAllAsync()).ToDictionary(p => p.Id);
+      //var diff = registries.SelectMany(r => r.Plugins)
+      //  .Where(p => NeedsUpdate(p, localPlugins.GetValueOrDefault(p.QualifiedName)))
+      //  .ToHashSet();
+
+      var latestPlugins = registries.SelectMany(r => r.Plugins).ToHashSet();
+
+      _pluginsToUpdate = latestPlugins.Where(p => NeedsUpdate(p, localPlugins.GetValueOrDefault(p.QualifiedName))).Select(c => new PluginCatalogEntry(c.QualifiedName, c.Version, c.Checksum, false)).ToDictionary(c => c.Id, c => c);
+      return latestPlugins;
     }
+
+    bool NeedsUpdate(PluginPackageEntry remote, PluginCatalogEntry? local)
+    {
+      if (local == null)
+        return true;
+
+      var localVersion = NuGetVersion.Parse(local.Version);
+      var remoteVersion = NuGetVersion.Parse(remote.Version);
+
+      if (remoteVersion > localVersion)
+        return true;
+
+      if (remoteVersion == localVersion &&
+          !string.Equals(local.Checksum, remote.Checksum, StringComparison.OrdinalIgnoreCase))
+        return true;
+
+      return false;
+    }
+
   }
 }

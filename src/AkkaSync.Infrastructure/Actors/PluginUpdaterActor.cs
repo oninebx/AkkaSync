@@ -1,5 +1,7 @@
 ﻿using Akka.Actor;
 using Akka.Event;
+using AkkaSync.Core.Domain.Plugins.Commands;
+using AkkaSync.Core.Domain.Plugins.Events;
 using AkkaSync.Infrastructure.Messaging.Contract.Update;
 using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
@@ -19,7 +21,7 @@ namespace AkkaSync.Infrastructure.Actors
 
     private void Idle()
     {
-      Receive<CheckVersionsForUpdate>(_ =>
+      Receive<CheckForUpdates>(_ =>
       {
         Become(Checking);
         Self.Tell(new DoCheck());
@@ -49,7 +51,7 @@ namespace AkkaSync.Infrastructure.Actors
         var updates = await _pluginPackageManager.CheckoutVersions();
         if (updates.Count > 0)
         {
-          Context.System.EventStream.Publish(new PluginVersionsChecked(updates));
+          Context.System.EventStream.Publish(new PluginsVersionChecked(updates));
         }
       }
       finally

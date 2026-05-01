@@ -1,11 +1,11 @@
-import { PluginStatus, PluginType } from '@/contracts/plugin/types';
+import { PluginKind, PluginStatus } from '@/contracts/plugin/types';
 import { Node, Edge } from '@xyflow/react';
 
 
 export type PluginNodePayload = {
   id: string;
   name: string;
-  type: PluginType;
+  type: PluginKind;
   status: PluginStatus;
   stats: {
     processed: number;
@@ -16,7 +16,7 @@ export type PluginNodePayload = {
 export interface PluginAggregate {
   id: string;
   name: string;
-  type: PluginType;
+  type: PluginKind;
   status: PluginStatus;
   dependsOn: string[];
   stats: {
@@ -25,7 +25,7 @@ export interface PluginAggregate {
   };
 }
 
-export type PluginNodeData = Node<PluginNodePayload, PluginType>;
+export type PluginNodeData = Node<PluginNodePayload, PluginKind>;
 export type PluginNodeEdge = Edge;
 
 

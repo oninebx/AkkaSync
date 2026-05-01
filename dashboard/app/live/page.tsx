@@ -13,7 +13,6 @@ import { buildGraph } from './utils';
 import DataSourceNode from './components/DataSourceNode';
 import PipelineNode from './components/PipelineNode';
 import { useSelector } from 'react-redux';
-import { selectClusterPipelines } from './selectors';
 
 const nodeTypes = {
   dataSource: DataSourceNode,
