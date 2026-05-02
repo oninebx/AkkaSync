@@ -3,6 +3,7 @@ interface PluginDefinition {
   key: string;
   type: string;
   pipeline: string;
+  provider: string;
   dependsOn: string[]
 }
 
@@ -18,6 +19,7 @@ interface PluginRemote {
   identifier: string;
   qualifiedName: string;
   version: string;
+  provider: string;
 }
 
 export type {

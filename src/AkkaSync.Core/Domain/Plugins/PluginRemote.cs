@@ -2,8 +2,8 @@
 
 namespace AkkaSync.Core.Domain.Plugins
 {
-  public sealed record PluginRemote(string QualifiedName, string Version) : ISnapshot
+  public sealed record PluginRemote(string QualifiedName, string Version, string Provider) : ISnapshot
   {
-    public string Identifier => QualifiedName;
+    public string Identifier => Provider;
   }
 }

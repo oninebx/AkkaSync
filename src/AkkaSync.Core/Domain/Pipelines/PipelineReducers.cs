@@ -23,8 +23,17 @@ namespace AkkaSync.Core.Domain.Pipelines
     {
       var spec = e.Pipelines.FirstOrDefault(p => p.Name == id)
                  ?? throw new InvalidOperationException($"Spec not found for pipeline: {id}");
-
-      return (current ?? new PipelineDefinition(id, spec.Plugins.ToDictionary(p => p.Key, p => new PluginInfo(p.Provider, p.Type)))) with
+      var sourceKey = spec.Source?.Meta?.DataSource?.Key;
+      var sinkKeys = spec.Sinks.Select(s => s.Meta?.DataSource?.Key).Where(key => key is not null).ToList();
+      if (string.IsNullOrEmpty(sourceKey) || sinkKeys.Count == 0)
+      {
+        throw new InvalidOperationException($"Pipeline '{id}' is invalid: missing source or at least one valid sink connector.");
+      }
+      return (current ?? new PipelineDefinition(
+        id, 
+        spec.Plugins.ToDictionary(p => p.Key, p => new PluginInfo(p.Provider, p.Type)), 
+        sourceKey, 
+        [.. sinkKeys!])) with
       {
         Schedule = spec.Schedule
       };

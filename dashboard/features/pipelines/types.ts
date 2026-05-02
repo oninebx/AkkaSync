@@ -12,7 +12,7 @@ interface PipelineDefinition {
   name: string;
   schedule: string | null;
   sourceId: string;
-  targetIds: string[];
+  sinkIds: string[];
   plugins: Record<string, PluginInfo>;
 }
 

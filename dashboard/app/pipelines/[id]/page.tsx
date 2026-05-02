@@ -1,10 +1,13 @@
 'use client'
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
-import { selectPipelineTopology } from "../selectors";
 import Breadcrumb from "@/components/Breadcrumb";
-import { Background, Controls, MiniMap, ReactFlow } from "@xyflow/react";
+import { Background, Controls, MiniMap, NodeChange, ReactFlow, useEdgesState, useNodesState } from "@xyflow/react";
 import '@xyflow/react/dist/style.css';
+import { selectPipelineTopology } from "./selectors";
+import { ConnectorNode, PluginNode } from "./components";
+import { useCallback, useMemo } from "react";
+import useLiveLayout from "@/infrastructure/storage/useLiveLayout";
 
 
 function PipelineDetail() {
@@ -14,10 +17,27 @@ function PipelineDetail() {
     { label: 'Pipelines', href: '/pipelines' },
     { label: id, active: true },
   ];
-  const topology = useSelector(state => selectPipelineTopology(state, id));
+
+  const { loadLayout, saveLayout } = useLiveLayout(id);
+  const savedLayout = useMemo(() => loadLayout(), [loadLayout]);
+
+  const {nodes, edges} = useSelector(state => selectPipelineTopology(state, id, savedLayout));
+
+  const [localNodes, setNodes, onNodesChange] = useNodesState(nodes);
+  const [localEdges, setEdges, onEdgesChange] = useEdgesState(edges);
+
+  const onNodeDragStop = useCallback(() => {
+    saveLayout(localNodes);
+  }, [saveLayout, localNodes]);
+
+  const nodeTypes = {
+    connector: ConnectorNode,
+    plugin: PluginNode
+  };
+
 
   return (
-  <div className="h-screen flex flex-col p-8 max-w-7xl mx-auto">
+  <div className="h-screen flex flex-col p-8 mx-auto">
     <Breadcrumb items={breadcrumbItems} />
     
     <header className="mb-4">
@@ -30,7 +50,13 @@ function PipelineDetail() {
     </header>
     
     <div className="flex-1 min-h-0">
-      <ReactFlow fitView>
+      <ReactFlow 
+        fitView
+        nodeTypes={nodeTypes}
+        nodes={localNodes}
+        edges={localEdges}
+        onNodesChange={onNodesChange}
+        onNodeDragStop={onNodeDragStop}>
         <Controls />
         <MiniMap nodeStrokeColor={(n) =>
           n.data.status === "error" ? "#f87171" : "#888"

@@ -1,7 +1,4 @@
-import { PluginKind } from "@/contracts/plugin/types";
-import { PluginStatus } from "@/features/plugin-artifact/plugin.types";
-
-type PluginHealthStatus = 'loaded' | 'loadFailed' | 'notFound' | 'notDownloaded' | 'updateAvailable'
+import { PluginHealthStatus, PluginKind } from "@/contracts/plugin/types";
 
 interface PluginVM {
   id: string;

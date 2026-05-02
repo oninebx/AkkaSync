@@ -10,11 +10,17 @@ import { selectJournal } from "@/features/diagnosis/diagnosis.selectors";
 import { selectKpiData } from "./selectors";
 import { connectionSelectors } from "@/infrastructure/realtime/store";
 import { pipelineRuntimeSelectors } from "@/features/pipelines/pipelineRuntime.slice";
+import { QueryResponse, useSignalRQuery } from "@/infrastructure/realtime/SignalRProvider";
 interface PingResponse {
   value: string
 }
 
 export default function HomePage() {
+
+  const { data } = useSignalRQuery<QueryResponse>('CheckForUpdates');
+  if(data && !data.success){
+    alert(data.message);
+  }
   const connectionStatus = useSelector(connectionSelectors.selectConnectionStatus);
 
   

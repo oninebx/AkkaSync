@@ -2,7 +2,7 @@ import { Node } from '@xyflow/react';
 
 export type NodeLayout = Record<string, { x: number; y: number }>;
 
-export const applyLiveLayout = (
+const applyLiveLayout = (
   nodes: Node[],
   layout: NodeLayout | null
 ): Node[] => {
@@ -13,3 +13,16 @@ export const applyLiveLayout = (
     position: layout[n.id] ?? n.position,
   }));
 };
+
+const getEffectivePosition = (
+  nodeId: string, 
+  defaultPos: { x: number, y: number }, 
+  savedLayout: NodeLayout | null
+) => {
+  return savedLayout?.[nodeId] || defaultPos;
+};
+
+export {
+  applyLiveLayout,
+  getEffectivePosition
+}

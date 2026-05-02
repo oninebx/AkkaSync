@@ -11,7 +11,7 @@ namespace AkkaSync.Core.Domain.Shared.Events
     public IReadOnlyList<PipelineSpec> Pipelines { get; init; }
     public IReadOnlyDictionary<string, ScheduleSpec> Schedules { get; init; }
 
-    public IReadOnlyDictionary<string, DataSourceMeta> DataSources { get; init; }
+    public IReadOnlyDictionary<string, (string Plugin, DataSourceMeta Connector)> DataSources { get; init; }
     public IReadOnlyDictionary<Type, IReadOnlyList<string>> IdGroups { get; init; }
     public IReadOnlyList<Type> SupportedTypes => [typeof(PipelineDefinition), typeof(PipelineMetrics), typeof(PluginDefinition), typeof(ConnectorDefinition)];
 
@@ -23,9 +23,9 @@ namespace AkkaSync.Core.Domain.Shared.Events
       var extractedDataSources = pipelines
           .SelectMany(p => p.Plugins)
           .Where(p => p is { Type: "source" or "sink", Meta.DataSource: not null })
-          .Select(p => p.Meta!.DataSource!)
-          .DistinctBy(ds => ds.Key)
-          .ToDictionary(ds => ds.Key);
+          .Select(p => new { Plugin = p.Key, Connector = p.Meta!.DataSource! })
+          .DistinctBy(ds => ds.Connector.Key)
+          .ToDictionary(ds => ds.Connector.Key, ds => (ds.Plugin, ds.Connector));
 
       DataSources = extractedDataSources;
 

@@ -9,7 +9,7 @@ namespace AkkaSync.Core.Domain.Plugins.Events
 
     public IReadOnlyDictionary<Type, IReadOnlyList<string>> IdGroups => new Dictionary<Type, IReadOnlyList<string>>
     {
-      [typeof(PluginRemote)] = [.. NewVersions.Select(p => p.QualifiedName)]
+      [typeof(PluginRemote)] = [.. NewVersions.Select(p => p.Provider)]
     };
   }
 }

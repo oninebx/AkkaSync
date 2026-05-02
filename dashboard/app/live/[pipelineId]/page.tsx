@@ -1,14 +1,14 @@
 'use client';
 import { Node, Edge, ReactFlow, Controls, MiniMap, Background, addEdge, NodeChange, applyNodeChanges } from '@xyflow/react';
 import React, { useCallback, useEffect, useState } from 'react'
-import useLiveLayout from './hooks/useLiveLayout';
-import { applyLiveLayout } from './utils/liveLayout';
+import useLiveLayout from '../../../infrastructure/storage/useLiveLayout';
 import { SinkNode, SourceNode, TransformNode } from './components/FlowNode';
 import { useSelector } from 'react-redux';
 import { selectPluginGraph } from './selectors';
 import '@xyflow/react/dist/style.css';
 import { useParams } from 'next/navigation';
 import { RootState } from '@/store';
+import { applyLiveLayout } from '@/infrastructure/storage/liveLayout';
 
 
 const LivePage = () => {
@@ -16,7 +16,7 @@ const LivePage = () => {
 
   const {nodes, edges } = useSelector((state: RootState) => selectPluginGraph(state, pipelineId));
 
-  const { saveLayout, loadLayout } = useLiveLayout();
+  const { saveLayout, loadLayout } = useLiveLayout(pipelineId);
   const [layoutNodes, setLayoutNodes] = useState<Node[]>(() => {
     const layout = loadLayout();
     return applyLiveLayout(nodes, layout);

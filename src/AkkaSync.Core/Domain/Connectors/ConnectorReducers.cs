@@ -13,10 +13,10 @@ namespace AkkaSync.Core.Domain.DataSources
 
     private static ConnectorDefinition HandleReadyForDefinition(ConnectorDefinition? current, string id, SyncEngineReady ready)
     {
-      var meta = ready.DataSources[id];
+      var (plugin, connector) = ready.DataSources[id];
       return current is null
-         ? new ConnectorDefinition(meta.Key, meta.Name, meta.Type)
-         : current with { Name = meta.Name, Kind = meta.Type };
+         ? new ConnectorDefinition(connector.Key, connector.Name, connector.Type, plugin)
+         : current with { Name = connector.Name, Kind = connector.Type };
     }
   }
 }

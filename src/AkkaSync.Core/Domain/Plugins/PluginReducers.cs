@@ -30,7 +30,7 @@ namespace AkkaSync.Core.Domain.Plugins
         .SelectMany(pipeline => pipeline.Plugins, (pipeline, plugin) => new { pipeline, plugin })
         .FirstOrDefault(x => x.plugin.Key == id) ?? throw new InvalidOperationException($"Spec not found for plugin: {id}");
 
-      return current ?? new PluginDefinition(id, spec.plugin.Type, spec.pipeline.Name) { DependsOn = spec.plugin.DependsOn };
+      return current ?? new PluginDefinition(id, spec.plugin.Type, spec.plugin.Provider, spec.pipeline.Name) { DependsOn = spec.plugin.DependsOn };
     }
 
     private static PluginLocal HandleRestoredForLocal(PluginLocal? current, string id, PluginsRestored e)
@@ -42,8 +42,8 @@ namespace AkkaSync.Core.Domain.Plugins
 
     private static PluginRemote HandleCheckedForRemote(PluginRemote? current, string id, PluginsVersionChecked e)
     {
-      var entry = e.NewVersions.FirstOrDefault(e => e.QualifiedName == id) ?? throw new InvalidOperationException($"Entry not found for plugin: { id }");
-      return current ?? new PluginRemote(entry.QualifiedName, entry.Version);
+      var entry = e.NewVersions.FirstOrDefault(e => e.Provider == id) ?? throw new InvalidOperationException($"Entry not found for plugin: { id }");
+      return current ?? new PluginRemote(entry.QualifiedName, entry.Version, entry.Provider);
     }
   }
 }

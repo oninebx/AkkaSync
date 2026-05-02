@@ -23,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className='bg-background flex min-h-screen'>
         <Sidebar />
-        <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 max-w-[1600px] mx-auto">
+        <div className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 mx-auto">
           <ReduxProvider>
             <SignalRProvider url='hub/state' autoReconnect>
               {children}
