@@ -71,6 +71,7 @@ public class SyncGatewayActor : ReceiveActor
     foreach (var type in @event.SupportedTypes)
     {
       var currents = _snapshotStore.GetCurrentByType(type);
+      var oldSnapshots = currents.Values.ToList();
       var ids = idGroups[type];
       foreach (var id in ids) 
       {
@@ -83,7 +84,7 @@ public class SyncGatewayActor : ReceiveActor
       }
       _snapshotStore.Update(nexts);
 
-      if ( _projectionRegistry.TryProjection(type, [.. currents.Values], nexts, out var changes))
+      if ( _projectionRegistry.TryProjection(type, oldSnapshots, nexts, out var changes))
       {
         changesToSend.AddRange(changes);
       }

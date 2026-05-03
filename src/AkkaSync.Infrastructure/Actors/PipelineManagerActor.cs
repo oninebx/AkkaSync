@@ -1,4 +1,3 @@
-using System;
 using Akka.Actor;
 using Akka.Event;
 using AkkaSync.Abstractions;
@@ -83,23 +82,9 @@ public class PipelineManagerActor : ReceiveActor
       _logger.Warning("No pipeline specs found in storage.");
       return;
     }
-    
-    var schedules = await _pipelineStorage.LoadScheduleSpecificationsAsync();
-    var enabledSchedules = schedules.Where(s => s.Value.Enabled).ToDictionary(s => s.Key, s => s.Value);
-    if (enabledSchedules.Count == 0)
-    {
-      _logger.Warning("No schedules specs found in storage.");
-      return;
-    }
+    _pipelines = [.. pipelineSpecs.Values];
 
-    _pipelines = [.. pipelineSpecs!.Select(kvp => kvp.Value with { Name = kvp.Key })];
-    _schedules = enabledSchedules;
-
-    var scheduleCron = _schedules.ToDictionary(s => s.Key, s => s.Value.Cron);
-
-    var pipelineSchedules = _pipelines
-        .Where(p => p.Schedule != null && scheduleCron.ContainsKey(p.Schedule))
-        .ToDictionary(p => p.Name, p => scheduleCron[p.Schedule!]);
+   var pipelineSchedules = pipelineSpecs.Values.ToDictionary(p => p.Name, p => (IReadOnlySet<string>)p.Schedules.ToHashSet());
 
     _registryActor.Tell(new RegistryProtocol.Initialize(pipelineSpecs));
 

@@ -6,6 +6,7 @@ interface PipelineRow {
   scheduleText: string;
   status: 'RUNNING' | 'FAILED' | 'SUCCESS' | 'IDLE';
   lastRun: string;
+  nextRun: string;
   errors: number;
 };
 

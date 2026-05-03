@@ -1,7 +1,7 @@
 ﻿{
   "Pipelines": {
     "sync-orders" :{
-      "Schedule": "every-minute",
+      "Schedules": [ "*/1 * * * *", "0 10,22 * * 6,0" ],
       "Name": "sync-orders",
       "BatchSize": 50,
       "Plugins": [

@@ -40,7 +40,14 @@ namespace AkkaSync.Core.Common
 
           if (changes != null)
           {
-            upsertPayloads.Add(new { id = next.Identifier, changes });
+            var flatObj = new ExpandoObject() as IDictionary<string, object>;
+            
+            flatObj["identifier"] = next.Identifier;
+            foreach (var pair in changes)
+            {
+              flatObj[pair.Key] = pair.Value;
+            }
+            upsertPayloads.Add(flatObj);
           }
         }
       }
@@ -80,7 +87,7 @@ namespace AkkaSync.Core.Common
 
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
 
-    private static object? GetPropertyDelta<T>(T current, T next) where T : class
+    private static IDictionary<string, object>? GetPropertyDelta<T>(T current, T next) where T : class
     {
       var type = typeof(T);
       var props = _propertyCache.GetOrAdd(type, t => t.GetProperties(BindingFlags.Public | BindingFlags.Instance)

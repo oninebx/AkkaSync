@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text.Json;
@@ -10,7 +8,7 @@ namespace AkkaSync.Abstractions.Models;
 public record PipelineSpec
 {
   public string Name { get; set; } = string.Empty;
-  public string? Schedule { get; set; }
+  public IReadOnlyList<string> Schedules { get; set; } = [];
   public int BatchSize { get; set; } = 1;
   public bool IsActive { get; init; } = true;
   public IReadOnlyList<PluginSpec> Plugins { get; set; } = [];

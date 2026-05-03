@@ -6,6 +6,8 @@ import { Column } from "@/components/DisplayTable";
 import { PipelineRow } from "./types";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { formatRelativeTime } from "@/shared/utils/time";
+import { Countdown } from "@/components/CountDown";
 
 const columns: Column<PipelineRow>[] = [
     {
@@ -68,11 +70,29 @@ const columns: Column<PipelineRow>[] = [
           )}
         </div>
       ),
+    },
+    {
+      header: 'Next Run',
+      key: 'nextRun',
+      render: (item) => {
+        if (!item.nextRun) {
+          return <span className="text-slate-400 text-xs">—</span>;
+        }
+
+        return (
+          <Countdown 
+        target={item.nextRun} 
+        expiredLabel="Pending..." 
+        className="text-xs font-bold text-slate-600"
+      />
+        );
+      }
     }
   ];
 
 const PipelineHome = () => {
   const data = useSelector(selectPipelineRows);
+  
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-6">

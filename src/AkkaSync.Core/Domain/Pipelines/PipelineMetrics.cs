@@ -8,5 +8,7 @@ namespace AkkaSync.Core.Domain.Pipelines
     public long TotalRuns { get; set; }
     public long TotalProcessed { get; set; }
     public long TotalErrors { get; set; }
+    public DateTimeOffset? LastRun { get; set; }
+    public DateTimeOffset? NextRun { get; set; }
   }
 }

@@ -20,6 +20,7 @@ interface PipelineMetrics {
   totalRuns: number;
   totalProcessed: number;
   totalErrors: number;
+  nextRun: string;
 }
 
 export type {

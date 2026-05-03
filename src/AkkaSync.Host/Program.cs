@@ -7,6 +7,7 @@ using AkkaSync.Persistence.ErrorStores;
 using AkkaSync.Persistence.HistoryStore;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 var logConfig = new LoggerConfiguration()
@@ -24,7 +25,14 @@ if (builder.Environment.IsDevelopment())
   akkaConfig = ConfigurationFactory.ParseString(File.ReadAllText(configFile));
 }
 
-builder.Services.AddSignalR();
+//builder.Services.AddSignalR();
+
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+      options.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+      options.PayloadSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    });
 
 builder.Services.AddAkkaSync(builder.Configuration, sync => sync
   .AddPipelines()

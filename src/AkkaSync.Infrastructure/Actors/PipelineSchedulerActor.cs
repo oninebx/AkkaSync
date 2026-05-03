@@ -13,7 +13,7 @@ namespace AkkaSync.Infrastructure.Actors;
 
 public class PipelineSchedulerActor : ReceiveActor
 {
-  private IReadOnlyDictionary<string, string>? _schedules;
+  private IReadOnlyDictionary<string, IReadOnlySet<string>>? _schedules;
   private readonly Dictionary<string, ICancelable> _jobs = [];
   private readonly ILoggingAdapter _logger = Context.GetLogger();
   private IActorRef? _pipelineRegistry;
@@ -45,30 +45,42 @@ public class PipelineSchedulerActor : ReceiveActor
 
   private void HandlePipeline(PipelineId id)
   {
-    var spec = _schedules![id.Key];
-    var nextUtc = ScheduleNextRun(id.Key, spec);
-    Context.System.EventStream.Publish(new PipelineScheduled(id.Key, nextUtc));
+    var crons = _schedules![id.Key];
+    var nextUtc = ScheduleNextRun(id.Key, crons);
+    if (nextUtc is DateTime scheduledTime)
+    {
+      Context.System.EventStream.Publish(new PipelineScheduled(id.Key, scheduledTime));
+    }
+    
   }
 
-  private DateTime ScheduleNextRun(string key, string cron)
+  private DateTime? ScheduleNextRun(string key, IReadOnlySet<string> crons)
   {
-    var schedule = CrontabSchedule.Parse(cron);
-    var nextUtc = schedule.GetNextOccurrence(DateTime.UtcNow);
-    var delay = nextUtc - DateTime.UtcNow;
-
-    var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
-      delay,
-      Self,
-      new SchedulerProtocol.Trigger(key),
-      Self
-    );
-
-    if(_jobs.TryGetValue(key, out var job))
+    
+    var now = DateTime.UtcNow;
+    var nextUtc = crons
+        .Select(cron => (DateTime?)CrontabSchedule.Parse(cron).GetNextOccurrence(now))
+        .DefaultIfEmpty()
+        .Min();
+    if (nextUtc is DateTime scheduledTime)
     {
-      job.Cancel();
+      var delay = scheduledTime - now;
+
+      var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(
+        delay,
+        Self,
+        new SchedulerProtocol.Trigger(key),
+        Self
+      );
+
+      if (_jobs.TryGetValue(key, out var job))
+      {
+        job.Cancel();
+      }
+      _jobs[key] = cancelable;
+      _logger.Info("{0} will run at {1}. Please wait for {2}.", key, nextUtc, delay);
     }
-    _jobs[key] = cancelable;
-    _logger.Info("{0} will run at {1}. Please wait for {2}.", key, nextUtc, delay);
+   
 
     return nextUtc;
   }
@@ -83,7 +95,11 @@ public class PipelineSchedulerActor : ReceiveActor
     foreach (var schedule in _schedules)
     {
       var nextUtc = ScheduleNextRun(schedule.Key, schedule.Value);
-      Context.System.EventStream.Publish(new PipelineScheduled(schedule.Key, nextUtc));
+      if(nextUtc is DateTime scheduledTime)
+      {
+        Context.System.EventStream.Publish(new PipelineScheduled(schedule.Key, scheduledTime));
+      }
+      
     }
   }
 

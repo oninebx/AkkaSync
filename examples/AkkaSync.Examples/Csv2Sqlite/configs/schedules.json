@@ -1,28 +1,12 @@
 ﻿{
   "Schedules": {
-    "every-5-minutes": {
-      "cron": "*/5 * * * *",
-      "description": "Trigger every 30 seconds"
-    },
-    "every-minute": {
-      "cron": "*/1 * * * *",
-      "description": "Trigger every minute"
-    },
-    "every-hour": {
-      "cron": "0 * * * *",
-      "description": "Trigger at the start of every hour"
-    },
-    "daily-1am": {
-      "cron": "0 1 * * *",
-      "description": "Trigger daily at 1:00 AM"
-    },
-    "weekly-monday-2am": {
-      "cron": "0 2 * * 1",
-      "description": "Trigger every Monday at 2:00 AM"
-    },
-    "monthly-1st-3am": {
-      "cron": "0 3 1 * *",
-      "description": "Trigger on the 1st of each month at 3:00 AM"
-    }
+    "every-5-minutes": "*/5 * * * *",
+    "every-minute": "*/1 * * * *",
+    "every-hour": "0 * * * *",
+    "daily-1am": "0 1 * * *",
+    "daily-midnight": "0 0 * * *",
+    "workdays-high": "*/10 8-18 * * 1-5",
+    "weekends-morning": "0 10 * * 6,0",
+    "monthly-1st": "0 3 1 * *"
   }
 }

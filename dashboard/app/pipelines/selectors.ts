@@ -18,6 +18,7 @@ const selectPipelineRows = createSelector(
       scheduleText: 'Manual',
       status: 'IDLE',
       lastRun: 'Never',
+      nextRun: metrics[p.identifier].nextRun,
       errors: metrics[p.identifier].totalErrors
     }));
   }

@@ -16,6 +16,7 @@ namespace AkkaSync.Core.Domain.Pipelines
     {
       SyncEngineReady ready => HandleSyncReadyForMetrics(current, id, ready),
       PipelineCompleted completed => (current ?? new PipelineMetrics(id)) with { TotalRuns = current is null ? 0 : current.TotalRuns + 1 },
+      PipelineScheduled scheduled => (current ?? new PipelineMetrics(id)) with { NextRun = scheduled.NextUtc },
       _ => throw new NotFiniteNumberException()
     };
 
@@ -33,10 +34,7 @@ namespace AkkaSync.Core.Domain.Pipelines
         id, 
         spec.Plugins.ToDictionary(p => p.Key, p => new PluginInfo(p.Provider, p.Type)), 
         sourceKey, 
-        [.. sinkKeys!])) with
-      {
-        Schedule = spec.Schedule
-      };
+        [.. sinkKeys!]));
     }
 
     private static PipelineMetrics HandleSyncReadyForMetrics(PipelineMetrics? current, string id, SyncEngineReady e)
