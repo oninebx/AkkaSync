@@ -18,9 +18,10 @@ public static class DashboardServiceExtension
     services.AddSingleton(sp => new ProjectionRegistryBuilder()
       .Add<PipelineDefinition>(PipelineProjections.ProjectionDefinition)
       .Add<PipelineMetrics>(PipelineProjections.ProjectionMetrics)
-      .Add<Core.Domain.Plugins.PluginDefinition>(PluginProjections.ProjectionDefinition)
+      .Add<PluginDefinition>(PluginProjections.ProjectionDefinition)
       .Add<PluginLocal>(PluginProjections.ProjectionLocal)
       .Add<PluginRemote>(PluginProjections.ProjectionRemote)
+      .Add<PluginInstance>(PluginProjections.ProjectionInstance)
       .Add<ConnectorDefinition>(ConnectorProjections.ProjectionDefinition)
       .Build());
 

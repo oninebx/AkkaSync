@@ -8,7 +8,12 @@ import { selectPipelineTopology } from "./selectors";
 import { ConnectorNode, PluginNode } from "./components";
 import { useCallback, useMemo } from "react";
 import useLiveLayout from "@/infrastructure/storage/useLiveLayout";
+import { QueryResponse, useSignalRQuery } from "@/infrastructure/realtime/SignalRProvider";
 
+const nodeTypes = {
+  connector: ConnectorNode,
+  plugin: PluginNode
+};
 
 function PipelineDetail() {
   const { id } = useParams<{id: string}>();
@@ -17,6 +22,11 @@ function PipelineDetail() {
     { label: 'Pipelines', href: '/pipelines' },
     { label: id, active: true },
   ];
+
+  const { data } = useSignalRQuery<QueryResponse>('CheckForUpdates');
+  if(data && !data.success){
+    alert(data.message);
+  }
 
   const { loadLayout, saveLayout } = useLiveLayout(id);
   const savedLayout = useMemo(() => loadLayout(), [loadLayout]);
@@ -29,12 +39,6 @@ function PipelineDetail() {
   const onNodeDragStop = useCallback(() => {
     saveLayout(localNodes);
   }, [saveLayout, localNodes]);
-
-  const nodeTypes = {
-    connector: ConnectorNode,
-    plugin: PluginNode
-  };
-
 
   return (
   <div className="h-screen flex flex-col p-8 mx-auto">

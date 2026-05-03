@@ -1,4 +1,5 @@
 ﻿using AkkaSync.Abstractions;
+using AkkaSync.Core.Domain.Pipelines.Events;
 using AkkaSync.Core.Domain.Plugins.Events;
 using AkkaSync.Core.Domain.Shared.Events;
 
@@ -24,6 +25,12 @@ namespace AkkaSync.Core.Domain.Plugins
       _ => throw new NotImplementedException()
     };
 
+    public static PluginInstance ReduceInstance(PluginInstance? current, ISnapshotEvent @event, string id) => @event switch
+    {
+      PipelineStarted started => HandleStartedForInstance(current, id, started),
+      _ => throw new NotImplementedException()
+    };
+
     private static PluginDefinition HandleSyncReadyForDefinition(PluginDefinition? current, string id, SyncEngineReady e)
     {
       var spec = e.Pipelines
@@ -44,6 +51,12 @@ namespace AkkaSync.Core.Domain.Plugins
     {
       var entry = e.NewVersions.FirstOrDefault(e => e.Provider == id) ?? throw new InvalidOperationException($"Entry not found for plugin: { id }");
       return current ?? new PluginRemote(entry.QualifiedName, entry.Version, entry.Provider);
+    }
+
+    private static PluginInstance HandleStartedForInstance(PluginInstance? current, string id, PipelineStarted e)
+    {
+      var plugin = e.Plugins[id];
+      return current ?? new PluginInstance(plugin.Id, plugin.Key);
     }
   }
 }

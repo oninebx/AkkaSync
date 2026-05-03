@@ -66,13 +66,13 @@ public class SyncWorkerActor : ReceiveActor
         
         if (context is not null)
         {
-          _pluginProcessedCount[_source.QualifiedId] = _pluginProcessedCount.GetValueOrDefault(_source.QualifiedId) + 1;
+          _pluginProcessedCount[_source.Id] = _pluginProcessedCount.GetValueOrDefault(_source.Id) + 1;
           foreach (var transformerLayer in _transformers)
           {
             var tasks = transformerLayer.Select(async t => 
             {
               var error = await t.Transform(context, _cancellationToken);
-              return (pluginId: t.QualifiedId, error);
+              return (pluginId: t.Id, error);
             });
             var results = await Task.WhenAll(tasks);
 
@@ -149,7 +149,7 @@ public class SyncWorkerActor : ReceiveActor
       foreach (var sink in _sinks)
       {
         var sinkErrors = await sink.WriteAsync(batch, _cancellationToken);
-        _pluginProcessedCount[sink.QualifiedId] = _pluginProcessedCount.GetValueOrDefault(sink.QualifiedId) + batch.Count;
+        _pluginProcessedCount[sink.Id] = _pluginProcessedCount.GetValueOrDefault(sink.Id) + batch.Count;
         Context.Parent.Tell(new WorkerProgressed(_id, batch.Last().Cursor));
         batch.Clear();
         errors.AddRange(sinkErrors);

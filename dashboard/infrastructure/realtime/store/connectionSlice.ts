@@ -38,8 +38,7 @@ const connectionSlice = createSlice({
 });
 
 const selectors = {
-  selectConnectionStatus: (state: RootState) => state.connection.status,
-  selectConnectionError: (state: RootState) => state.connection.error,
+  selectConnectionState: (state: RootState) => state.connection,
   selectIsConnected: (state: RootState) => state.connection.status === SignalRStatus.Connected
 }
 

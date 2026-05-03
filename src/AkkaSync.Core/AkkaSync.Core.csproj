@@ -18,8 +18,4 @@
     <ProjectReference Include="../AkkaSync.Abstractions/AkkaSync.Abstractions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Contracts\" />
-  </ItemGroup>
-
 </Project>

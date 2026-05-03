@@ -1,7 +1,7 @@
 'use client';
-import { startTransition, useContext, useEffect, useState } from "react";
-import { SignalRContext } from "./SignalRProvider";
+import { startTransition, useEffect, useState } from "react";
 import { QueryEnvelope } from "./signalRProvider.types";
+import { useSignalR } from "./useSignalR";
 
 const buildQueryKey = ({method, payload, returnImmediately}: QueryEnvelope) => {
   const sortedPayload = Object.keys(payload)
@@ -12,10 +12,7 @@ const buildQueryKey = ({method, payload, returnImmediately}: QueryEnvelope) => {
 }
 
 export const useSignalRQuery = <TResult,>(method: string, payload: Record<string, string> = {}, returnImmediately: boolean = false) => {
-  const context = useContext(SignalRContext);
-  if(!context || !context.invoke){
-    throw new Error('SignalR connection not established');
-  }
+  const { invoke } = useSignalR();
 
   const [data, setData] = useState<TResult>();
   const [error, setError] = useState<Error>();
@@ -29,14 +26,13 @@ export const useSignalRQuery = <TResult,>(method: string, payload: Record<string
       setError(undefined);
     });
     const query = { method, payload, returnImmediately } as QueryEnvelope;
-    context.invoke<TResult>('Query', query)
+    invoke<TResult>('Query', query)
       .then(result => !cancelled && setData(result))
       .catch(err => !cancelled && setError(err))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context, queryKey]);
+  }, [queryKey]);
   return { data, error, loading }
 }

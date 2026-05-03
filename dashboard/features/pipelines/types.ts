@@ -1,6 +1,4 @@
 import { PluginKind } from "@/contracts/plugin/types";
-import { IBusinessState } from "@/types";
-import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 
 interface PluginInfo {
   provider: string;

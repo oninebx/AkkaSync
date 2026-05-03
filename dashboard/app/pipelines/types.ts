@@ -8,8 +8,6 @@ interface PipelineRow {
   lastRun: string;
   errors: number;
 };
-          
-
 
 export type {
   PipelineRow

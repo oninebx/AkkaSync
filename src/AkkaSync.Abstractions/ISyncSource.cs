@@ -2,12 +2,8 @@ using AkkaSync.Abstractions.Models;
 
 namespace AkkaSync.Abstractions;
 
-public interface ISyncSource
+public interface ISyncSource: IPlugin
 {
-  string Id { get; }
-  string QualifiedId { get; }
-  string Name { get; }
-  string Key { get; init; }
   string Type { get; }
   string ETag { get; }
 

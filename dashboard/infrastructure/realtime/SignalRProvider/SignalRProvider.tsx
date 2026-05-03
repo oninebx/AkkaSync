@@ -2,11 +2,13 @@
 
 import { useDispatch } from "react-redux";
 import * as signalR from "@microsoft/signalr";
-import { createContext, ReactNode, useEffect, useRef } from "react";
+import { createContext, ReactNode, useCallback, useEffect, useRef } from "react";
 import { QueryEnvelope } from "./signalRProvider.types";
 import { registerConnectionLifecycle, registerSignalRHandlers } from "./signalRProvider.handlers";
 import { connectionStatusChanged } from "../store/actions";
 import { SignalRStatus } from "../types";
+import { AsyncFunction } from "@/types";
+import { SignalRStatusContainer } from "./SignalRNotifyBar";
 
 interface Props {
   url: string;
@@ -18,6 +20,7 @@ type EnvelopeInvokeMethod = <TPayload>(method: string, args?: QueryEnvelope) => 
 
 interface SignalRProviderValue {
   invoke: EnvelopeInvokeMethod;
+  reconnect: AsyncFunction<[], void>;
 }
 
 interface CreateConnectionOptions {
@@ -42,6 +45,26 @@ export const SignalRProvider = ({ children, url, autoReconnect = false }: Props)
   const dispatch = useDispatch();
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   
+  const startConnection = useCallback(async () => {
+    if(!connectionRef.current){
+      return;
+    }
+    if(connectionRef.current.state !== signalR.HubConnectionState.Disconnected) {
+      return;
+    }
+    
+    try {
+      await connectionRef.current.start();
+      dispatch(connectionStatusChanged({ status: SignalRStatus.Connected }));
+    }catch(err){
+      dispatch(connectionStatusChanged({
+        status: SignalRStatus.Disconnected,
+        error: String(err)
+      }));
+    }
+
+  }, [dispatch]);
+
   useEffect(() => {
 
     const connection = createConnection({url, autoReconnect});
@@ -50,17 +73,8 @@ export const SignalRProvider = ({ children, url, autoReconnect = false }: Props)
     const unregister = registerSignalRHandlers(connection, dispatch);
     registerConnectionLifecycle(connection, dispatch);
 
-    connection.start()
-      .then(() => dispatch(connectionStatusChanged({
-        status: SignalRStatus.Connected
-      })))
-      .catch(err => { 
-        dispatch(connectionStatusChanged({ 
-          status: SignalRStatus.Unavailable, 
-          error: err instanceof Error ? err.message : String(err)
-        }));
-      });
-    
+    startConnection();
+
     return () => {
       unregister();
       if(connection.state !== signalR.HubConnectionState.Disconnected) {
@@ -79,6 +93,10 @@ export const SignalRProvider = ({ children, url, autoReconnect = false }: Props)
     return await connection.invoke(method, args);
   }
 
-  return <SignalRContext.Provider value={{ invoke }}>{children}</SignalRContext.Provider>;
+  return (
+    <SignalRContext.Provider value={{ invoke, reconnect: startConnection }}>
+      <SignalRStatusContainer />
+      {children}
+    </SignalRContext.Provider>);
 };
 

@@ -10,15 +10,13 @@ using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Core.Notifications;
-using AkkaSync.Core.Projection;
-using AkkaSync.Core.Projection.Events;
 
 namespace AkkaSync.Infrastructure.Actors
 {
   public class PipelineActor : ReceiveActor
   {
     private readonly PipelineId _id;
-    private readonly IEnumerable<ISyncSource> _sources;
+    private readonly IReadOnlyList<ISyncSource> _sources;
     private readonly IReadOnlyList<IReadOnlyList<ISyncTransform>> _transformers;
     private readonly IReadOnlyList<ISyncSink> _sinks;
     private readonly int _batchSize;
@@ -42,7 +40,7 @@ namespace AkkaSync.Infrastructure.Actors
       _cancellationToken = _cancellationTokenSource.Token;
 
       var sourceSpec = specs.FirstOrDefault(s => s.Type == "source") ?? throw new NullReferenceException("Source Provider cannot be empty");
-      _sources = sourceProvider.Create(sourceSpec, _cancellationToken);
+      _sources = [.. sourceProvider.Create(sourceSpec, _cancellationToken)];
 
       var transformSpecs = specs.Where(s => s.Type == "transform").ToList();
       _transformers = DagBuilder.Build(transformSpecs.SelectMany(transform => transformProviders[transform.Provider].Create(transform, _cancellationToken)), sourceSpec.Key);
@@ -54,14 +52,6 @@ namespace AkkaSync.Infrastructure.Actors
       }
       _sinks = [.. sinkSpecs.SelectMany(sink => sinkProviders[sink.Provider].Create(sink, _cancellationToken))]; //sinkProviders.Create(sinkSpec, _cancellationToken).First();
       _batchSize = batchSize;
-      //if(sinkSpec.Parameters.TryGetProperty("batchSize", out var batchSizeElement))
-      //{
-      //  _batchSize = batchSizeElement.GetInt32();
-      //}
-      //else
-      //{
-      //  _batchSize = 1;
-      //}
 
       _historyStore = historyStore;
       _errorStore = errorStore;
@@ -79,47 +69,7 @@ namespace AkkaSync.Infrastructure.Actors
 
     protected override void PreStart()
     {
-      var sourceInstances = _sources.Select(s => new PluginInstance(s.QualifiedId, s.Key, s.Name, "source")).ToList();
-      var pluginDict = _transformers.SelectMany(layer => layer).GroupBy(t => t.Key).ToDictionary(t => t.Key, t => t.Select(x => x.QualifiedId).ToList());
-      
-      pluginDict.Add(sourceInstances.GroupBy(s => s.Key).First().Key, [.. sourceInstances.Select(s => s.Id)]);
-      
-      
-      var transformerInstances = _transformers.Select(layer => (IReadOnlyList<PluginInstance>)[.. layer.Select(t => new PluginInstance(t.QualifiedId, t.Key, t.Name, "transformer") 
-      {
-        Dependencies = [.. t.DependsOn.Select(d => pluginDict[d]).SelectMany(x => x)]
-      })]).ToList();
-      var sinkInstances = _sinks.Select(sink => new PluginInstance(sink.QualifiedId, sink.Key, sink.Name, "sink")).ToList();
-
-      if (transformerInstances.Count > 0)
-      {
-        var firstLayer = transformerInstances[0];
-        foreach (var t in firstLayer)
-        {
-          t.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
-        }
-      }
-      
-      foreach (var sink in sinkInstances)
-      {
-        if (transformerInstances.Count > 0)
-        {
-          var lastLayer = transformerInstances[^1];
-          sink.Dependencies.AddRange(lastLayer.Select(t => t.Id));
-        }
-        else
-        {
-          sink.Dependencies.AddRange(sourceInstances.Select(s => s.Id));
-        }
-
-      }
-
-      Context.System.EventStream.Publish(new PipelineCreatedTransition(_id)
-      {
-        SourceInstances = sourceInstances,
-        TransformerInstances = [..transformerInstances.SelectMany(layer => layer)],
-        SinkInstances = sinkInstances
-      });
+      Context.System.EventStream.Publish(new PipelineStarted(_id, ((IEnumerable<IPlugin>)[.. _sources, .. _transformers.SelectMany(t => t), .. _sinks]).ToDictionary(p => p.Id, p => p)));
     }
 
     protected override void PostStop()

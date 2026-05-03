@@ -55,6 +55,7 @@ public static class AkkaSyncExtension
       .AddReducer<PluginDefinition>(PluginReducers.ReduceDefinition)
       .AddReducer<PluginLocal>(PluginReducers.ReduceLocal)
       .AddReducer<PluginRemote>(PluginReducers.ReduceRemote)
+      .AddReducer<PluginInstance>(PluginReducers.ReduceInstance)
       .AddReducer<ConnectorDefinition>(ConnectorReducers.ReduceDefinition)
       .Build());
     services.AddSingleton<ISnapshotStore, SnapshotStore>();

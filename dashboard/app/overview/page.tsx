@@ -17,13 +17,8 @@ interface PingResponse {
 
 export default function HomePage() {
 
-  const { data } = useSignalRQuery<QueryResponse>('CheckForUpdates');
-  if(data && !data.success){
-    alert(data.message);
-  }
-  const connectionStatus = useSelector(connectionSelectors.selectConnectionStatus);
+  const {status} = useSelector(connectionSelectors.selectConnectionState);
 
-  
   const pipelines = useSelector(pipelineRuntimeSelectors.selectAll);
  
   const kpiData = useSelector(selectKpiData);
@@ -39,7 +34,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <HostCard 
               name="AkkaSync-Primary"
-              status={connectionStatus}
+              status={status}
               /*status={status}*/ />
             <RecentEventsCard events={events}/>
           </div>

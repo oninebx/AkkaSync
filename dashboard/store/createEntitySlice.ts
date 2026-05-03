@@ -1,20 +1,28 @@
 import { ChangeOperation } from "@/infrastructure/realtime/types";
 import { IBusinessState } from "@/types";
-import { Comparer, createEntityAdapter, createSlice, EntityId, IdSelector, PayloadAction } from "@reduxjs/toolkit";
+import { Comparer, createEntityAdapter, createSlice, EntityId, IdSelector, PayloadAction } from "@reduxjs/toolkit"; 
 
-interface SliceOptions<T, ID extends EntityId> {
+type EntityChangeHandler<T, A> = (
+  state: A, 
+  data: T[], 
+  operation: ChangeOperation
+) => void;
+
+interface SliceOptions<T, ID extends EntityId, A> {
   name: string;
   selectId: IdSelector<T, ID>;
   sortComparer?: Comparer<T>;
-  additionalInitialState?: Record<string, any>;
+  additionalInitialState?: A;
+  onChanges?: EntityChangeHandler<T, A>;
 }
 
-function createEntitySlice<T, ID extends EntityId = string>({
+function createEntitySlice<T, ID extends EntityId = string, A = Record<string, any>>({
   name,
   selectId,
   sortComparer,
-  additionalInitialState = {}
-}: SliceOptions<T, ID>){
+  additionalInitialState = {} as A,
+  onChanges
+}: SliceOptions<T, ID, A>){
 
   const adapter = createEntityAdapter<T, ID>({
     selectId,
@@ -23,8 +31,9 @@ function createEntitySlice<T, ID extends EntityId = string>({
 
   const initialState: IBusinessState<T, ID> = adapter.getInitialState({
     isInitialized: false,
-    error: null
-  });
+    error: null,
+    ...additionalInitialState
+  }) as IBusinessState<T, ID> & A;
 
   const slice = createSlice({
     name,
@@ -40,18 +49,30 @@ function createEntitySlice<T, ID extends EntityId = string>({
             adapter.upsertMany(state, data);
             break;
         }
+        if(onChanges) {
+          onChanges(state as A, data, operation);
+        }
       }
     }
   });
+
+  const selectSliceState = (state: any) => state[name] as IBusinessState<T, ID> & A;
 
   return {
     slice,
     adapter,
     actions: slice.actions,
-    selectors: adapter.getSelectors(state => (state as Record<string, any>)[name])
+    selectors: {
+      ...adapter.getSelectors(selectSliceState),
+      getExtraField: <K extends keyof A>(state: any, key: K): A[K] => selectSliceState(state)[key] 
+    }
   }
 }
 
 export {
   createEntitySlice
+}
+
+export type {
+  EntityChangeHandler
 }

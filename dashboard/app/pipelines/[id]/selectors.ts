@@ -106,6 +106,7 @@ const selectPipelineTopology = createSelector(
         });
       }
 
+      // Connection: Sink Plugin -> Sink Connector
       const sinkConnectorId = pluginToSinkId[nodeId];
       if(sinkConnectorId) {
         edges.push({
@@ -116,29 +117,6 @@ const selectPipelineTopology = createSelector(
             style: { stroke: '#10b981', strokeWidth: 3 },
           });
       }
-      
-      // if (config.type === 'source' && sourceConnectorId) {
-      //   edges.push({
-      //     id: `e-src-ingest-${nodeId}`,
-      //     source: sourceConnectorId,
-      //     target: nodeId,
-      //     animated: isAnimated,
-      //     style: { stroke: '#3b82f6', strokeWidth: 3 }
-      //   });
-      // }
-
-      // Connection: Sink Plugin -> All Sink Connectors
-      // if (config.type === 'sink') {
-      //   sinkConnectorNodes.forEach(connNode => {
-      //     edges.push({
-      //       id: `e-sink-deliver-${nodeId}-${connNode.id}`,
-      //       source: nodeId,
-      //       target: connNode.id,
-      //       animated: isAnimated, // Animate only if healthy
-      //       style: { stroke: '#10b981', strokeWidth: 3 },
-      //     });
-      //   });
-      // }
 
       // Connection: Plugin Dependencies (DAG)
       (config.dependsOn || []).forEach((parentKey) => {

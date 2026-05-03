@@ -22,8 +22,17 @@ interface PluginRemote {
   provider: string;
 }
 
+interface PluginInstance {
+  identifier: string;
+  id: string;
+  key: string;
+  processed: number;
+  errors: number;
+}
+
 export type {
   PluginDefinition,
   PluginLocal,
-  PluginRemote
+  PluginRemote,
+  PluginInstance
 }
