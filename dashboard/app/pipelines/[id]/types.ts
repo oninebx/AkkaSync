@@ -17,15 +17,26 @@ type PluginNodePayload = {
   latestVersion?: string;
 };
 
+type PluginRuntimeNodePayload = {
+  id: string;
+  name: string;
+  kind: string;
+  processed: number;
+  errors: number;
+  isRunning: boolean;
+};
+
 type ConnectorNodeData = Node<ConnectorNodePayload, 'connector'>;
 type PluginNodeData = Node<PluginNodePayload, 'plugin'>;
-type FlowNodeData = ConnectorNodeData | PluginNodeData;
+type PluginRuntimeNodeData = Node<PluginRuntimeNodePayload, 'runtimePlugin'>;
+type FlowNodeData = ConnectorNodeData | PluginNodeData | PluginRuntimeNodeData;
 
 type FlowEdge = Edge;
 
 export type {
   ConnectorNodeData,
   PluginNodeData,
+  PluginRuntimeNodeData,
   FlowNodeData,
   FlowEdge
 }

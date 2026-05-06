@@ -8,7 +8,7 @@ public static class DiagnosisReducer
 {
   public static DiagnosisJournal Reduce(DiagnosisJournal current, IProjectionEvent @event) => @event switch
   {
-    PipelineStartReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' started.") { Timestamp = @event.OccurredAt }),
+    //PipelineStartReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' started.") { Timestamp = @event.OccurredAt }),
     PipelineCompleteReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Pipeline '{e.PipelineId}' completed.") { Timestamp = @event.OccurredAt }),
     PipelineSkipReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Warning, $"Pipeline '{e.PipelineId}' is skipped.") {Timestamp = @event.OccurredAt }),
     WorkerStartReported e => current.AddRecord(new DiagnosisRecord(DiagnosisLevel.Info, $"Worker '{e.WorkerId}' started.") { Timestamp = @event.OccurredAt }),

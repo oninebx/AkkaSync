@@ -1,15 +1,18 @@
-using System;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Streams.Dsl;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
 using AkkaSync.Core.Common;
 using AkkaSync.Core.Domain.Pipelines;
 using AkkaSync.Core.Domain.Pipelines.Events;
+using AkkaSync.Core.Domain.Plugins.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
 using AkkaSync.Core.Notifications;
+using OpenTelemetry.Metrics;
+using System;
 
 namespace AkkaSync.Infrastructure.Actors
 {
@@ -25,6 +28,8 @@ namespace AkkaSync.Infrastructure.Actors
     private CancellationTokenSource _cancellationTokenSource;
     private CancellationToken _cancellationToken;
     private readonly HashSet<WorkerId> _runWorkers = [];
+    private readonly Dictionary<string, int> _pluginProcessedCount;
+    private readonly Dictionary<string, int> _pluginErrorCount;
     private readonly ILoggingAdapter _logger = Context.GetLogger();
     public PipelineActor(
       IPluginProvider<ISyncSource> sourceProvider,
@@ -57,19 +62,18 @@ namespace AkkaSync.Infrastructure.Actors
       _errorStore = errorStore;
       _id = id;
 
+      _pluginErrorCount = [];
+      _pluginProcessedCount = [];
+
       ReceiveAsync<SharedProtocol.Start>(msg => StartAsync(msg));
       ReceiveAsync<WorkerProtocol.Create>(msg => CreateWorkerAsync(msg));
 
-      ReceiveAsync<WorkerStarted>(msg => HandleStartedWorkerAsync(msg));
-      ReceiveAsync<WorkerCompleted>(msg => FinalizeWorker(msg));
+      ReceiveAsync<WorkerStarted>(msg => HandleStartedWorkerAsync(msg.WorkerId));
+      ReceiveAsync<WorkerCompleted>(msg => FinalizeWorker(msg.WorkerId, msg.Etag));
       ReceiveAsync<WorkerProgressed>(msg => HandleWorkerProgress(msg));
       ReceiveAsync<WorkerFailed>(msg => HandleFailedWorker(msg));
       ReceiveAsync<WorkerErrored>(msg => HandleWorkerErrored(msg));
-    }
-
-    protected override void PreStart()
-    {
-      Context.System.EventStream.Publish(new PipelineStarted(_id, ((IEnumerable<IPlugin>)[.. _sources, .. _transformers.SelectMany(t => t), .. _sinks]).ToDictionary(p => p.Id, p => p)));
+      Receive<PluginsBatchProcessed>(msg => HandleBatchProcessed(msg.Processed, msg.Errors));
     }
 
     protected override void PostStop()
@@ -100,12 +104,17 @@ namespace AkkaSync.Infrastructure.Actors
       }
       if (!workerCreated)
       {
-        Context.Parent.Tell(new PipelineSkipped(_id, "No workers created"));
+        var skippedEvent = new PipelineSkipped(_id, "No workers created");
+        Context.Parent.Tell(skippedEvent);
+        _logger.Info($"Pipeline {_id} skipped for no workers being created.");
+        Context.System.EventStream.Publish(skippedEvent);
         Context.Stop(Self);
         return;
       }
-      Context.System.EventStream.Publish(new PipelineStartReported(_id));
-      _logger.Info($"Pipeline {_id} started successfully.");
+      else
+      {
+        Context.System.EventStream.Publish(new PipelineStarted(_id, ((IEnumerable<IPlugin>)[.. _sources, .. _transformers.SelectMany(t => t), .. _sinks]).ToDictionary(p => p.Id, p => p)));
+      }
     }
 
     private async Task CreateWorkerAsync(WorkerProtocol.Create msg)
@@ -123,25 +132,25 @@ namespace AkkaSync.Infrastructure.Actors
       worker.Tell(new SharedProtocol.Start());
     }
 
-    private async Task FinalizeWorker(WorkerCompleted msg)
+    private async Task FinalizeWorker(WorkerId id, string etag)
     {
       if (_historyStore != null)
       {
-        await _historyStore.MarkCompletedAsync(msg.WorkerId.SourceId, msg.Etag);
+        await _historyStore.MarkCompletedAsync(id.SourceId, etag);
       }
-      Context.System.EventStream.Publish(new WorkerCompleteReported(msg.WorkerId));
-      FinalizePipeline(msg.WorkerId);
+      //Context.System.EventStream.Publish(new WorkerCompleteReported(msg.WorkerId));
+      FinalizePipeline(id);
     }
 
-    private async Task HandleStartedWorkerAsync(WorkerStarted msg)
+    private async Task HandleStartedWorkerAsync(WorkerId id)
     {
       if(_historyStore is IHistoryStore store)
       {
-        await store.MarkRunningAsync(msg.WorkerId.SourceId);
+        await store.MarkRunningAsync(id.SourceId);
       }
-      _runWorkers.Add(msg.WorkerId);
-      _logger.Info("Worker {0} started.", msg.WorkerId);
-      Context.System.EventStream.Publish(new WorkerStartReported(msg.WorkerId));
+      _runWorkers.Add(id);
+      _logger.Info("Worker {0} started.", id);
+      Context.System.EventStream.Publish(new WorkerStartReported(id));
     }
 
     private async Task HandleWorkerProgress(WorkerProgressed msg)
@@ -180,6 +189,35 @@ namespace AkkaSync.Infrastructure.Actors
       //_logger.Error($"Worker {msg.WorkerId} encountered errors: {string.Join(", ", msg.Errors.Select(e => $"{_id.Key} - {e.PluginId}: {e.Message}"))}");
       await _errorStore.RecordErrorsAsync([.. msg.Errors.Select(e => new ErrorRecord(_id.Key, _id.RunId.ToString(), e.PluginId, e.Message) { Context = e.Context })]);
       Context.System.EventStream.Publish(new WorkerErrorReported(msg.WorkerId, msg.Errors.GroupBy(e => e.PluginId).ToDictionary(g => g.Key, g => g.Count())));
+    }
+
+    private void HandleBatchProcessed(Dictionary<string, int> processed, Dictionary<string, int> errors)
+    {
+      MergeCounts(processed, _pluginProcessedCount);
+      MergeCounts(errors, _pluginErrorCount);
+
+      var metrics = _pluginProcessedCount.Keys
+        .Union(_pluginErrorCount.Keys)
+        .Select(pluginId => new PluginMetrics(pluginId, _pluginProcessedCount.GetValueOrDefault(pluginId), _pluginErrorCount.GetValueOrDefault(pluginId)))
+        .ToDictionary(p => p.PluginId);
+
+      Context.System.EventStream.Publish(new PipelineBatchProcessed(metrics));
+
+    }
+
+    private void MergeCounts(Dictionary<string, int> source, Dictionary<string, int> target)
+    {
+      foreach (var (key, value) in source)
+      {
+        if (target.TryGetValue(key, out var existing))
+        {
+          target[key] = existing + value;
+        }
+        else
+        {
+          target[key] = value;
+        }
+      }
     }
   }
 }

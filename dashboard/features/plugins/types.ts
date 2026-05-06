@@ -22,17 +22,23 @@ interface PluginRemote {
   provider: string;
 }
 
+interface IPluginRuntmeExtraState {
+  keyToIdIndex: Record<string, string>;
+}
+
 interface PluginInstance {
   identifier: string;
   id: string;
   key: string;
   processed: number;
   errors: number;
+  usedBy: number;
 }
 
 export type {
   PluginDefinition,
   PluginLocal,
   PluginRemote,
-  PluginInstance
+  PluginInstance,
+  IPluginRuntmeExtraState
 }

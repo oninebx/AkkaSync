@@ -6,8 +6,17 @@ import { Column } from "@/components/DisplayTable";
 import { PipelineRow } from "./types";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { formatRelativeTime } from "@/shared/utils/time";
 import { Countdown } from "@/components/CountDown";
+import { PipelineStatus } from "@/features/pipelines/types";
+
+const statusStyles: Record<keyof typeof PipelineStatus, string> = {
+  RUNNING: 'bg-blue-50 text-blue-600 border-blue-100',
+  SUCCESS: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+  FAILED: 'bg-red-50 text-red-600 border-red-100',
+  RETRYING: 'bg-amber-50 text-amber-600 border-amber-100',
+  SKIPPED: 'bg-slate-50 text-slate-400 border-slate-200',
+  UNKNOWN: 'bg-gray-50 text-gray-500 border-gray-100',
+};
 
 const columns: Column<PipelineRow>[] = [
     {
@@ -38,19 +47,27 @@ const columns: Column<PipelineRow>[] = [
       header: 'Status',
       key: 'status',
       render: (item) => {
-        const statusStyles: Record<string, string> = {
-          RUNNING: 'bg-blue-50 text-blue-600 border-blue-100',
-          FAILED: 'bg-red-50 text-red-600 border-red-100',
-          SUCCESS: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-          IDLE: 'bg-slate-50 text-slate-500 border-slate-100',
-        };
+        
+        
         return (
-          <span className={cn(
-            "px-2 py-1 rounded border text-[11px] font-bold uppercase tracking-wider",
-            statusStyles[item.status] || statusStyles.IDLE
-          )}>
+          // <span className={cn(
+          //   'px-2 py-1 rounded border text-[11px] font-bold uppercase tracking-wider',
+          //   statusStyles[item.status]
+          // )}>
+          //   {item.status}
+          // </span>
+          <Link 
+            href={`/pipelines/${item.id}/running`}
+            // 阻止冒泡：防止点击状态标签时触发整行的点击事件
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              'px-2 py-1 rounded border text-[11px] font-bold uppercase tracking-wider transition-all',
+              'hover:brightness-90 active:scale-95 cursor-pointer', // 增加点击反馈
+              statusStyles[item.status]
+            )}
+          >
             {item.status}
-          </span>
+          </Link>
         );
       },
     },
@@ -81,10 +98,10 @@ const columns: Column<PipelineRow>[] = [
 
         return (
           <Countdown 
-        target={item.nextRun} 
-        expiredLabel="Pending..." 
-        className="text-xs font-bold text-slate-600"
-      />
+            target={item.nextRun} 
+            expiredLabel="Pending..." 
+            className="text-xs font-bold text-slate-600"
+          />
         );
       }
     }

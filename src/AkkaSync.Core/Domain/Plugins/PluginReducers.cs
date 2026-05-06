@@ -28,6 +28,9 @@ namespace AkkaSync.Core.Domain.Plugins
     public static PluginInstance ReduceInstance(PluginInstance? current, ISnapshotEvent @event, string id) => @event switch
     {
       PipelineStarted started => HandleStartedForInstance(current, id, started),
+      PipelineBatchProcessed processed => current! with { Processed = processed.MetricsData[id].ProcessedCount, Errors = processed.MetricsData[id].ErrorCount },
+      WorkerStarted workerStarted => current! with { UsedBy = current.UsedBy + 1 },
+      WorkerCompleted workerCompleted => current! with { UsedBy = current.UsedBy - 1 },
       _ => throw new NotImplementedException()
     };
 

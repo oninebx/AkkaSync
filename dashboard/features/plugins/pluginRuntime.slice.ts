@@ -1,23 +1,33 @@
 import { createEntitySlice, EntityChangeHandler } from "@/store/createEntitySlice";
-import { PluginInstance } from "./types";
+import { IPluginRuntmeExtraState, PluginInstance } from "./types";
 import { ChangeOperation } from "@/infrastructure/realtime/types";
 
-interface IPluginRuntmeExtraState {
-  keyToIdIndex: Record<string, string>;
-}
+
 
 const handleRuntimeIndex: EntityChangeHandler<PluginInstance, IPluginRuntmeExtraState> = (
   state,
   data,
   operation
 ) => {
-  if(operation === ChangeOperation.Upsert){
-    data.forEach(item => {
-      if(item.key){
-        state.keyToIdIndex[item.key] = item.id;
-      }
-    });
+  switch(operation){
+    case ChangeOperation.Upsert:
+      data.forEach(item => {
+        if(item.key){
+          state.keyToIdIndex[item.key] = item.id;
+        }
+      });
+      break;
+    case ChangeOperation.Replace:
+      const newIndex: Record<string, string> = {};
+      data.forEach(item => {
+        if (item.key) {
+          newIndex[item.key] = item.id;
+        }
+      });
+      state.keyToIdIndex = newIndex;
+      break;
   }
+
 }
 
 const { slice, selectors } = createEntitySlice<PluginInstance, string, IPluginRuntmeExtraState>({

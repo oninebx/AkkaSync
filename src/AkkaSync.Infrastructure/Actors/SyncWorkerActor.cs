@@ -1,12 +1,13 @@
-using System;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Streams.Dsl;
 using AkkaSync.Abstractions;
 using AkkaSync.Abstractions.Models;
+using AkkaSync.Core.Domain.Pipelines.Events;
+using AkkaSync.Core.Domain.Plugins.Events;
 using AkkaSync.Core.Domain.Shared;
 using AkkaSync.Core.Domain.Workers;
 using AkkaSync.Core.Domain.Workers.Events;
-using AkkaSync.Core.Notifications;
 
 namespace AkkaSync.Infrastructure.Actors;
 
@@ -46,13 +47,27 @@ public class SyncWorkerActor : ReceiveActor
     ReceiveAsync<SharedProtocol.Start>(_ => StartAsync());
   }
 
+  protected override void PreStart()
+  {
+    IReadOnlyList<string> pluginIds = [_source.Id, .. _transformers.SelectMany(g => g).Select(t => t.Id), .. _sinks.Select(s => s.Id)];
+    var startedEvent = new WorkerStarted(_id, pluginIds.ToHashSet());
+    Context.Parent.Tell(startedEvent);
+    Context.System.EventStream.Publish(startedEvent);
+  }
+
+  protected override void PostStop()
+  {
+    IReadOnlyList<string> pluginIds = [_source.Id, .. _transformers.SelectMany(g => g).Select(t => t.Id), .. _sinks.Select(s => s.Id)];
+    var startedEvent = new WorkerCompleted(_id, _source.ETag, pluginIds.ToHashSet());
+    Context.Parent.Tell(startedEvent);
+    Context.System.EventStream.Publish(startedEvent);
+  }
+
   private async Task StartAsync()
   {
-    Context.Parent.Tell(new WorkerStarted(_id));
-
     _cancellationToken.ThrowIfCancellationRequested();
     _logger.Info($"Worker {Self.Path.Name} started processing.");
-
+    
     var batch = new List<TransformContext>();
     var errorBatch = new List<ErrorContext>();
     try
@@ -115,11 +130,11 @@ public class SyncWorkerActor : ReceiveActor
       FlushMetrics(0);
 
 
-      Context.Parent.Tell(new WorkerCompleted(_id, _source.ETag));
+      //Context.Parent.Tell(new WorkerCompleted(_id, _source.ETag));
     }
     catch (Exception ex)
     {
-      Context.Parent.Tell(new WorkerFailed(_id, ex.Message));
+      //Context.Parent.Tell(new WorkerFailed(_id, ex.Message));
       _logger.Error(ex, $"Worker {Self.Path.Name} encountered a fatal error: {ex.Message}");
     }
     finally
@@ -138,7 +153,6 @@ public class SyncWorkerActor : ReceiveActor
     }
     
     batch.AddRange(errors);
-    //_logger.Error($"Worker {Self.Path.Name} is running with error(s): {string.Join(", ", errors.Select(e => e.Message))}");
   }
 
   private async Task<IReadOnlyList<ErrorContext>> FlushAsync(List<TransformContext> batch, int size)
@@ -172,17 +186,9 @@ public class SyncWorkerActor : ReceiveActor
   {
     if(_metricsSinceLastFlush >= threshhold)
     {
-      var metrics = _pluginProcessedCount.Keys
-        .Union(_pluginErrorCount.Keys)
-        .Select(pluginId =>  new PluginMetrics( pluginId, _pluginProcessedCount.GetValueOrDefault(pluginId), _pluginErrorCount.GetValueOrDefault(pluginId)))
-        .ToList();
-      Context.System.EventStream.Publish(new WorkerMetricsReported(_id, metrics));
-      //foreach (var pluginId in _pluginProcessedCount.Keys.Union(_pluginErrorCount.Keys))
-      //{
-      //  var metrics = new PluginMetrics(pluginId, _pluginProcessedCount.GetValueOrDefault(pluginId), _pluginErrorCount.GetValueOrDefault(pluginId));
-
-      //  Context.System.EventStream.Publish(new WorkerMetricsReported(_id, metrics));
-      //}
+      Context.Parent.Tell(new PluginsBatchProcessed(new Dictionary<string, int>(_pluginProcessedCount), new Dictionary<string, int>(_pluginErrorCount)));
+      _pluginProcessedCount.Clear();
+      _pluginErrorCount.Clear();
       _metricsSinceLastFlush = 0;
     }
     

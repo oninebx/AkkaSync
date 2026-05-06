@@ -1,10 +1,10 @@
 import { pipelineConfigSelectors, pipelineRuntimeSelectors } from "@/features/pipelines";
 import { createSelector } from "@reduxjs/toolkit";
-import { PipelineRow } from "./types";
+import { PipelineRow, PipelineRowStatus } from "./types";
+import { PipelineStatus } from "@/features/pipelines/types";
 
 const selectPipelines = pipelineConfigSelectors.selectEntities;
 const selectMetrics = pipelineRuntimeSelectors.selectEntities;
-
 
 const selectPipelineRows = createSelector(
   [ selectPipelines, selectMetrics],
@@ -16,7 +16,7 @@ const selectPipelineRows = createSelector(
       processed: metrics[p.identifier].totalProcessed,
       // scheduleText: p.schedule ? cronstrue.toString(p.schedule) : 'Manual',
       scheduleText: 'Manual',
-      status: 'IDLE',
+      status: PipelineStatus[metrics[p.identifier].status] as PipelineRowStatus,
       lastRun: 'Never',
       nextRun: metrics[p.identifier].nextRun,
       errors: metrics[p.identifier].totalErrors

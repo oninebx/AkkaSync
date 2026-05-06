@@ -15,8 +15,10 @@ namespace AkkaSync.Core.Domain.Pipelines
     public static PipelineMetrics ReduceMetrics(PipelineMetrics? current, ISnapshotEvent @event, string id) => @event switch
     {
       SyncEngineReady ready => HandleSyncReadyForMetrics(current, id, ready),
-      PipelineCompleted completed => (current ?? new PipelineMetrics(id)) with { TotalRuns = current is null ? 0 : current.TotalRuns + 1 },
+      PipelineStarted started => (current ?? new PipelineMetrics(id)) with { Status = PipelineStatus.Running },
+      PipelineCompleted completed => (current ?? new PipelineMetrics(id)) with { TotalRuns = current is null ? 0 : current.TotalRuns + 1, Status = PipelineStatus.Success },
       PipelineScheduled scheduled => (current ?? new PipelineMetrics(id)) with { NextRun = scheduled.NextUtc },
+      PipelineSkipped skipped => (current ?? new PipelineMetrics(id)) with { Status = PipelineStatus.Skipped },
       _ => throw new NotFiniteNumberException()
     };
 
@@ -43,6 +45,8 @@ namespace AkkaSync.Core.Domain.Pipelines
                  ?? throw new InvalidOperationException($"Spec not found for pipeline: {id}");
 
       return (current ?? new PipelineMetrics(id));
+
     }
+
   }
 }

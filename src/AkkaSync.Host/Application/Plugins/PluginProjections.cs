@@ -14,7 +14,15 @@ namespace AkkaSync.Host.Application.Plugins
 
     public static IReadOnlyList<PluginRemoteChangeSet> ProjectionRemote(IReadOnlyList<PluginRemote> currents, IReadOnlyList<PluginRemote> nexts) =>
       [.. SnapshotDiffEngine.GenerateDiff<PluginRemote, PluginRemoteChangeSet>(currents, nexts)];
-    public static IReadOnlyList<PluginInstanceChangeSet> ProjectionInstance(IReadOnlyList<PluginInstance> currents, IReadOnlyList<PluginInstance> nexts) =>
-      [.. SnapshotDiffEngine.GenerateDiff<PluginInstance, PluginInstanceChangeSet>(currents, nexts)];
+    public static IReadOnlyList<PluginInstanceChangeSet> ProjectionInstance(IReadOnlyList<PluginInstance> currents, IReadOnlyList<PluginInstance> nexts)
+    {
+      var nextIds = new HashSet<string>(nexts.Select(x => x.Id));
+
+      var wholeNexts = nexts
+          .Concat(currents.Where(c => !nextIds.Contains(c.Id)))
+          .ToList();
+      return [.. SnapshotDiffEngine.GenerateDiff<PluginInstance, PluginInstanceChangeSet>(currents, wholeNexts, true)];
+    }
+      
   }
 }

@@ -5,6 +5,15 @@ interface PluginInfo {
   kind: PluginKind;
 }
 
+enum PipelineStatus {
+  UNKNOWN = 0,
+  RUNNING = 1,
+  SUCCESS = 2,
+  FAILED = 3,
+  RETRYING = 4,
+  SKIPPED = 5,
+}
+
 interface PipelineDefinition {
   identifier: string;
   name: string;
@@ -21,11 +30,16 @@ interface PipelineMetrics {
   totalProcessed: number;
   totalErrors: number;
   nextRun: string;
+  status: PipelineStatus;
 }
 
 export type {
   PipelineDefinition,
   PipelineMetrics,
   PluginInfo
+}
+
+export {
+  PipelineStatus
 }
 

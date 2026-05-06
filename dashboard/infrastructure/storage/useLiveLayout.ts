@@ -4,8 +4,8 @@ import { NodeLayout } from "./liveLayout";
 
 const STORAGE_KEY_PREFIX = 'live-layout:';
 
-const useLiveLayout = (pipelineId: string) => {
-  const key = `${STORAGE_KEY_PREFIX}${pipelineId}`;
+const useLiveLayout = (pipelineId: string, path: string) => {
+  const key = `${STORAGE_KEY_PREFIX}-${path}${pipelineId}`;
 
   const saveLayout = useCallback((nodes: Node[]) => {
     const layout: NodeLayout = {};

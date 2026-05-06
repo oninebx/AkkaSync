@@ -48,6 +48,9 @@ function createEntitySlice<T, ID extends EntityId = string, A = Record<string, a
           case ChangeOperation.Upsert:
             adapter.upsertMany(state, data);
             break;
+          case ChangeOperation.Replace:
+            adapter.setAll(state, data);
+            break;
         }
         if(onChanges) {
           onChanges(state as A, data, operation);
@@ -64,7 +67,8 @@ function createEntitySlice<T, ID extends EntityId = string, A = Record<string, a
     actions: slice.actions,
     selectors: {
       ...adapter.getSelectors(selectSliceState),
-      getExtraField: <K extends keyof A>(state: any, key: K): A[K] => selectSliceState(state)[key] 
+      getExtraField: <K extends keyof A>(key: K) => (state: any): A[K] => selectSliceState(state)[key]
+      // getExtraField: <K extends keyof A>(state: any, key: K): A[K] => selectSliceState(state)[key] 
     }
   }
 }

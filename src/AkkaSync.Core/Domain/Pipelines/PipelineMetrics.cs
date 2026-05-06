@@ -10,5 +10,6 @@ namespace AkkaSync.Core.Domain.Pipelines
     public long TotalErrors { get; set; }
     public DateTimeOffset? LastRun { get; set; }
     public DateTimeOffset? NextRun { get; set; }
+    public PipelineStatus Status { get; set; }
   }
 }

@@ -10,10 +10,18 @@ namespace AkkaSync.Core.Common
   {
     public static IEnumerable<R> GenerateDiff<T, R>(
       IReadOnlyList<T> currents, 
-      IReadOnlyList<T> nexts) 
+      IReadOnlyList<T> nexts,
+      bool forceReplace = false) 
       where T : class, ISnapshot
       where R: class, IChangeSet
     {
+
+      if (forceReplace)
+      {
+        yield return CreateInstance<R>(ChangeOperation.Replace, nexts.ToList());
+        yield break;
+      }
+
       var currentDict = currents.ToDictionary(c => c.Identifier);
       var nextIds = nexts.Select(n => n.Identifier).ToHashSet();
 

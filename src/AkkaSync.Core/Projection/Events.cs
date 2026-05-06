@@ -5,9 +5,9 @@ using AkkaSync.Core.Domain.Workers;
 namespace AkkaSync.Core.Notifications;
 
 //public sealed record PipelineCreatedReported(PipelineId PipelineId, IReadOnlyList<PluginInstance> SourceInstances, IReadOnlyList<PluginInstance> TransformerInstances, PluginInstance SinkInstance) : IProjectionEvent;
-public sealed record WorkerMetricsReported(WorkerId WorkerId, IReadOnlyList<PluginMetrics> MetricsList) : IProjectionEvent;
+//public sealed record WorkerMetricsReported(WorkerId WorkerId, IReadOnlyList<PluginMetrics> MetricsList) : IProjectionEvent;
 
-public sealed record PipelineStartReported(PipelineId PipelineId) : IProjectionEvent;
+//public sealed record PipelineStartReported(PipelineId PipelineId) : IProjectionEvent;
 public sealed record PipelineSkipReported(PipelineId PipelineId, string Reason) : IProjectionEvent;
 public sealed record PipelineCompleteReported(PipelineId PipelineId) : IProjectionEvent;
 public sealed record WorkerFailureReported(WorkerId WorkerId, string Message) : IProjectionEvent;

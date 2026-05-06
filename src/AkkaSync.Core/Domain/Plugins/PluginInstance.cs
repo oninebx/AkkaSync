@@ -6,6 +6,7 @@ namespace AkkaSync.Core.Domain.Plugins
   {
     public int Processed { get; set; } = 0;
     public int Errors { get; set; } = 0;
+    public int UsedBy { get; set; } = 0;
     public string Identifier => Id;
   }
 }
