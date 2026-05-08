@@ -10,6 +10,8 @@ namespace AkkaSync.Abstractions
   {
     IReadOnlyList<Type> SupportedTypes { get; }
     IReadOnlyDictionary<Type, IReadOnlyList<string>> IdGroups { get;}
+    bool ResetState { get => false; }
+    IReadOnlySet<Type> ResetTypes => new HashSet<Type>();
     DateTimeOffset OccurredAt { get => DateTimeOffset.UtcNow; }
   }
 }
