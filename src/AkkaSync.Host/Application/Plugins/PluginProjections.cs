@@ -22,7 +22,19 @@ namespace AkkaSync.Host.Application.Plugins
           .Concat(currents.Where(c => !nextIds.Contains(c.Id)))
           .ToList();
       return [.. SnapshotDiffEngine.GenerateDiff<PluginInstance, PluginInstanceChangeSet>(currents, wholeNexts, true)];
+
+      /*
+       var nextIds = new HashSet<string>(nexts.Select(x => x.Id));
+      var wholeNexts = new List<PluginInstance>(nexts);
+      var forceReplace = false;
+      if (nexts.Count > 0)
+      {
+        wholeNexts = [.. nexts, .. currents.Where(c => !nextIds.Contains(c.Id))];
+        forceReplace = true;
+      }
+      return [.. SnapshotDiffEngine.GenerateDiff<PluginInstance, PluginInstanceChangeSet>(currents, wholeNexts, forceReplace)];
+       */
     }
-      
+
   }
 }

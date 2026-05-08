@@ -10,6 +10,6 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
   {
     //Task<string?> FetchCatalogAsync(string url, string? cachedETag = null);
     Task<IEnumerable<string>> FetchFromSourcesAsync(IEnumerable<string> sources, string? cachedETag = null);
-    Task<byte[]> DownloadPluginAsync(string url, string expectedChecksum);
+    Task<byte[]> DownloadPluginAsync(string url, string? expectedChecksum);
   }
 }

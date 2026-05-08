@@ -3,6 +3,7 @@ using Akka.DependencyInjection;
 using Akka.Event;
 using AkkaSync.Abstractions;
 using AkkaSync.Core.Domain.Plugins.Commands;
+using AkkaSync.Core.Domain.Plugins.Queries;
 using AkkaSync.Infrastructure.Messaging.Contract.Swap;
 using AkkaSync.Infrastructure.SyncPlugins.Catalog;
 using AkkaSync.Infrastructure.SyncPlugins.Loader;
@@ -37,8 +38,8 @@ namespace AkkaSync.Infrastructure.Actors
 
       ReceiveAsync<Protocol.CleanupPendingPlugins>(_ => DoCleanup());
 
-      Receive<CheckForUpdates>(DoCheckVersions);
-      Receive<UpdatePlugin>(msg => NotifyUpdatePlugin(msg));
+      Receive<CheckVersionsQuery>(DoCheckVersions);
+      ReceiveAsync<DownloadQuery>(NotifyDownloadPlugin);
     }
 
     protected override void PreStart()
@@ -104,14 +105,17 @@ namespace AkkaSync.Infrastructure.Actors
      
     }
 
-    private void DoCheckVersions(CheckForUpdates msg)
+    private void DoCheckVersions(CheckVersionsQuery msg)
     {
       _updateActor.Tell(msg);
     }
 
-    private void NotifyUpdatePlugin(UpdatePlugin msg)
+    private async Task NotifyDownloadPlugin(DownloadQuery msg)
     {
-      _updateActor.Tell(new CheckoutNewVersion(msg.Url, msg.Checksum));
+      //var plugins = await _pluginCatalog.GetAllAsync(p => p.Id == msg.Id);
+      //var plugin= plugins.FirstOrDefault();
+      
+      _updateActor.Tell(msg);
     }
     private string ExtractToShadow(string path)
     {

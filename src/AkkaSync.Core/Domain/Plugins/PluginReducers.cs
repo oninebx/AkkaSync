@@ -53,7 +53,7 @@ namespace AkkaSync.Core.Domain.Plugins
     private static PluginRemote HandleCheckedForRemote(PluginRemote? current, string id, PluginsVersionChecked e)
     {
       var entry = e.NewVersions.FirstOrDefault(e => e.Provider == id) ?? throw new InvalidOperationException($"Entry not found for plugin: { id }");
-      return current ?? new PluginRemote(entry.QualifiedName, entry.Version, entry.Provider);
+      return current ?? new PluginRemote(entry.QualifiedName, entry.Version, entry.Provider, entry.Url, entry.Checksum);
     }
 
     private static PluginInstance HandleStartedForInstance(PluginInstance? current, string id, PipelineStarted e)

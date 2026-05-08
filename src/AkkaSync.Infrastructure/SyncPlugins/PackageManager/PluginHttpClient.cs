@@ -19,7 +19,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
       _logger = logger;
     }
 
-    public async Task<byte[]> DownloadPluginAsync(string url, string expectedChecksum)
+    public async Task<byte[]> DownloadPluginAsync(string url, string? expectedChecksum)
     {
       _logger.LogInformation("Downloading plugin from {Url}", url);
       var response = await _client.GetAsync(url);
@@ -29,7 +29,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
 
       using var sha256 = SHA256.Create();
       var hashBytes = sha256.ComputeHash(bytes);
-      var actualChecksum = Convert.ToHexString(hashBytes);
+      var actualChecksum = $"sha256:{Convert.ToHexString(hashBytes).ToLowerInvariant()}";
 
       if (!string.Equals(actualChecksum, expectedChecksum, StringComparison.OrdinalIgnoreCase))
       {

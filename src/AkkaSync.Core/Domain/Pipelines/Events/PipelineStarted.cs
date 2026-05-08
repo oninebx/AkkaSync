@@ -13,5 +13,6 @@ namespace AkkaSync.Core.Domain.Pipelines.Events
       [typeof(PipelineMetrics)] = [ Id.Key ],
     };
 
+    public IReadOnlySet<Type> ResetTypes { get; init; } = new HashSet<Type> { typeof(PluginInstance) };
   }
 }

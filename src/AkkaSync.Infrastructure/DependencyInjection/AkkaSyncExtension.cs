@@ -60,6 +60,8 @@ public static class AkkaSyncExtension
       .Build());
     services.AddSingleton<ISnapshotStore, SnapshotStore>();
 
+    services.AddSingleton<IContextHydrator, PluginHydrator>();
+
     services.AddSingleton<IEventIdGenerator, GuidEventIdGenerator>();
     services.AddSingleton<ISequenceGenerator, InMemorySequenceGenerator>();
     services.AddSingleton<IEnvelopeFactory, EnvelopeFactory>();

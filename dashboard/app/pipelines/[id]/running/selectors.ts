@@ -78,7 +78,6 @@ export const selectRuntimeTopology = createSelector(
       const nodeId = inst.identifier; // Use unique identifier as React Flow Node ID
       // const isActive = inst.processed > 0;
       const isActive = inst.usedBy > 0;
-      console.log(inst.id, inst.usedBy);
 
       nodes.push({
         id: nodeId,
@@ -133,10 +132,6 @@ export const selectRuntimeTopology = createSelector(
           });
         }
       });
-
-      if(!isActive){
-        console.log(edges);
-      }
     });
     
     return { nodes, edges };

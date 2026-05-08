@@ -27,7 +27,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
       _logger = logger;
     }
 
-    public async Task<string> CheckoutPlugin(string url, string checksum)
+    public async Task<string> CheckoutPlugin(string url, string? checksum)
     {
       var data = await _client.DownloadPluginAsync(url, checksum);
 
@@ -38,7 +38,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
       var filePath = await _storage.SaveAsync(id, new MemoryStream(data));
       if (_pluginsToUpdate is not null && _pluginsToUpdate.TryGetValue(id, out var entry))
       {
-        await _catalog.AddAsync(new PluginCatalogEntry(id, entry.Version, entry.Checksum, false));
+        await _catalog.AddAsync(new PluginCatalogEntry(id, entry.Version, entry.CheckSum, false));
         _pluginsToUpdate.Remove(id);
       }
       
@@ -86,7 +86,7 @@ namespace AkkaSync.Infrastructure.SyncPlugins.PackageManager
         return true;
 
       if (remoteVersion == localVersion &&
-          !string.Equals(local.Checksum, remote.Checksum, StringComparison.OrdinalIgnoreCase))
+          !string.Equals(local.CheckSum, remote.Checksum, StringComparison.OrdinalIgnoreCase))
         return true;
 
       return false;

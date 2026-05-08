@@ -2,6 +2,7 @@
 using Akka.Event;
 using AkkaSync.Core.Domain.Plugins.Commands;
 using AkkaSync.Core.Domain.Plugins.Events;
+using AkkaSync.Core.Domain.Plugins.Queries;
 using AkkaSync.Infrastructure.Messaging.Contract.Update;
 using AkkaSync.Infrastructure.SyncPlugins.PackageManager;
 using static AkkaSync.Infrastructure.Messaging.Contract.Update.Protocol;
@@ -21,16 +22,16 @@ namespace AkkaSync.Infrastructure.Actors
 
     private void Idle()
     {
-      Receive<CheckForUpdates>(_ =>
+      Receive<CheckVersionsQuery>(_ =>
       {
         Become(Checking);
         Self.Tell(new DoCheck());
       });
 
-      Receive<CheckoutNewVersion>(msg =>
+      Receive<DownloadQuery>(msg =>
       {
         Become(Updating);
-        Self.Tell(new DoUpdate(msg.Url, msg.Checksum));
+        Self.Tell(new DoUpdate(msg.Url, msg.CheckSum));
       });
     }
 
@@ -60,10 +61,11 @@ namespace AkkaSync.Infrastructure.Actors
       }
     }
 
-    private async Task HandleUpdate(string pluginUrl, string checksum)
+    private async Task HandleUpdate(string pluginUrl, string? checksum)
     {
       try
       {
+
         var file = await _pluginPackageManager.CheckoutPlugin(pluginUrl, checksum);
         _logger.Info("Plugin in {0} is downloaded to {1}", pluginUrl, file);
       }

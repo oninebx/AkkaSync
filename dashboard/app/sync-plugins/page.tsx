@@ -40,7 +40,7 @@ const PluginsPage = () => {
       try{
         const plugin = plugins.find(p => p.id === id);
         if(plugin?.installedVersion !== plugin?.latestversion){
-          const response = await queryInvoke('UpdatePlugin');
+          const response = await queryInvoke('CheckoutPlugin', { Id: id }, true);
           setUpdatingId(id);
           
           if(!response.success){

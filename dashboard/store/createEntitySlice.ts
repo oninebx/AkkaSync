@@ -51,6 +51,12 @@ function createEntitySlice<T, ID extends EntityId = string, A = Record<string, a
           case ChangeOperation.Replace:
             adapter.setAll(state, data);
             break;
+          // case ChangeOperation.Remove:
+          //   console.log(data);
+          //   const idsToRemove = data.map(selectId);
+          //   console.log(`Removing entities with IDs: ${idsToRemove.join(', ')}`);
+          //   adapter.removeMany(state, idsToRemove);
+          //   break;
         }
         if(onChanges) {
           onChanges(state as A, data, operation);

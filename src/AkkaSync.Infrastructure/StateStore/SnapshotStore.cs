@@ -20,6 +20,14 @@ namespace AkkaSync.Infrastructure.StateStore
       return new ReadOnlyDictionary<string, ISnapshot>(new Dictionary<string, ISnapshot>());
     }
 
+    public void ResetByType(Type type)
+    {
+      if (_storage.ContainsKey(type)) 
+      { 
+        _storage.Remove(type);
+      }
+    }
+
     public void Update(IEnumerable<ISnapshot> states)
     {
       if (states == null) return;
