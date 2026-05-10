@@ -1,8 +1,9 @@
 ﻿{
   "Pipelines": {
-    "sync-orders" :{
+    "sync-orders": {
       "Schedules": [ "*/1 * * * *", "0 10,22 * * 6,0" ],
       "Name": "sync-orders",
+      "IsActive": true,
       "BatchSize": 50,
       "Plugins": [
         {
@@ -15,7 +16,7 @@
           },
           "Meta": {
             "DataSource": {
-              "Key":"order_files",
+              "Key": "order_files",
               "Name": "Order Files",
               "Type": "folder"
             }
@@ -150,7 +151,8 @@
           "Type": "sink",
           "Provider": "SqliteSinkProvider",
           "Parameters": {
-            "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;"
+            "connectionString": "Data Source=data/Csv2Sqlite/output/orderstore.db;Mode=ReadWriteCreate;Cache=Shared;Pooling=True;Foreign Keys=True;",
+            "tables": [ "Customer", "Product", "Order", "OrderItem", "Audit" ]
           },
           "Meta": {
             "DataSource": {

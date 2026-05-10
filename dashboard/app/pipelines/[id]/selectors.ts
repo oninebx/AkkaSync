@@ -3,7 +3,6 @@ import { pipelineConfigSelectors } from "@/features/pipelines";
 import { pluginCacheSelectors, pluginCentralSelectors, pluginConfigSelectors } from "@/features/plugins";
 import { createSelector } from "@reduxjs/toolkit";
 import { ConnectorNodeData, FlowEdge, FlowNodeData } from "./types";
-import { PluginHealthStatus } from "@/contracts/plugin/types";
 import { getPluginHealthStatus } from "@/features/plugins/utils";
 import { getEffectivePosition, NodeLayout } from "@/infrastructure/storage/liveLayout";
 
@@ -21,9 +20,10 @@ const selectPipelineTopology = createSelector(
     selectCachePlugins,
     selectCentralPlugins,
     (_, pipelineId: string) => pipelineId,
-    (_, __, savedLayout: NodeLayout | null) => savedLayout
+    (_, __, ___: string) => ___,
+    (_, __, ___, savedLayout: NodeLayout | null) => savedLayout
   ],
-  (pipelines, connectors, configPlugins, cachePlugins, centralPlugins, id, savedLayout) => {
+  (pipelines, connectors, configPlugins, cachePlugins, centralPlugins, id, _instanceId, savedLayout) => {
     const nodes: FlowNodeData[] = [];
     const edges: FlowEdge[] = [];
     

@@ -19,7 +19,8 @@ const selectPipelineRows = createSelector(
       status: PipelineStatus[metrics[p.identifier].status] as PipelineRowStatus,
       lastRun: 'Never',
       nextRun: metrics[p.identifier].nextRun,
-      errors: metrics[p.identifier].totalErrors
+      errors: metrics[p.identifier].totalErrors,
+      instanceId: metrics[p.identifier].instanceId
     }));
   }
 );

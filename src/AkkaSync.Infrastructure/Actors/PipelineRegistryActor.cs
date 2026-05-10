@@ -78,7 +78,7 @@ public class PipelineRegistryActor : ReceiveActor
 
       var transforms = spec.Plugins.Where(p => p.Type == "transform").Select(p => p.Provider).Distinct().ToList() ?? [];
       var transformerMap = transforms.Select(t => _transformRegistry.GetProvider(t)).Where(p => p is not null).ToDictionary(p => p.Key, p => p);
-      var sinkProviderMap = spec.Sinks.Select(sink => _sinkRegistry.GetProvider(sink.Provider)).Where(p => p is not null).ToDictionary(p => p.Key, p => p);
+      var sinkProviderMap = spec.Sinks.Select(sink => _sinkRegistry.GetProvider(sink.Provider)).Where(p => p is not null).Distinct().ToDictionary(p => p.Key, p => p);
 
       if (sourceProvider is not null && transformerMap.Count == transforms.Count && sinkProviderMap is not null)
       {

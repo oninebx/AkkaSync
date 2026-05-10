@@ -7,11 +7,12 @@ import { selectRuntimeTopology } from "./selectors";
 const nodeTypes = { connector: ConnectorNode, runtimePlugin: PluginRuntimeNode };
 
 export default function RuntimePage() {
-   const { id } = useParams<{id: string}>();
+   const { id, instance } = useParams<{id: string; instance: string}>();
    const pathName = usePathname();
   return (
     <PipelineTopologyBase
       id={id}
+      instanceId={instance}
       title="Runtime Monitor"
       selector={selectRuntimeTopology}
       nodeTypes={nodeTypes}

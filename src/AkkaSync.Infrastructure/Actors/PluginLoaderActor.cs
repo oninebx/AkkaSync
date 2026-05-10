@@ -80,7 +80,7 @@ namespace AkkaSync.Infrastructure.Actors
 
       if (descriptor is not null)
       {
-        Context.System.EventStream.Publish(new PluginAdded(descriptor.Holder, descriptor.Version));
+        Context.System.EventStream.Publish(new PluginAdded(descriptor.Name, descriptor.Holder, descriptor.Version, descriptor.Kind));
       }
     }
 

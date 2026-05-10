@@ -9,17 +9,18 @@ import '@xyflow/react/dist/style.css';
 
 interface PipelineTopologyBaseProps {
   id: string;
+  instanceId?: string;
   title: string;
-  selector: (state: any, id: string, savedLayout: any) => { nodes: any[]; edges: any[] };
+  selector: (state: any, id: string, instance: string, savedLayout: any) => { nodes: any[]; edges: any[] };
   nodeTypes: Record<string, any>;
   path: string;
 }
 
-export default function PipelineTopologyBase({ id, title, selector, nodeTypes, path }: PipelineTopologyBaseProps) {
+export default function PipelineTopologyBase({ id, instanceId, title, selector, nodeTypes, path }: PipelineTopologyBaseProps) {
   const { loadLayout, saveLayout } = useLiveLayout(id, path);
   const savedLayout = useMemo(() => loadLayout(), [loadLayout]);
 
-  const { nodes: remoteNodes, edges: remoteEdges } = useSelector((state) => selector(state, id, savedLayout));
+  const { nodes: remoteNodes, edges: remoteEdges } = useSelector((state) => selector(state, id, instanceId || 'latest', savedLayout));
 
   const [localNodes, setNodes, onNodesChange] = useNodesState(remoteNodes);
   const [localEdges, setEdges, onEdgesChange] = useEdgesState(remoteEdges);
@@ -33,13 +34,16 @@ export default function PipelineTopologyBase({ id, title, selector, nodeTypes, p
     const nextNodes = remoteNodes.map(rn => {
       const local = localNodes.find(ln => ln.id === rn.id);
       return {
-        ...rn,
-        position: local?.position ?? rn.position 
+        // ...rn,
+        // position: local?.position ?? rn.position 
+        ...local,
+        data:{
+          ...rn.data,
+        }
+        
       };
     });
 
-   
-    const nodeIdSet = new Set(nextNodes.map(n => n.id));
     setNodes(nextNodes);
     
     const timer = setTimeout(() => {
@@ -71,7 +75,6 @@ export default function PipelineTopologyBase({ id, title, selector, nodeTypes, p
 
 const [refreshKey, setRefreshKey] = useState(0);
 
-  // 手动刷新函数
   const forceRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1);
   }, []);

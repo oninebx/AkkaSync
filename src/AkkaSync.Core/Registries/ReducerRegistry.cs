@@ -11,7 +11,7 @@ namespace AkkaSync.Core.Registries
       _reducers = new Dictionary<Type, Func<ISnapshot?, ISnapshotEvent, string, ISnapshot>>(reducers);
     }
 
-    public bool TryReduce(Type targetType, string id, ISnapshot? current, ISnapshotEvent @event, out ISnapshot next)
+    public bool TryReduce(Type targetType, string id, ISnapshot? current, ISnapshotEvent @event, out ISnapshot? next)
     {
       if (_reducers.TryGetValue(targetType, out var reducer))
       {

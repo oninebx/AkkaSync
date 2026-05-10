@@ -73,7 +73,7 @@ function createEntitySlice<T, ID extends EntityId = string, A = Record<string, a
     actions: slice.actions,
     selectors: {
       ...adapter.getSelectors(selectSliceState),
-      getExtraField: <K extends keyof A>(key: K) => (state: any): A[K] => selectSliceState(state)[key]
+      getExtraField: <K extends keyof A>(key: K) => (state: Record<string, any>): A[K] => selectSliceState(state)[key]
       // getExtraField: <K extends keyof A>(state: any, key: K): A[K] => selectSliceState(state)[key] 
     }
   }

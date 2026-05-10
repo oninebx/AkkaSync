@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Csv2Sqlite/input/" />
     <Folder Include="Csv2Sqlite/input/orders/" />
+    <Folder Include="Csv2Sqlite\input\retail\" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -23,7 +23,7 @@ interface PluginRemote {
 }
 
 interface IPluginRuntmeExtraState {
-  keyToIdIndex: Record<string, string>;
+  keyToIdIndex: Record<string, Record<string, string[]>>;
 }
 
 interface PluginInstance {
@@ -33,6 +33,7 @@ interface PluginInstance {
   processed: number;
   errors: number;
   usedBy: number;
+  pipelineRunId: string;
 }
 
 export type {

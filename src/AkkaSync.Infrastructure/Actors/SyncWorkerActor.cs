@@ -114,7 +114,7 @@ public class SyncWorkerActor : ReceiveActor
         }
 
         _metricsSinceLastFlush++;
-        
+
         FlushError(errorBatch, _batchSize);
         FlushMetrics(_batchSize);
 
@@ -165,9 +165,9 @@ public class SyncWorkerActor : ReceiveActor
         var sinkErrors = await sink.WriteAsync(batch, _cancellationToken);
         _pluginProcessedCount[sink.Id] = _pluginProcessedCount.GetValueOrDefault(sink.Id) + batch.Count;
         Context.Parent.Tell(new WorkerProgressed(_id, batch.Last().Cursor));
-        batch.Clear();
         errors.AddRange(sinkErrors);
       }
+      batch.Clear();
     }
     
     return errors;

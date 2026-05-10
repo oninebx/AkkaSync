@@ -47,4 +47,5 @@ runtime
 releases
 !TestPlugins/
 !TestPlugins/**/*.dll
+examples
 

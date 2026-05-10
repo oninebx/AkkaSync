@@ -9,22 +9,23 @@ import {
   PluginRuntimeNodeData, 
   ConnectorNodeData 
 } from "../types";
+import { RootState } from "@/store";
 
 const selectPipelines = pipelineConfigSelectors.selectEntities;
 const selectConnectors = connectorConfigSelectors.selectEntities;
 const selectPlugins = pluginConfigSelectors.selectAll;
-const selectInstancePlugins = pluginRuntimeSelectors.selectAll;
 
 export const selectRuntimeTopology = createSelector(
   [
     selectPipelines,
     selectConnectors,
     selectPlugins,
-    selectInstancePlugins,
+    pluginRuntimeSelectors.selectInstancesByRef,
     (_, pipelineId: string) => pipelineId,
-    (_, __, savedLayout: NodeLayout | null) => savedLayout
+    (_, __, instanceId: string) => instanceId,
+    (_, __, ___, savedLayout: NodeLayout | null) => savedLayout
   ],
-  (pipelines, connectors, configPlugins, allInstances, id, savedLayout) => {
+  (pipelines, connectors, configPlugins, allInstances, id, instanceId, savedLayout) => {
     const nodes: FlowNodeData[] = [];
     const edges: FlowEdge[] = [];
     

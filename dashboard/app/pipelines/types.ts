@@ -12,6 +12,7 @@ interface PipelineRow {
   lastRun: string;
   nextRun: string;
   errors: number;
+  instanceId?: string;
 };
 
 export type {

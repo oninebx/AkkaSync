@@ -94,16 +94,33 @@ public class SyncGatewayActor : ReceiveActor
       var currents = _snapshotStore.GetCurrentByType(type);
       var oldSnapshots = currents.Values.ToList();
       var ids = idGroups[type];
+      var toRemove = new List<string>();
       foreach (var id in ids) 
       {
         currents.TryGetValue(id, out var current);
 
         if (_reducerRegistry.TryReduce(type, id, current, @event, out var next))
         {
-          nexts.Add(next);
+          if(next is null)
+          {
+            toRemove.Add(id);
+          }
+          else
+          {
+            nexts.Add(next);
+          }
+          
         }
       }
-      _snapshotStore.Update(nexts);
+      if (toRemove.Count > 0) 
+      {
+        _snapshotStore.RemoveRangeByType(type, toRemove);
+      }
+      if(nexts.Count > 0)
+      {
+        _snapshotStore.Update(nexts);
+      }
+      
 
       if ( _projectionRegistry.TryProjection(type, oldSnapshots, nexts, out var changes))
       {

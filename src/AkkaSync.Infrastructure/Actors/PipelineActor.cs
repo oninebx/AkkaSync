@@ -55,7 +55,7 @@ namespace AkkaSync.Infrastructure.Actors
       {
         throw new NullReferenceException("Sink Provider cannot be empty");
       }
-      _sinks = [.. sinkSpecs.SelectMany(sink => sinkProviders[sink.Provider].Create(sink, _cancellationToken))]; //sinkProviders.Create(sinkSpec, _cancellationToken).First();
+      _sinks = [.. sinkSpecs.SelectMany(sink => sinkProviders[sink.Provider].Create(sink, _cancellationToken))];
       _batchSize = batchSize;
 
       _historyStore = historyStore;

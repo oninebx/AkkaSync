@@ -11,5 +11,6 @@ namespace AkkaSync.Core.Domain.Pipelines
     public DateTimeOffset? LastRun { get; set; }
     public DateTimeOffset? NextRun { get; set; }
     public PipelineStatus Status { get; set; }
+    public string? InstanceId { get; set; }
   }
 }

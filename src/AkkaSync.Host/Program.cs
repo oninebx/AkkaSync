@@ -25,8 +25,6 @@ if (builder.Environment.IsDevelopment())
   akkaConfig = ConfigurationFactory.ParseString(File.ReadAllText(configFile));
 }
 
-//builder.Services.AddSignalR();
-
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
     {

@@ -57,7 +57,7 @@ const columns: Column<PipelineRow>[] = [
           //   {item.status}
           // </span>
           <Link 
-            href={`/pipelines/${item.id}/running`}
+            href={`/pipelines/${item.id}/${item.instanceId || 'latest'}`}
             // 阻止冒泡：防止点击状态标签时触发整行的点击事件
             onClick={(e) => e.stopPropagation()}
             className={cn(

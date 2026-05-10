@@ -31,6 +31,7 @@ interface PipelineMetrics {
   totalErrors: number;
   nextRun: string;
   status: PipelineStatus;
+  instanceId?: string;
 }
 
 export type {

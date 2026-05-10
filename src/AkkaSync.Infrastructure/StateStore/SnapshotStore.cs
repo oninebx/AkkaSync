@@ -20,6 +20,25 @@ namespace AkkaSync.Infrastructure.StateStore
       return new ReadOnlyDictionary<string, ISnapshot>(new Dictionary<string, ISnapshot>());
     }
 
+    public void RemoveByType(Type type, string id)
+    {
+      if( _storage.TryGetValue(type, out var bucket))
+      {
+        bucket.Remove(id);
+      }
+    }
+
+    public void RemoveRangeByType(Type type, IEnumerable<string> ids)
+    {
+      if ( _storage.TryGetValue(type,out var bucket))
+      {
+        foreach(var id in ids)
+        {
+          bucket.Remove(id);
+        }
+      }
+    }
+
     public void ResetByType(Type type)
     {
       if (_storage.ContainsKey(type)) 

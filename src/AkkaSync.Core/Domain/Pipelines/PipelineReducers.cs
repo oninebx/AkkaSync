@@ -15,7 +15,7 @@ namespace AkkaSync.Core.Domain.Pipelines
     public static PipelineMetrics ReduceMetrics(PipelineMetrics? current, ISnapshotEvent @event, string id) => @event switch
     {
       SyncEngineReady ready => HandleSyncReadyForMetrics(current, id, ready),
-      PipelineStarted started => (current ?? new PipelineMetrics(id)) with { Status = PipelineStatus.Running },
+      PipelineStarted started => (current ?? new PipelineMetrics(id)) with { Status = PipelineStatus.Running, InstanceId = started.Id.RunId.ToString() },
       PipelineCompleted completed => (current ?? new PipelineMetrics(id)) with { TotalRuns = current is null ? 0 : current.TotalRuns + 1, Status = PipelineStatus.Success },
       PipelineScheduled scheduled => (current ?? new PipelineMetrics(id)) with { NextRun = scheduled.NextUtc },
       PipelineSkipped skipped => (current ?? new PipelineMetrics(id)) with { Status = PipelineStatus.Skipped },
